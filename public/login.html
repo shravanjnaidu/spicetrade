@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sign in — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <nav>
+        <a href="/signup.html" class="btn">Sign up</a>
+        <a href="/dashboard.html" class="btn secondary">View ads</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h2>Sign in to your account</h2>
+      <form id="loginForm" class="card">
+        <label>
+          Email
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" required />
+        </label>
+        <button type="submit" class="btn">Sign in</button>
+      </form>
+    </main>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          const payload = {
+            email: fd.get("email"),
+            password: fd.get("password"),
+          };
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const j = await res.json();
+          if (j && j.success) {
+            localStorage.setItem(
+              "spicetrade_user",
+              JSON.stringify({ id: j.userId, email: j.email, name: j.name })
+            );
+            window.location.href = "/dashboard.html";
+          } else {
+            alert(j.error || "Login failed");
+          }
+        });
+    </script>
+  </body>
+</html>

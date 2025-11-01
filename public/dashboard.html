@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <nav>
+        <a href="/signup.html" class="btn">Sign up / Login</a>
+        <a href="/" class="btn secondary">Home</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Post a new ad</h2>
+        <form id="adForm">
+          <label
+            >Title
+            <input name="title" required />
+          </label>
+          <label
+            >Description
+            <textarea name="description" required></textarea>
+          </label>
+          <button class="btn" type="submit">Publish Ad</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Latest ads</h2>
+        <div id="adsList">Loading...</div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
