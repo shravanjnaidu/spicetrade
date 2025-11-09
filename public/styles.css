@@ -5,7 +5,15 @@
 * {
   box-sizing: border-box;
 }
+html,
 body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   font-family: Inter, system-ui, sans-serif;
   margin: 0;
   color: #222;
@@ -94,6 +102,8 @@ body {
   max-width: 900px;
   margin: 28px auto;
   padding: 0 16px;
+  /* allow main content to grow so footer stays at bottom when page is short */
+  flex: 1 0 auto;
 }
 .card {
   background: #fff;
@@ -135,22 +145,45 @@ textarea {
 .featured {
   padding: 20px 16px;
 }
+/* Ads: use grid for overall layout but make each ad a flexible card so images and text align */
 #adsList {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
 }
+
+/* individual ad card: use flex so image sits left and body on right on wide viewports */
 #adsList .ad {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
   background: #fff;
   border: 1px solid #f2f2f2;
   padding: 12px;
   border-radius: 8px;
+}
+
+.ad-image {
+  width: 200px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.ad-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0; /* allow text to truncate inside flex */
 }
 .footer {
   background: linear-gradient(90deg, #d35400, #f39c12);
   text-align: center;
   padding: 18px 16px;
   color: #fff;
+  /* push footer to bottom when page content is short */
+  margin-top: auto;
 }
 .large {
   padding: 12px 20px;

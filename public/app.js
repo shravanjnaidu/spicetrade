@@ -37,24 +37,51 @@ if (signupForm) {
   });
 }
 
-// Ad form
+// Ad form: submit multipart when an image is present, otherwise fall back to JSON
 const adForm = document.getElementById("adForm");
 if (adForm) {
   adForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const fd = new FormData(adForm);
-    const payload = {
-      title: fd.get("title"),
-      description: fd.get("description"),
-    };
+
+    const fileInput = adForm.querySelector('input[type="file"][name="image"]');
+    const hasFile =
+      fileInput &&
+      fileInput.files &&
+      fileInput.files.length > 0 &&
+      fileInput.files[0] instanceof File;
+
     const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
-    if (user && user.id) payload.userId = user.id;
-    const res = await postJSON("/api/ads", payload);
-    if (res && res.id) {
-      adForm.reset();
-      loadAds();
-    } else {
-      alert(res.error || "Could not post ad");
+    try {
+      let res;
+      if (hasFile) {
+        // Use FormData so the browser sends multipart/form-data including the file
+        const fd = new FormData(adForm);
+        if (user && user.id) fd.set("userId", user.id);
+        const r = await fetch("/api/ads", {
+          method: "POST",
+          body: fd,
+        });
+        res = await r.json();
+      } else {
+        // fallback to existing JSON API for compatibility
+        const fd = new FormData(adForm);
+        const payload = {
+          title: fd.get("title"),
+          description: fd.get("description"),
+        };
+        if (user && user.id) payload.userId = user.id;
+        res = await postJSON("/api/ads", payload);
+      }
+
+      if (res && (res.id || res.success)) {
+        adForm.reset();
+        loadAds();
+      } else {
+        alert(res.error || "Could not post ad");
+      }
+    } catch (err) {
+      console.error("Error posting ad:", err);
+      alert("Error posting ad");
     }
   });
 }
@@ -85,15 +112,49 @@ function renderAds(ads) {
   }
   list.innerHTML = "";
   ads.forEach((a) => {
-    const el = document.createElement("div");
+    const el = document.createElement("article");
     el.className = "ad";
-    el.innerHTML = `<h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(
-      a.description
-    )}</p><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><small>by ${escapeHtml(
-      a.author || "anonymous"
-    )}</small><small>${new Date(
-      a.createdAt
-    ).toLocaleDateString()}</small></div>`;
+
+    // image (server should provide imageUrl when an image is stored)
+    if (a.imageUrl) {
+      const img = document.createElement("img");
+      img.className = "ad-image";
+      img.src = a.imageUrl;
+      img.alt = a.title || "ad image";
+      img.loading = "lazy";
+      el.appendChild(img);
+    }
+
+    const body = document.createElement("div");
+    body.className = "ad-body";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = a.title || "";
+    body.appendChild(h3);
+
+    const p = document.createElement("p");
+    p.textContent = a.description || "";
+    body.appendChild(p);
+
+    const meta = document.createElement("div");
+    meta.style.display = "flex";
+    meta.style.justifyContent = "space-between";
+    meta.style.alignItems = "center";
+    meta.style.marginTop = "8px";
+
+    const author = document.createElement("small");
+    author.textContent = `by ${a.author || "anonymous"}`;
+    meta.appendChild(author);
+
+    const date = document.createElement("small");
+    date.textContent = a.createdAt
+      ? new Date(a.createdAt).toLocaleDateString()
+      : "";
+    meta.appendChild(date);
+
+    body.appendChild(meta);
+    el.appendChild(body);
+
     list.appendChild(el);
   });
 }
@@ -123,23 +184,25 @@ function escapeHtml(s) {
 // Update header nav based on login state and handle sign-out
 function updateHeader() {
   // prefer the right-side header if available, else fallback to header nav
-  const right = document.querySelector('.header-right');
-  const navFallback = document.querySelector('.site-header nav');
+  const right = document.querySelector(".header-right");
+  const navFallback = document.querySelector(".site-header nav");
   const container = right || navFallback;
   if (!container) return;
 
-  const user = JSON.parse(localStorage.getItem('spicetrade_user') || 'null');
+  const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
   if (user && user.id) {
     // place post ad + welcome + sign out in the chosen container
-    container.innerHTML = `\n      <nav>\n        <a href="/dashboard.html" class="btn" id="postAdBtn">Post an ad</a>\n        <span class="user">Welcome, ${escapeHtml(user.name || user.email)}</span>\n        <button id="signOutBtn" class="btn secondary">Sign out</button>\n      </nav>\n    `;
+    container.innerHTML = `\n      <nav>\n        <a href="/dashboard.html" class="btn" id="postAdBtn">Post an ad</a>\n        <span class="user">Welcome, ${escapeHtml(
+      user.name || user.email
+    )}</span>\n        <button id="signOutBtn" class="btn secondary">Sign out</button>\n      </nav>\n    `;
 
     // attach handler after inserting
-    const btn = document.getElementById('signOutBtn');
+    const btn = document.getElementById("signOutBtn");
     if (btn)
-      btn.addEventListener('click', () => {
-        localStorage.removeItem('spicetrade_user');
+      btn.addEventListener("click", () => {
+        localStorage.removeItem("spicetrade_user");
         updateHeader();
-        window.location.href = '/';
+        window.location.href = "/";
       });
   } else {
     // show sign in / sign up when logged out
