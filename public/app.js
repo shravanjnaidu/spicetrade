@@ -1,3 +1,4 @@
+// Clean, single-file app.js for the site
 // Minimal frontend logic for signup, login, ads
 async function postJSON(url, data) {
   const res = await fetch(url, {
@@ -18,6 +19,7 @@ if (signupForm) {
       name: fd.get("name"),
       email: fd.get("email"),
       password: fd.get("password"),
+      role: fd.get("role") || null,
     };
     const res = await postJSON("/api/signup", payload);
     if (res && res.success) {
@@ -29,7 +31,6 @@ if (signupForm) {
           name: payload.name,
         })
       );
-      alert("Account created — you can now post ads on the dashboard");
       window.location.href = "/dashboard.html";
     } else {
       alert(res.error || "Signup failed");
@@ -37,51 +38,24 @@ if (signupForm) {
   });
 }
 
-// Ad form: submit multipart when an image is present, otherwise fall back to JSON
+// Ad form
 const adForm = document.getElementById("adForm");
 if (adForm) {
   adForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const fileInput = adForm.querySelector('input[type="file"][name="image"]');
-    const hasFile =
-      fileInput &&
-      fileInput.files &&
-      fileInput.files.length > 0 &&
-      fileInput.files[0] instanceof File;
-
+    const fd = new FormData(adForm);
+    const payload = {
+      title: fd.get("title"),
+      description: fd.get("description"),
+    };
     const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
-    try {
-      let res;
-      if (hasFile) {
-        // Use FormData so the browser sends multipart/form-data including the file
-        const fd = new FormData(adForm);
-        if (user && user.id) fd.set("userId", user.id);
-        const r = await fetch("/api/ads", {
-          method: "POST",
-          body: fd,
-        });
-        res = await r.json();
-      } else {
-        // fallback to existing JSON API for compatibility
-        const fd = new FormData(adForm);
-        const payload = {
-          title: fd.get("title"),
-          description: fd.get("description"),
-        };
-        if (user && user.id) payload.userId = user.id;
-        res = await postJSON("/api/ads", payload);
-      }
-
-      if (res && (res.id || res.success)) {
-        adForm.reset();
-        loadAds();
-      } else {
-        alert(res.error || "Could not post ad");
-      }
-    } catch (err) {
-      console.error("Error posting ad:", err);
-      alert("Error posting ad");
+    if (user && user.id) payload.userId = user.id;
+    const res = await postJSON("/api/ads", payload);
+    if (res && res.id) {
+      adForm.reset();
+      loadAds();
+    } else {
+      alert(res.error || "Could not post ad");
     }
   });
 }
@@ -112,54 +86,19 @@ function renderAds(ads) {
   }
   list.innerHTML = "";
   ads.forEach((a) => {
-    const el = document.createElement("article");
+    const el = document.createElement("div");
     el.className = "ad";
-
-    // image (server should provide imageUrl when an image is stored)
-    if (a.imageUrl) {
-      const img = document.createElement("img");
-      img.className = "ad-image";
-      img.src = a.imageUrl;
-      img.alt = a.title || "ad image";
-      img.loading = "lazy";
-      el.appendChild(img);
-    }
-
-    const body = document.createElement("div");
-    body.className = "ad-body";
-
-    const h3 = document.createElement("h3");
-    h3.textContent = a.title || "";
-    body.appendChild(h3);
-
-    const p = document.createElement("p");
-    p.textContent = a.description || "";
-    body.appendChild(p);
-
-    const meta = document.createElement("div");
-    meta.style.display = "flex";
-    meta.style.justifyContent = "space-between";
-    meta.style.alignItems = "center";
-    meta.style.marginTop = "8px";
-
-    const author = document.createElement("small");
-    author.textContent = `by ${a.author || "anonymous"}`;
-    meta.appendChild(author);
-
-    const date = document.createElement("small");
-    date.textContent = a.createdAt
-      ? new Date(a.createdAt).toLocaleDateString()
-      : "";
-    meta.appendChild(date);
-
-    body.appendChild(meta);
-    el.appendChild(body);
-
+    el.innerHTML = `<h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(
+      a.description
+    )}</p><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><small>by ${escapeHtml(
+      a.author || "anonymous"
+    )}</small><small>${new Date(
+      a.createdAt
+    ).toLocaleDateString()}</small></div>`;
     list.appendChild(el);
   });
 }
 
-// replace earlier loadAds function to use renderAds
 async function loadAds() {
   const list = document.getElementById("adsList");
   if (!list) return;
@@ -181,9 +120,52 @@ function escapeHtml(s) {
     .replaceAll(">", "&gt;");
 }
 
+// --- signup modal logic -------------------------------------------------
+function showSignupModal() {
+  const modal = document.getElementById("signupModal");
+  if (!modal) return;
+  modal.classList.add("open");
+}
+function hideSignupModal() {
+  const modal = document.getElementById("signupModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+}
+
+// Use delegated click handling so dynamically-inserted "Sign up" links
+// (for example those added by updateHeader) are intercepted.
+document.addEventListener("click", (e) => {
+  // If user clicked an anchor that points to /signup.html on the landing page,
+  // open the modal instead of navigating. This handles anchors inserted later.
+  const anchor = e.target.closest('a[href="/signup.html"], a.signup-link');
+  if (anchor) {
+    if (location.pathname === "/" || location.pathname.endsWith("index.html")) {
+      e.preventDefault();
+      showSignupModal();
+      return;
+    }
+    // otherwise allow normal navigation
+  }
+
+  // If user clicked a modal option (buyer/seller), navigate to signup with role
+  const opt = e.target.closest("[data-signup-role]");
+  if (opt) {
+    const role = opt.getAttribute("data-signup-role");
+    window.location.href = "/signup.html?role=" + encodeURIComponent(role);
+    return;
+  }
+
+  // clicking the close button or backdrop closes the modal
+  if (
+    e.target.closest("#signupModal .close") ||
+    e.target.id === "signupModal"
+  ) {
+    hideSignupModal();
+  }
+});
+
 // Update header nav based on login state and handle sign-out
 function updateHeader() {
-  // prefer the right-side header if available, else fallback to header nav
   const right = document.querySelector(".header-right");
   const navFallback = document.querySelector(".site-header nav");
   const container = right || navFallback;
@@ -191,12 +173,9 @@ function updateHeader() {
 
   const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
   if (user && user.id) {
-    // place post ad + welcome + sign out in the chosen container
     container.innerHTML = `\n      <nav>\n        <a href="/dashboard.html" class="btn" id="postAdBtn">Post an ad</a>\n        <span class="user">Welcome, ${escapeHtml(
       user.name || user.email
     )}</span>\n        <button id="signOutBtn" class="btn secondary">Sign out</button>\n      </nav>\n    `;
-
-    // attach handler after inserting
     const btn = document.getElementById("signOutBtn");
     if (btn)
       btn.addEventListener("click", () => {
@@ -205,15 +184,12 @@ function updateHeader() {
         window.location.href = "/";
       });
   } else {
-    // show sign in / sign up when logged out
     container.innerHTML = `\n      <nav>\n        <a href="/login.html" class="btn">Sign in</a>\n        <a href="/signup.html" class="btn">Sign up</a>\n        <a href="/dashboard.html" class="btn secondary">View ads</a>\n      </nav>\n    `;
   }
 }
 
-// initialize header state
 updateHeader();
 
-// Category filter: clicking a .cat tag filters listings by keyword
 function filterByCategory(cat) {
   const qInput = document.getElementById("q");
   if (qInput) qInput.value = cat;
@@ -229,19 +205,17 @@ function filterByCategory(cat) {
           (a.description || "").toLowerCase().includes(keyword)
       );
       renderAds(filtered);
-      // mark active tag
       document
         .querySelectorAll(".sub-header .cat, .header-tags .cat")
         .forEach((el) => {
           el.classList.toggle("active", el.textContent.trim() === cat);
         });
     })
-    .catch((err) => {
+    .catch(() => {
       if (list) list.innerHTML = "<p>Error loading ads</p>";
     });
 }
 
-// attach handlers to category tags (works whether tags are in .sub-header or .header-tags)
 document
   .querySelectorAll(".sub-header .cat, .header-tags .cat")
   .forEach((el) => {

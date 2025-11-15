@@ -79,6 +79,29 @@
       &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
     </footer>
 
+    <!-- Signup modal (shown when user clicks Sign up on landing) -->
+    <div id="signupModal" class="modal" aria-hidden="true">
+      <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="signupModalTitle"
+      >
+        <button class="close" aria-label="Close">×</button>
+        <h3 id="signupModalTitle">Join SpiceTrade</h3>
+        <p class="muted">Choose how you'd like to use the platform</p>
+        <div class="modal-options">
+          <button class="opt buyer large" data-signup-role="buyer">
+            Become a buyer
+          </button>
+          <button class="opt seller large" data-signup-role="seller">
+            Become a seller
+          </button>
+        </div>
+        <p class="muted small">You can switch later from your profile.</p>
+      </div>
+    </div>
+
     <script src="/app.js"></script>
   </body>
 </html>

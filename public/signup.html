@@ -9,34 +9,336 @@
   <body>
     <header class="site-header">
       <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
-      <nav>
-        <a href="/dashboard.html" class="btn secondary">View ads</a>
-      </nav>
     </header>
 
     <main class="container">
-      <h2>Create your account</h2>
-      <form id="signupForm" class="card">
-        <label
-          >Name (optional)
-          <input type="text" name="name" />
-        </label>
-        <label
-          >Email
-          <input type="email" name="email" required />
-        </label>
-        <label
-          >Password
-          <input type="password" name="password" required />
-        </label>
-        <button type="submit" class="btn">Sign up</button>
-      </form>
-      <p>
-        Already have an account? Use the same email and password on the
-        dashboard to login.
-      </p>
+      <section class="auth-card">
+        <div class="auth-header" style="justify-content: center">
+          <div>
+            <h2 id="signupTitle">Create your seller account</h2>
+            <p class="muted">
+              Reach buyers, manage listings and grow your store.
+            </p>
+          </div>
+        </div>
+
+        <div class="signup-grid">
+          <!-- Centered Form -->
+          <div class="signup-form">
+            <form id="signupForm">
+              <input type="hidden" id="roleInput" name="role" value="seller" />
+
+              <!-- Account details -->
+              <div class="form-section">
+                <h3 class="section-title">Account details</h3>
+                <div class="form-row">
+                  <div>
+                    <label for="name">Full name</label>
+                    <input
+                      id="name"
+                      name="name"
+                      required
+                      placeholder="Your full name"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div>
+                    <label for="email">Email</label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      autocomplete="email"
+                      class="form-control"
+                    />
+                  </div>
+                  <div>
+                    <label for="phone">Contact number</label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div>
+                    <label for="password">Password</label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      class="form-control"
+                    />
+                  </div>
+                  <div>
+                    <label for="confirmPassword">Confirm password</label>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Store details -->
+              <div class="form-section">
+                <h3 class="section-title">Store details</h3>
+                <div class="form-row">
+                  <div>
+                    <label for="storeName">Store / Business name</label>
+                    <input
+                      id="storeName"
+                      name="storeName"
+                      placeholder="eg. Sunny Spices Pvt Ltd"
+                      class="form-control"
+                    />
+                  </div>
+                  <div>
+                    <label for="businessType">Business type</label>
+                    <div class="select-wrap">
+                      <select
+                        id="businessType"
+                        name="businessType"
+                        class="form-control"
+                      >
+                        <option value="Manufacturer">Manufacturer</option>
+                        <option value="Wholesaler">Wholesaler</option>
+                        <option value="Retailer">Retailer</option>
+                        <option value="Service Provider">
+                          Service Provider
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div>
+                    <label for="categories">Primary product category</label>
+                    <div class="select-wrap">
+                      <select
+                        id="categories"
+                        name="categories"
+                        class="form-control"
+                      >
+                        <option>Food & Beverages</option>
+                        <option>Agriculture</option>
+                        <option>Packaging</option>
+                        <option>Machinery</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="taxNumber"
+                      >GST / VAT / Tax number
+                      <span class="muted">(optional)</span></label
+                    >
+                    <input
+                      id="taxNumber"
+                      name="taxNumber"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Business info -->
+              <div class="form-section">
+                <h3 class="section-title">Business information</h3>
+                <div class="form-row">
+                  <div>
+                    <label for="address">Business address</label>
+                    <input id="address" name="address" class="form-control" />
+                  </div>
+                  <div>
+                    <label for="website"
+                      >Website <span class="muted">(optional)</span></label
+                    >
+                    <input
+                      id="website"
+                      name="website"
+                      type="url"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Store media & shipping -->
+              <div class="form-section">
+                <h3 class="section-title">Store media & shipping</h3>
+                <div class="form-row logo-row">
+                  <div>
+                    <label for="logo"
+                      >Store logo <span class="muted">(optional)</span></label
+                    >
+                    <input id="logo" name="logo" type="file" accept="image/*" />
+                  </div>
+                  <div>
+                    <label for="shippingLocations">Shipping locations</label>
+                    <div class="select-wrap">
+                      <select
+                        id="shippingLocations"
+                        name="shippingLocations"
+                        class="form-control"
+                      >
+                        <option value="Pan-India">Pan-India</option>
+                        <option value="Local cities">Local cities</option>
+                        <option value="Specific states">Specific states</option>
+                        <option value="International">International</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-row terms">
+                  <label class="checkbox terms-label"
+                    ><input type="checkbox" name="terms" required />
+                    <span
+                      >I agree to the
+                      <a href="/terms.html">Terms of Service</a> and
+                      <a href="/privacy.html">Privacy Policy</a>.</span
+                    ></label
+                  >
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn primary large" type="submit">
+                    Create seller account
+                  </button>
+                  <a href="/" class="btn link">Cancel</a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <script src="/app.js"></script>
+    <footer class="site-footer ecommerce-footer">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <img
+            src="/logo.svg"
+            alt="SpiceTrade logo"
+            style="height: 36px; margin-right: 10px; vertical-align: middle"
+          />
+          <span class="brand-name">SpiceTrade Marketplace</span>
+        </div>
+        <div class="footer-columns">
+          <div class="footer-col">
+            <h4>Company</h4>
+            <a href="/about.html">About Us</a>
+            <a href="/contact.html">Contact</a>
+            <a href="/careers.html">Careers</a>
+          </div>
+          <div class="footer-col">
+            <h4>Support</h4>
+            <a href="/help.html">Help Center</a>
+            <a href="/shipping.html">Shipping</a>
+            <a href="/returns.html">Returns</a>
+          </div>
+          <div class="footer-col">
+            <h4>Legal</h4>
+            <a href="/terms.html">Terms of Service</a>
+            <a href="/privacy.html">Privacy Policy</a>
+          </div>
+          <div class="footer-col">
+            <h4>Quick Links</h4>
+            <a href="/">Home</a>
+            <a href="/dashboard.html">Browse Ads</a>
+            <a href="/signup.html">Sign up</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 SpiceTrade. All rights reserved.</span>
+        <span class="footer-social">
+          <a href="#" title="Facebook" class="social-icon"
+            ><img src="/icons/facebook.svg" alt="Facebook"
+          /></a>
+          <a href="#" title="Twitter" class="social-icon"
+            ><img src="/icons/twitter.svg" alt="Twitter"
+          /></a>
+          <a href="#" title="Instagram" class="social-icon"
+            ><img src="/icons/instagram.svg" alt="Instagram"
+          /></a>
+        </span>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        const params = new URLSearchParams(location.search);
+        const initialRole = (params.get("role") || "seller").toLowerCase();
+        const roleInput = document.getElementById("roleInput");
+        const signupTitle = document.getElementById("signupTitle");
+        const signupForm = document.getElementById("signupForm");
+        const logoInput = document.getElementById("logo");
+
+        function setRole(r) {
+          roleInput.value = r;
+          signupTitle.textContent =
+            r === "seller" ? "Create your seller account" : "Create an account";
+        }
+
+        // set initial role (default to seller for this page)
+        setRole(initialRole);
+
+        // logo input is present; we do not show an inline preview to keep the layout clean
+
+        signupForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fd = new FormData(signupForm);
+
+          // basic client-side checks
+          if (roleInput.value === "seller") {
+            const pwd = fd.get("password");
+            const cpwd = fd.get("confirmPassword");
+            if (pwd !== cpwd) {
+              alert("Passwords do not match. Please confirm your password.");
+              return;
+            }
+          }
+
+          // remove confirmPassword before sending
+          fd.delete("confirmPassword");
+
+          try {
+            const res = await fetch("/api/signup", {
+              method: "POST",
+              body: fd,
+            });
+            const data = await res.json();
+            if (data.success) {
+              localStorage.setItem(
+                "spicetrade_user",
+                JSON.stringify(data.user || data)
+              );
+              location.href = "/dashboard.html";
+            } else {
+              alert(data.error || "Signup failed");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Signup failed — network or server error.");
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

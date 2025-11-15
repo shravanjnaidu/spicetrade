@@ -1,2 +1,3 @@
+ENV/*
 node_modules/*
-data/db.sqlite
+data/*
