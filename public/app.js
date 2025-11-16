@@ -173,9 +173,18 @@ function updateHeader() {
 
   const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
   if (user && user.id) {
-    container.innerHTML = `\n      <nav>\n        <a href="/dashboard.html" class="btn" id="postAdBtn">Post an ad</a>\n        <span class="user">Welcome, ${escapeHtml(
-      user.name || user.email
-    )}</span>\n        <button id="signOutBtn" class="btn secondary">Sign out</button>\n      </nav>\n    `;
+    // Show different navigation for sellers
+    const isSeller = user.role === "seller";
+    const dashboardLink = isSeller ? "/seller-dashboard.html" : "/dashboard.html";
+    const dashboardLabel = isSeller ? "Manage Store" : "Post an ad";
+    
+    container.innerHTML = `
+      <nav>
+        <a href="${dashboardLink}" class="btn">${dashboardLabel}</a>
+        <span class="user">Welcome, ${escapeHtml(user.name || user.email)}</span>
+        <button id="signOutBtn" class="btn secondary">Sign out</button>
+      </nav>
+    `;
     const btn = document.getElementById("signOutBtn");
     if (btn)
       btn.addEventListener("click", () => {
@@ -184,7 +193,13 @@ function updateHeader() {
         window.location.href = "/";
       });
   } else {
-    container.innerHTML = `\n      <nav>\n        <a href="/login.html" class="btn">Sign in</a>\n        <a href="/signup.html" class="btn">Sign up</a>\n        <a href="/dashboard.html" class="btn secondary">View ads</a>\n      </nav>\n    `;
+    container.innerHTML = `
+      <nav>
+        <a href="/login.html" class="btn">Sign in</a>
+        <a href="/signup.html" class="btn">Sign up</a>
+        <a href="/dashboard.html" class="btn secondary">View ads</a>
+      </nav>
+    `;
   }
 }
 

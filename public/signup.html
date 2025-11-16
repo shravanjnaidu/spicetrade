@@ -325,11 +325,24 @@
             });
             const data = await res.json();
             if (data.success) {
+              // store user info including role
+              const userObj = {
+                id: data.userId,
+                name: fd.get("name"),
+                email: fd.get("email"),
+                role: roleInput.value,
+                storeName: fd.get("storeName"),
+              };
               localStorage.setItem(
                 "spicetrade_user",
-                JSON.stringify(data.user || data)
+                JSON.stringify(userObj)
               );
-              location.href = "/dashboard.html";
+              // redirect sellers to seller dashboard
+              if (roleInput.value === "seller") {
+                location.href = "/seller-dashboard.html";
+              } else {
+                location.href = "/dashboard.html";
+              }
             } else {
               alert(data.error || "Signup failed");
             }

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Seller Dashboard — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .seller-container {
+        max-width: 1200px;
+        margin: 28px auto;
+        padding: 0 16px;
+        flex: 1 0 auto;
+      }
+      .dashboard-header {
+        margin-bottom: 24px;
+      }
+      .dashboard-header h1 {
+        font-size: 32px;
+        margin: 0 0 8px 0;
+      }
+      .dashboard-header p {
+        color: var(--muted);
+        margin: 0;
+      }
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      @media (min-width: 768px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .card-section {
+        background: #fff;
+        border: 1px solid #f2f2f2;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .card-section h2 {
+        font-size: 20px;
+        margin: 0 0 16px 0;
+        color: #222;
+      }
+      .store-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
+      }
+      .store-info-row:last-child {
+        border-bottom: none;
+      }
+      .store-info-label {
+        font-weight: 600;
+        color: #555;
+      }
+      .store-info-value {
+        color: #222;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .product-list {
+        margin-top: 16px;
+      }
+      .product-item {
+        padding: 12px;
+        background: #fafafa;
+        border: 1px solid #e9e9e9;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .product-item h4 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+      }
+      .product-item p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .product-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .btn-small {
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--muted);
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .modal-header h3 {
+        margin: 0;
+      }
+      .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e6e6e6;
+        border-radius: 6px;
+      }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="seller-container">
+      <div class="dashboard-header">
+        <h1>Seller Dashboard</h1>
+        <p>Manage your store, products and services</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Store Details Card -->
+        <div class="card-section">
+          <h2>Store Details</h2>
+          <div id="storeDetails">
+            <div class="store-info-row">
+              <span class="store-info-label">Store Name:</span>
+              <span class="store-info-value" id="storeName">—</span>
+            </div>
+            <div class="store-info-row">
+              <span class="store-info-label">Business Type:</span>
+              <span class="store-info-value" id="businessType">—</span>
+            </div>
+            <div class="store-info-row">
+              <span class="store-info-label">Email:</span>
+              <span class="store-info-value" id="storeEmail">—</span>
+            </div>
+            <div class="store-info-row">
+              <span class="store-info-label">Category:</span>
+              <span class="store-info-value" id="storeCategory">—</span>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn" onclick="editStoreDetails()">Edit Store Details</button>
+          </div>
+        </div>
+
+        <!-- Quick Stats Card -->
+        <div class="card-section">
+          <h2>Quick Stats</h2>
+          <div class="store-info-row">
+            <span class="store-info-label">Total Products:</span>
+            <span class="store-info-value" id="totalProducts">0</span>
+          </div>
+          <div class="store-info-row">
+            <span class="store-info-label">Total Services:</span>
+            <span class="store-info-value" id="totalServices">0</span>
+          </div>
+          <div class="store-info-row">
+            <span class="store-info-label">Member Since:</span>
+            <span class="store-info-value" id="memberSince">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Section -->
+      <div class="card-section" style="margin-top: 20px;">
+        <h2>Products</h2>
+        <div class="action-buttons">
+          <button class="btn" onclick="openProductModal()">Add Product</button>
+        </div>
+        <div class="product-list" id="productsList">
+          <div class="empty-state">No products added yet. Click "Add Product" to get started.</div>
+        </div>
+      </div>
+
+      <!-- Services Section -->
+      <div class="card-section" style="margin-top: 20px;">
+        <h2>Services</h2>
+        <div class="action-buttons">
+          <button class="btn" onclick="openServiceModal()">Add Service</button>
+        </div>
+        <div class="product-list" id="servicesList">
+          <div class="empty-state">No services added yet. Click "Add Service" to get started.</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Add Product Modal -->
+    <div id="productModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add Product</h3>
+          <button class="close-modal" onclick="closeProductModal()">&times;</button>
+        </div>
+        <form id="productForm">
+          <div class="form-group">
+            <label for="productName">Product Name *</label>
+            <input type="text" id="productName" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="productDescription">Description *</label>
+            <textarea id="productDescription" name="description" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="productPrice">Price *</label>
+            <input type="number" id="productPrice" name="price" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="productCategory">Category *</label>
+            <select id="productCategory" name="category" required>
+              <option value="">Select category</option>
+              <option value="Spices">Spices</option>
+              <option value="Grains">Grains</option>
+              <option value="Packaging">Packaging</option>
+              <option value="Machinery">Machinery</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="productImage">Product Image</label>
+            <input type="file" id="productImage" name="image" accept="image/*" />
+          </div>
+          <div class="action-buttons">
+            <button type="submit" class="btn">Add Product</button>
+            <button type="button" class="btn secondary" onclick="closeProductModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div id="serviceModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add Service</h3>
+          <button class="close-modal" onclick="closeServiceModal()">&times;</button>
+        </div>
+        <form id="serviceForm">
+          <div class="form-group">
+            <label for="serviceName">Service Name *</label>
+            <input type="text" id="serviceName" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="serviceDescription">Description *</label>
+            <textarea id="serviceDescription" name="description" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="servicePrice">Starting Price *</label>
+            <input type="number" id="servicePrice" name="price" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="serviceCategory">Category *</label>
+            <select id="serviceCategory" name="category" required>
+              <option value="">Select category</option>
+              <option value="Consulting">Consulting</option>
+              <option value="Logistics">Logistics</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Installation">Installation</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="action-buttons">
+            <button type="submit" class="btn">Add Service</button>
+            <button type="button" class="btn secondary" onclick="closeServiceModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>&copy; 2025 SpiceTrade. All rights reserved.</p>
+    </footer>
+
+    <script src="/app.js"></script>
+    <script>
+      // Load store details from localStorage
+      const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
+      
+      if (!user || user.role !== "seller") {
+        // redirect if not a seller
+        alert("Access denied. Please sign up as a seller.");
+        location.href = "/signup.html?role=seller";
+      }
+
+      // Populate store details
+      document.getElementById("storeName").textContent = user.storeName || "Not set";
+      document.getElementById("storeEmail").textContent = user.email || "—";
+      document.getElementById("businessType").textContent = "Seller"; // Could be enhanced
+      document.getElementById("storeCategory").textContent = "General"; // Could be enhanced
+      document.getElementById("memberSince").textContent = new Date().toLocaleDateString();
+
+      // Mock data for products/services (in production, fetch from API)
+      let products = JSON.parse(localStorage.getItem("seller_products") || "[]");
+      let services = JSON.parse(localStorage.getItem("seller_services") || "[]");
+
+      function updateStats() {
+        document.getElementById("totalProducts").textContent = products.length;
+        document.getElementById("totalServices").textContent = services.length;
+      }
+
+      function renderProducts() {
+        const list = document.getElementById("productsList");
+        if (products.length === 0) {
+          list.innerHTML = '<div class="empty-state">No products added yet. Click "Add Product" to get started.</div>';
+          return;
+        }
+        list.innerHTML = "";
+        products.forEach((p, index) => {
+          const item = document.createElement("div");
+          item.className = "product-item";
+          item.innerHTML = `
+            <div>
+              <h4>${escapeHtml(p.name)}</h4>
+              <p>${escapeHtml(p.description)} • $${p.price}</p>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-small secondary" onclick="editProduct(${index})">Edit</button>
+              <button class="btn btn-small secondary" onclick="deleteProduct(${index})">Delete</button>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+      }
+
+      function renderServices() {
+        const list = document.getElementById("servicesList");
+        if (services.length === 0) {
+          list.innerHTML = '<div class="empty-state">No services added yet. Click "Add Service" to get started.</div>';
+          return;
+        }
+        list.innerHTML = "";
+        services.forEach((s, index) => {
+          const item = document.createElement("div");
+          item.className = "product-item";
+          item.innerHTML = `
+            <div>
+              <h4>${escapeHtml(s.name)}</h4>
+              <p>${escapeHtml(s.description)} • Starting at $${s.price}</p>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-small secondary" onclick="editService(${index})">Edit</button>
+              <button class="btn btn-small secondary" onclick="deleteService(${index})">Delete</button>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+      }
+
+      function escapeHtml(s) {
+        if (!s) return "";
+        return s
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      function openProductModal() {
+        document.getElementById("productModal").classList.add("active");
+      }
+
+      function closeProductModal() {
+        document.getElementById("productModal").classList.remove("active");
+        document.getElementById("productForm").reset();
+      }
+
+      function openServiceModal() {
+        document.getElementById("serviceModal").classList.add("active");
+      }
+
+      function closeServiceModal() {
+        document.getElementById("serviceModal").classList.remove("active");
+        document.getElementById("serviceForm").reset();
+      }
+
+      function editStoreDetails() {
+        alert("Store editing feature coming soon!");
+      }
+
+      function deleteProduct(index) {
+        if (confirm("Delete this product?")) {
+          products.splice(index, 1);
+          localStorage.setItem("seller_products", JSON.stringify(products));
+          renderProducts();
+          updateStats();
+        }
+      }
+
+      function deleteService(index) {
+        if (confirm("Delete this service?")) {
+          services.splice(index, 1);
+          localStorage.setItem("seller_services", JSON.stringify(services));
+          renderServices();
+          updateStats();
+        }
+      }
+
+      function editProduct(index) {
+        alert("Product editing feature coming soon!");
+      }
+
+      function editService(index) {
+        alert("Service editing feature coming soon!");
+      }
+
+      // Product form submission
+      document.getElementById("productForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const product = {
+          name: fd.get("name"),
+          description: fd.get("description"),
+          price: fd.get("price"),
+          category: fd.get("category"),
+        };
+        products.push(product);
+        localStorage.setItem("seller_products", JSON.stringify(products));
+        renderProducts();
+        updateStats();
+        closeProductModal();
+      });
+
+      // Service form submission
+      document.getElementById("serviceForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const service = {
+          name: fd.get("name"),
+          description: fd.get("description"),
+          price: fd.get("price"),
+          category: fd.get("category"),
+        };
+        services.push(service);
+        localStorage.setItem("seller_services", JSON.stringify(services));
+        renderServices();
+        updateStats();
+        closeServiceModal();
+      });
+
+      // Initial render
+      updateStats();
+      renderProducts();
+      renderServices();
+    </script>
+  </body>
+</html>
