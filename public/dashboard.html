@@ -27,9 +27,19 @@
             >Description
             <textarea name="description" required></textarea>
           </label>
-          <label
-            >Category *
-            <select id="adCategory" name="category" required>
+          <label>
+            <select
+              id="adCategory"
+              name="category"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #e6e6e6;
+                border-radius: 6px;
+                font-size: 15px;
+              "
+            >
               <option value="">Select category</option>
               <option value="Spices">Spices</option>
               <option value="Grains">Grains</option>
@@ -196,12 +206,16 @@
           }
 
           const fd = new FormData(this);
+          const user = JSON.parse(
+            localStorage.getItem("spicetrade_user") || "null"
+          );
           const payload = {
             title: fd.get("title"),
             description: fd.get("description"),
             category: fd.get("category"),
             tags: selectedTags,
           };
+          if (user && user.id) payload.userId = user.id;
 
           fetch("/api/ads", {
             method: "POST",
@@ -211,7 +225,14 @@
             .then((res) => res.json())
             .then((data) => {
               if (data.success) {
-                alert("Ad posted successfully!");
+                // Show success message
+                const successMsg = document.createElement("div");
+                successMsg.textContent = "Listing published successfully";
+                successMsg.style.cssText =
+                  "color: #22c55e; font-size: 14px; margin-top: 10px; font-weight: 500;";
+                this.appendChild(successMsg);
+                setTimeout(() => successMsg.remove(), 3000);
+
                 this.reset();
                 selectedTags = [];
                 adTagsGroup.style.display = "none";

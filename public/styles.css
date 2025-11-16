@@ -259,7 +259,7 @@ textarea {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 40px;
-  max-height: 340px;
+  max-height: 360px;
   overflow: hidden;
 }
 
@@ -274,7 +274,7 @@ textarea {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 150px;
+  height: 160px;
 }
 
 .store-card:hover {
@@ -446,11 +446,12 @@ textarea {
 
 /* Featured section spacing */
 .featured {
-  margin-bottom: 60px;
+  margin-bottom: 30px;
 }
 
 .featured:first-of-type {
   margin-top: 40px;
+  margin-bottom: 30px;
 }
 .large {
   padding: 12px 20px;

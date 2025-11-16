@@ -81,6 +81,21 @@ def init_db():
                 pass
     db2.commit()
     db2.close()
+    
+    # Add tags and category columns to ads table
+    db3 = get_db()
+    cur3 = db3.cursor()
+    cur3.execute("PRAGMA table_info(ads)")
+    ads_cols = [r[1] for r in cur3.fetchall()]
+    ads_needed = {'category': 'TEXT', 'tags': 'TEXT'}
+    for col, typ in ads_needed.items():
+        if col not in ads_cols:
+            try:
+                cur3.execute(f"ALTER TABLE ads ADD COLUMN {col} {typ}")
+            except Exception:
+                pass
+    db3.commit()
+    db3.close()
 
 
 app = Flask(__name__, static_folder=str(BASE_DIR / 'public'), static_url_path='')
@@ -226,6 +241,7 @@ def get_stores():
 @app.route('/api/ads', methods=['GET'])
 def get_ads():
     try:
+        import json
         db = get_db()
         cur = db.cursor()
         cur.execute('SELECT ads.*, users.name AS author FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY createdAt DESC')
@@ -233,16 +249,28 @@ def get_ads():
         db.close()
         results = []
         for r in rows:
+            try:
+                tags_val = r['tags'] if 'tags' in r.keys() else None
+                tags = json.loads(tags_val) if tags_val else []
+            except:
+                tags = []
+            try:
+                category = r['category'] if 'category' in r.keys() else None
+            except:
+                category = None
             results.append({
                 'id': r['id'],
                 'title': r['title'],
                 'description': r['description'],
                 'userId': r['userId'],
                 'createdAt': r['createdAt'],
-                'author': r['author']
+                'author': r['author'],
+                'category': category,
+                'tags': tags
             })
         return jsonify(results)
-    except Exception:
+    except Exception as e:
+        print('get_ads error:', e)
         return jsonify({'error': 'database error'}), 500
 
 
@@ -252,21 +280,30 @@ def post_ad():
     title = data.get('title')
     description = data.get('description')
     userId = data.get('userId')
+    category = data.get('category')
+    tags = data.get('tags', [])
     if not title or not description:
         return jsonify({'error': 'title and description required'}), 400
     try:
+        import json
         db = get_db()
         cur = db.cursor()
-        cur.execute('INSERT INTO ads (title, description, userId) VALUES (?, ?, ?)', (title, description, userId))
+        tags_json = json.dumps(tags) if tags else None
+        cur.execute('INSERT INTO ads (title, description, userId, category, tags) VALUES (?, ?, ?, ?, ?)', 
+                    (title, description, userId, category, tags_json))
         db.commit()
         last = cur.lastrowid
         cur.execute('SELECT ads.*, users.name AS author FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = ?', (last,))
         row = cur.fetchone()
         db.close()
         if row:
-            return jsonify({'id': row['id'], 'title': row['title'], 'description': row['description'], 'userId': row['userId'], 'createdAt': row['createdAt'], 'author': row['author']})
+            result = {'id': row['id'], 'title': row['title'], 'description': row['description'], 
+                     'userId': row['userId'], 'createdAt': row['createdAt'], 'author': row['author'],
+                     'category': row['category'], 'tags': json.loads(row['tags']) if row['tags'] else []}
+            return jsonify({'success': True, **result})
         return jsonify({'error': 'not found'}), 500
-    except Exception:
+    except Exception as e:
+        print('post_ad error:', e)
         return jsonify({'error': 'database error'}), 500
 
 

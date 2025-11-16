@@ -114,6 +114,19 @@
             <h2>Description</h2>
             <p id="listingDescription">—</p>
           </div>
+
+          <div
+            id="listingTagsSection"
+            style="margin-bottom: 24px; display: none"
+          >
+            <h2 style="font-size: 20px; margin: 0 0 12px 0; color: #222">
+              Tags
+            </h2>
+            <div
+              id="listingTags"
+              style="display: flex; flex-wrap: wrap; gap: 8px"
+            ></div>
+          </div>
         </div>
 
         <div class="listing-footer">
@@ -173,6 +186,20 @@
           document.getElementById("authorAvatar").textContent = initial;
           document.getElementById("authorName").textContent =
             listing.author || "Anonymous";
+
+          // Show tags if available
+          if (listing.tags && listing.tags.length > 0) {
+            document.getElementById("listingTagsSection").style.display =
+              "block";
+            const tagsContainer = document.getElementById("listingTags");
+            listing.tags.forEach((tag) => {
+              const tagEl = document.createElement("span");
+              tagEl.style.cssText =
+                "background: #f0f0f0; padding: 6px 12px; border-radius: 4px; font-size: 13px; color: #555; text-transform: lowercase;";
+              tagEl.textContent = tag;
+              tagsContainer.appendChild(tagEl);
+            });
+          }
 
           // Show image if available
           if (listing.imageUrl) {

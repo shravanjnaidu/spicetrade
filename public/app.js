@@ -38,27 +38,8 @@ if (signupForm) {
   });
 }
 
-// Ad form
-const adForm = document.getElementById("adForm");
-if (adForm) {
-  adForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(adForm);
-    const payload = {
-      title: fd.get("title"),
-      description: fd.get("description"),
-    };
-    const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
-    if (user && user.id) payload.userId = user.id;
-    const res = await postJSON("/api/ads", payload);
-    if (res && res.id) {
-      adForm.reset();
-      loadAds();
-    } else {
-      alert(res.error || "Could not post ad");
-    }
-  });
-}
+// Ad form handler is in dashboard.html to include tags
+// Removed from here to prevent duplicate submissions
 
 // Search handler (on index page)
 const searchForm = document.getElementById("searchForm");
@@ -112,6 +93,21 @@ function renderAds(ads) {
     const p = document.createElement("p");
     p.textContent = a.description || "";
     body.appendChild(p);
+
+    // Add tags display
+    if (a.tags && a.tags.length > 0) {
+      const tagsDiv = document.createElement("div");
+      tagsDiv.style.cssText =
+        "display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;";
+      a.tags.forEach((tag) => {
+        const tagSpan = document.createElement("span");
+        tagSpan.style.cssText =
+          "background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-size: 12px; color: #555; text-transform: lowercase;";
+        tagSpan.textContent = tag;
+        tagsDiv.appendChild(tagSpan);
+      });
+      body.appendChild(tagsDiv);
+    }
 
     const meta = document.createElement("div");
     meta.style.display = "flex";
