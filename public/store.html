@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Store Details — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .store-detail-container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 16px;
+        flex: 1 0 auto;
+      }
+      .store-banner {
+        background: linear-gradient(135deg, var(--accent), #f39c12);
+        padding: 60px 40px;
+        border-radius: 16px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        margin-bottom: 32px;
+      }
+      .store-logo-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        background: #fff;
+      }
+      .store-logo-placeholder-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        font-weight: 700;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+      }
+      .store-banner-info h1 {
+        margin: 0 0 12px 0;
+        font-size: 36px;
+        font-weight: 700;
+      }
+      .store-banner-info p {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        opacity: 0.95;
+      }
+      .store-badges {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .store-badge-large {
+        padding: 6px 16px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .store-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+      }
+      .store-main {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .store-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .info-card {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .info-card h2 {
+        margin: 0 0 16px 0;
+        font-size: 20px;
+        color: #222;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f5f5f5;
+      }
+      .info-row:last-child {
+        border-bottom: none;
+      }
+      .info-row-label {
+        font-weight: 600;
+        color: #666;
+      }
+      .info-row-value {
+        color: #222;
+        text-align: right;
+      }
+      .contact-btn {
+        width: 100%;
+        margin-top: 16px;
+      }
+      @media (max-width: 920px) {
+        .store-banner {
+          flex-direction: column;
+          text-align: center;
+          padding: 40px 24px;
+        }
+        .store-banner-info h1 {
+          font-size: 28px;
+        }
+        .store-content {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="store-detail-container">
+      <div class="store-banner" id="storeBanner">
+        <div id="storeLogo"></div>
+        <div class="store-banner-info">
+          <h1 id="storeName">Loading...</h1>
+          <p id="storeCategory">—</p>
+          <div class="store-badges" id="storeBadges"></div>
+        </div>
+      </div>
+
+      <div class="store-content">
+        <div class="store-main">
+          <div class="info-card">
+            <h2>About This Store</h2>
+            <div class="info-row">
+              <span class="info-row-label">Business Type:</span>
+              <span class="info-row-value" id="businessType">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Category:</span>
+              <span class="info-row-value" id="categories">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Shipping:</span>
+              <span class="info-row-value" id="shipping">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-row-label">Member Since:</span>
+              <span class="info-row-value" id="memberSince">—</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h2>Products & Services</h2>
+            <p style="color: #666; margin: 0">
+              This store hasn't listed any products yet.
+            </p>
+          </div>
+        </div>
+
+        <div class="store-sidebar">
+          <div class="info-card">
+            <h2>Contact Information</h2>
+            <div class="info-row">
+              <span class="info-row-label">Email:</span>
+              <span class="info-row-value" id="email">—</span>
+            </div>
+            <div class="info-row" id="addressRow" style="display: none">
+              <span class="info-row-label">Address:</span>
+              <span class="info-row-value" id="address">—</span>
+            </div>
+            <div class="info-row" id="websiteRow" style="display: none">
+              <span class="info-row-label">Website:</span>
+              <span class="info-row-value"
+                ><a
+                  id="website"
+                  href="#"
+                  target="_blank"
+                  style="color: var(--accent)"
+                  >Visit</a
+                ></span
+              >
+            </div>
+            <button class="btn contact-btn" onclick="contactStore()">
+              Contact Store
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
+    </footer>
+
+    <script src="/app.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const storeId = params.get("id");
+
+      if (!storeId) {
+        alert("Store not found.");
+        location.href = "/";
+      } else {
+        loadStore();
+      }
+
+      async function loadStore() {
+        try {
+          const res = await fetch("/api/stores");
+          const stores = await res.json();
+          const store = stores.find((s) => s.id == storeId);
+
+          if (!store) {
+            alert("Store not found.");
+            location.href = "/";
+            return;
+          }
+
+          // Populate store details
+          const initial = (store.storeName || store.name || "S")
+            .charAt(0)
+            .toUpperCase();
+          const logoHtml = store.logo
+            ? `<img src="${store.logo}" alt="${
+                store.storeName || store.name
+              }" class="store-logo-large" />`
+            : `<div class="store-logo-placeholder-large">${initial}</div>`;
+          document.getElementById("storeLogo").innerHTML = logoHtml;
+
+          document.getElementById("storeName").textContent =
+            store.storeName || store.name || "Store";
+          document.getElementById("storeCategory").textContent =
+            store.categories || store.businessType || "General";
+
+          const badgesHtml = `
+            <span class="store-badge-large">${
+              store.businessType || "Seller"
+            }</span>
+            ${
+              store.categories
+                ? `<span class="store-badge-large">${store.categories}</span>`
+                : ""
+            }
+          `;
+          document.getElementById("storeBadges").innerHTML = badgesHtml;
+
+          document.getElementById("businessType").textContent =
+            store.businessType || "—";
+          document.getElementById("categories").textContent =
+            store.categories || "—";
+          document.getElementById("shipping").textContent =
+            store.shippingLocations || "Not specified";
+          document.getElementById("memberSince").textContent = store.createdAt
+            ? new Date(store.createdAt).toLocaleDateString()
+            : "—";
+
+          document.getElementById("email").textContent = store.email || "—";
+
+          if (store.address) {
+            document.getElementById("addressRow").style.display = "flex";
+            document.getElementById("address").textContent = store.address;
+          }
+
+          if (store.website) {
+            document.getElementById("websiteRow").style.display = "flex";
+            document.getElementById("website").href = store.website;
+          }
+        } catch (err) {
+          console.error("Error loading store:", err);
+          alert("Error loading store details.");
+        }
+      }
+
+      function contactStore() {
+        alert("Contact feature coming soon!");
+      }
+    </script>
+  </body>
+</html>

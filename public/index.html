@@ -70,8 +70,19 @@
       </div>
 
       <section class="featured container">
-        <h2>Latest listings</h2>
-        <div id="adsList">Loading listings...</div>
+        <div class="section-header">
+          <h2>Featured Stores</h2>
+          <a href="/all-stores.html" class="view-all">View all stores →</a>
+        </div>
+        <div id="storesList" class="stores-grid">Loading stores...</div>
+      </section>
+
+      <section class="featured container">
+        <div class="section-header">
+          <h2>Latest Listings</h2>
+          <a href="/all-listings.html" class="view-all">View all listings →</a>
+        </div>
+        <div id="adsList" class="ads-grid">Loading listings...</div>
       </section>
     </main>
 
@@ -103,5 +114,73 @@
     </div>
 
     <script src="/app.js"></script>
+    <script>
+      // Load and render stores
+      async function loadStores() {
+        const list = document.getElementById("storesList");
+        if (!list) return;
+        try {
+          const res = await fetch("/api/stores");
+          const stores = await res.json();
+          if (!stores || stores.length === 0) {
+            list.innerHTML =
+              '<p class="empty-message">No stores yet. Be the first to create one!</p>';
+            return;
+          }
+          list.innerHTML = "";
+          // Show only 8 stores (2 rows of 4)
+          stores.slice(0, 8).forEach((store) => {
+            const card = document.createElement("div");
+            card.className = "store-card";
+            card.style.cursor = "pointer";
+            card.addEventListener("click", () => {
+              window.location.href = `/store.html?id=${store.id}`;
+            });
+
+            const logoHtml = store.logo
+              ? `<img src="${escapeHtml(store.logo)}" alt="${escapeHtml(
+                  store.storeName || store.name
+                )}" class="store-logo" />`
+              : `<div class="store-logo-placeholder">${(
+                  store.storeName ||
+                  store.name ||
+                  "S"
+                )
+                  .charAt(0)
+                  .toUpperCase()}</div>`;
+
+            card.innerHTML = `
+              ${logoHtml}
+              <div class="store-info">
+                <h3>${escapeHtml(store.storeName || store.name || "Store")}</h3>
+                <p class="store-category">${escapeHtml(
+                  store.categories || store.businessType || "General"
+                )}</p>
+                ${
+                  store.address
+                    ? `<p class="store-location"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(
+                        store.address.substring(0, 40)
+                      )}${store.address.length > 40 ? "..." : ""}</p>`
+                    : ""
+                }
+                <div class="store-meta">
+                  <span class="badge">${escapeHtml(
+                    store.businessType || "Seller"
+                  )}</span>
+                </div>
+              </div>
+            `;
+            list.appendChild(card);
+          });
+        } catch (err) {
+          console.error("Error loading stores:", err);
+          list.innerHTML =
+            '<p class="error-message">Error loading stores. Please try again later.</p>';
+        }
+      }
+
+      // Initialize
+      loadStores();
+    </script>
   </body>
 </html>

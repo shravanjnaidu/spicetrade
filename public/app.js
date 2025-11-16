@@ -86,15 +86,52 @@ function renderAds(ads) {
   }
   list.innerHTML = "";
   ads.forEach((a) => {
-    const el = document.createElement("div");
+    const el = document.createElement("article");
     el.className = "ad";
-    el.innerHTML = `<h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(
-      a.description
-    )}</p><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><small>by ${escapeHtml(
-      a.author || "anonymous"
-    )}</small><small>${new Date(
-      a.createdAt
-    ).toLocaleDateString()}</small></div>`;
+    el.style.cursor = "pointer";
+    el.addEventListener("click", () => {
+      window.location.href = `/listing.html?id=${a.id}`;
+    });
+
+    if (a.imageUrl) {
+      const img = document.createElement("img");
+      img.className = "ad-image";
+      img.src = a.imageUrl;
+      img.alt = a.title || "ad image";
+      img.loading = "lazy";
+      el.appendChild(img);
+    }
+
+    const body = document.createElement("div");
+    body.className = "ad-body";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = a.title || "";
+    body.appendChild(h3);
+
+    const p = document.createElement("p");
+    p.textContent = a.description || "";
+    body.appendChild(p);
+
+    const meta = document.createElement("div");
+    meta.style.display = "flex";
+    meta.style.justifyContent = "space-between";
+    meta.style.alignItems = "center";
+    meta.style.marginTop = "8px";
+
+    const author = document.createElement("small");
+    author.textContent = `by ${a.author || "anonymous"}`;
+    meta.appendChild(author);
+
+    const date = document.createElement("small");
+    date.textContent = a.createdAt
+      ? new Date(a.createdAt).toLocaleDateString()
+      : "";
+    meta.appendChild(date);
+
+    body.appendChild(meta);
+    el.appendChild(body);
+
     list.appendChild(el);
   });
 }
@@ -175,19 +212,29 @@ function updateHeader() {
   if (user && user.id) {
     // Show different navigation for sellers
     const isSeller = user.role === "seller";
-    const dashboardLink = isSeller ? "/seller-dashboard.html" : "/dashboard.html";
+    const dashboardLink = isSeller
+      ? "/seller-dashboard.html"
+      : "/dashboard.html";
     const dashboardLabel = isSeller ? "Manage Store" : "Post an ad";
-    
+
     container.innerHTML = `
       <nav>
         <a href="${dashboardLink}" class="btn">${dashboardLabel}</a>
-        <span class="user">Welcome, ${escapeHtml(user.name || user.email)}</span>
-        <button id="signOutBtn" class="btn secondary">Sign out</button>
+        <div class="user-dropdown">
+          <span class="user">Welcome, ${escapeHtml(
+            user.name || user.email
+          )}</span>
+          <div class="dropdown-menu">
+            <a href="/profile.html" class="dropdown-item">Profile</a>
+            <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
+          </div>
+        </div>
       </nav>
     `;
     const btn = document.getElementById("signOutBtn");
     if (btn)
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
         localStorage.removeItem("spicetrade_user");
         updateHeader();
         window.location.href = "/";

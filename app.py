@@ -178,6 +178,34 @@ def login():
         return jsonify({'error': 'database error'}), 500
 
 
+@app.route('/api/stores', methods=['GET'])
+def get_stores():
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute('SELECT id, name, email, storeName, businessType, categories, address, website, logo_path, createdAt FROM users WHERE role = ? ORDER BY createdAt DESC LIMIT 20', ('seller',))
+        rows = cur.fetchall()
+        db.close()
+        results = []
+        for r in rows:
+            results.append({
+                'id': r['id'],
+                'name': r['name'],
+                'email': r['email'],
+                'storeName': r['storeName'],
+                'businessType': r['businessType'],
+                'categories': r['categories'],
+                'address': r['address'],
+                'website': r['website'],
+                'logo': r['logo_path'],
+                'createdAt': r['createdAt']
+            })
+        return jsonify(results)
+    except Exception as e:
+        print('stores error', e)
+        return jsonify({'error': 'database error'}), 500
+
+
 @app.route('/api/ads', methods=['GET'])
 def get_ads():
     try:

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Profile — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .profile-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 16px;
+        flex: 1 0 auto;
+      }
+      .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+      }
+      .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), #f39c12);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        font-weight: 700;
+      }
+      .profile-info h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: #222;
+      }
+      .profile-info p {
+        margin: 0;
+        color: #666;
+      }
+      .profile-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+      }
+      .profile-section {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      .profile-section h2 {
+        margin: 0 0 20px 0;
+        font-size: 20px;
+        color: #222;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 10px;
+        display: inline-block;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .info-label {
+        font-size: 13px;
+        color: #666;
+        font-weight: 600;
+      }
+      .info-value {
+        font-size: 15px;
+        color: #222;
+      }
+      .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      @media (max-width: 720px) {
+        .profile-header {
+          flex-direction: column;
+          text-align: center;
+        }
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="profile-container">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profileAvatar">U</div>
+        <div class="profile-info">
+          <h1 id="profileName">Loading...</h1>
+          <p id="profileEmail">—</p>
+          <span class="profile-badge" id="profileRole">User</span>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h2>Account Information</h2>
+        <div class="info-grid" id="accountInfo">
+          <div class="info-item">
+            <span class="info-label">Full Name</span>
+            <span class="info-value" id="infoName">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email</span>
+            <span class="info-value" id="infoEmail">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Phone</span>
+            <span class="info-value" id="infoPhone">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Role</span>
+            <span class="info-value" id="infoRole">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section" id="storeSection" style="display: none">
+        <h2>Store Information</h2>
+        <div class="info-grid" id="storeInfo">
+          <div class="info-item">
+            <span class="info-label">Store Name</span>
+            <span class="info-value" id="infoStoreName">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Business Type</span>
+            <span class="info-value" id="infoBusinessType">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Category</span>
+            <span class="info-value" id="infoCategories">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Address</span>
+            <span class="info-value" id="infoAddress">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h2>Actions</h2>
+        <div class="btn-group">
+          <button class="btn" onclick="editProfile()">Edit Profile</button>
+          <button class="btn secondary" onclick="changePassword()">
+            Change Password
+          </button>
+          <button class="btn secondary" onclick="deleteAccount()">
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
+    </footer>
+
+    <script src="/app.js"></script>
+    <script>
+      const user = JSON.parse(
+        localStorage.getItem("spicetrade_user") || "null"
+      );
+
+      if (!user || !user.id) {
+        alert("Please log in to view your profile.");
+        location.href = "/login.html";
+      } else {
+        // Populate profile
+        const initial = (user.name || user.email || "U")
+          .charAt(0)
+          .toUpperCase();
+        document.getElementById("profileAvatar").textContent = initial;
+        document.getElementById("profileName").textContent =
+          user.name || "User";
+        document.getElementById("profileEmail").textContent = user.email || "—";
+        document.getElementById("profileRole").textContent =
+          user.role === "seller" ? "Seller" : "Buyer";
+
+        document.getElementById("infoName").textContent = user.name || "—";
+        document.getElementById("infoEmail").textContent = user.email || "—";
+        document.getElementById("infoPhone").textContent = user.phone || "—";
+        document.getElementById("infoRole").textContent =
+          user.role === "seller" ? "Seller" : "Buyer";
+
+        // Show store section if seller
+        if (user.role === "seller") {
+          document.getElementById("storeSection").style.display = "block";
+          document.getElementById("infoStoreName").textContent =
+            user.storeName || "—";
+          document.getElementById("infoBusinessType").textContent =
+            user.businessType || "—";
+          document.getElementById("infoCategories").textContent =
+            user.categories || "—";
+          document.getElementById("infoAddress").textContent =
+            user.address || "—";
+        }
+      }
+
+      function editProfile() {
+        alert("Edit profile feature coming soon!");
+      }
+
+      function changePassword() {
+        alert("Change password feature coming soon!");
+      }
+
+      function deleteAccount() {
+        if (
+          confirm(
+            "Are you sure you want to delete your account? This action cannot be undone."
+          )
+        ) {
+          localStorage.removeItem("spicetrade_user");
+          alert("Account deleted.");
+          location.href = "/";
+        }
+      }
+    </script>
+  </body>
+</html>

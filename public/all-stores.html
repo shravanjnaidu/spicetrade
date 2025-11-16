@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>All Stores — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="container" style="margin-top: 40px; flex: 1 0 auto">
+      <div class="section-header">
+        <h2>All Stores</h2>
+        <p style="color: #666; margin: 0">Browse all registered sellers</p>
+      </div>
+      <div
+        id="storesList"
+        class="stores-grid"
+        style="max-height: none; margin-top: 24px"
+      >
+        Loading stores...
+      </div>
+    </main>
+
+    <footer class="footer">
+      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
+    </footer>
+
+    <script src="/app.js"></script>
+    <script>
+      async function loadAllStores() {
+        const list = document.getElementById("storesList");
+        if (!list) return;
+        try {
+          const res = await fetch("/api/stores");
+          const stores = await res.json();
+          if (!stores || stores.length === 0) {
+            list.innerHTML =
+              '<p class="empty-message">No stores yet. Be the first to create one!</p>';
+            return;
+          }
+          list.innerHTML = "";
+          stores.forEach((store) => {
+            const card = document.createElement("div");
+            card.className = "store-card";
+            card.style.cursor = "pointer";
+            card.addEventListener("click", () => {
+              window.location.href = `/store.html?id=${store.id}`;
+            });
+
+            const logoHtml = store.logo
+              ? `<img src="${escapeHtml(store.logo)}" alt="${escapeHtml(
+                  store.storeName || store.name
+                )}" class="store-logo" />`
+              : `<div class="store-logo-placeholder">${(
+                  store.storeName ||
+                  store.name ||
+                  "S"
+                )
+                  .charAt(0)
+                  .toUpperCase()}</div>`;
+
+            card.innerHTML = `
+              ${logoHtml}
+              <div class="store-info">
+                <h3>${escapeHtml(store.storeName || store.name || "Store")}</h3>
+                <p class="store-category">${escapeHtml(
+                  store.categories || store.businessType || "General"
+                )}</p>
+                ${
+                  store.address
+                    ? `<p class="store-location"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(
+                        store.address.substring(0, 40)
+                      )}${store.address.length > 40 ? "..." : ""}</p>`
+                    : ""
+                }
+                <div class="store-meta">
+                  <span class="badge">${escapeHtml(
+                    store.businessType || "Seller"
+                  )}</span>
+                </div>
+              </div>
+            `;
+            list.appendChild(card);
+          });
+        } catch (err) {
+          console.error("Error loading stores:", err);
+          list.innerHTML =
+            '<p class="error-message">Error loading stores. Please try again later.</p>';
+        }
+      }
+
+      function escapeHtml(s) {
+        if (!s) return "";
+        return s
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      loadAllStores();
+    </script>
+  </body>
+</html>

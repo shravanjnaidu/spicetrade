@@ -198,7 +198,9 @@
             </div>
           </div>
           <div class="action-buttons">
-            <button class="btn" onclick="editStoreDetails()">Edit Store Details</button>
+            <button class="btn" onclick="editStoreDetails()">
+              Edit Store Details
+            </button>
           </div>
         </div>
 
@@ -221,24 +223,28 @@
       </div>
 
       <!-- Products Section -->
-      <div class="card-section" style="margin-top: 20px;">
+      <div class="card-section" style="margin-top: 20px">
         <h2>Products</h2>
         <div class="action-buttons">
           <button class="btn" onclick="openProductModal()">Add Product</button>
         </div>
         <div class="product-list" id="productsList">
-          <div class="empty-state">No products added yet. Click "Add Product" to get started.</div>
+          <div class="empty-state">
+            No products added yet. Click "Add Product" to get started.
+          </div>
         </div>
       </div>
 
       <!-- Services Section -->
-      <div class="card-section" style="margin-top: 20px;">
+      <div class="card-section" style="margin-top: 20px">
         <h2>Services</h2>
         <div class="action-buttons">
           <button class="btn" onclick="openServiceModal()">Add Service</button>
         </div>
         <div class="product-list" id="servicesList">
-          <div class="empty-state">No services added yet. Click "Add Service" to get started.</div>
+          <div class="empty-state">
+            No services added yet. Click "Add Service" to get started.
+          </div>
         </div>
       </div>
     </main>
@@ -248,7 +254,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>Add Product</h3>
-          <button class="close-modal" onclick="closeProductModal()">&times;</button>
+          <button class="close-modal" onclick="closeProductModal()">
+            &times;
+          </button>
         </div>
         <form id="productForm">
           <div class="form-group">
@@ -257,11 +265,21 @@
           </div>
           <div class="form-group">
             <label for="productDescription">Description *</label>
-            <textarea id="productDescription" name="description" required></textarea>
+            <textarea
+              id="productDescription"
+              name="description"
+              required
+            ></textarea>
           </div>
           <div class="form-group">
             <label for="productPrice">Price *</label>
-            <input type="number" id="productPrice" name="price" step="0.01" required />
+            <input
+              type="number"
+              id="productPrice"
+              name="price"
+              step="0.01"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="productCategory">Category *</label>
@@ -276,11 +294,22 @@
           </div>
           <div class="form-group">
             <label for="productImage">Product Image</label>
-            <input type="file" id="productImage" name="image" accept="image/*" />
+            <input
+              type="file"
+              id="productImage"
+              name="image"
+              accept="image/*"
+            />
           </div>
           <div class="action-buttons">
             <button type="submit" class="btn">Add Product</button>
-            <button type="button" class="btn secondary" onclick="closeProductModal()">Cancel</button>
+            <button
+              type="button"
+              class="btn secondary"
+              onclick="closeProductModal()"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
@@ -291,7 +320,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>Add Service</h3>
-          <button class="close-modal" onclick="closeServiceModal()">&times;</button>
+          <button class="close-modal" onclick="closeServiceModal()">
+            &times;
+          </button>
         </div>
         <form id="serviceForm">
           <div class="form-group">
@@ -300,11 +331,21 @@
           </div>
           <div class="form-group">
             <label for="serviceDescription">Description *</label>
-            <textarea id="serviceDescription" name="description" required></textarea>
+            <textarea
+              id="serviceDescription"
+              name="description"
+              required
+            ></textarea>
           </div>
           <div class="form-group">
             <label for="servicePrice">Starting Price *</label>
-            <input type="number" id="servicePrice" name="price" step="0.01" required />
+            <input
+              type="number"
+              id="servicePrice"
+              name="price"
+              step="0.01"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="serviceCategory">Category *</label>
@@ -319,7 +360,13 @@
           </div>
           <div class="action-buttons">
             <button type="submit" class="btn">Add Service</button>
-            <button type="button" class="btn secondary" onclick="closeServiceModal()">Cancel</button>
+            <button
+              type="button"
+              class="btn secondary"
+              onclick="closeServiceModal()"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
@@ -332,8 +379,10 @@
     <script src="/app.js"></script>
     <script>
       // Load store details from localStorage
-      const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
-      
+      const user = JSON.parse(
+        localStorage.getItem("spicetrade_user") || "null"
+      );
+
       if (!user || user.role !== "seller") {
         // redirect if not a seller
         alert("Access denied. Please sign up as a seller.");
@@ -341,15 +390,21 @@
       }
 
       // Populate store details
-      document.getElementById("storeName").textContent = user.storeName || "Not set";
+      document.getElementById("storeName").textContent =
+        user.storeName || "Not set";
       document.getElementById("storeEmail").textContent = user.email || "—";
       document.getElementById("businessType").textContent = "Seller"; // Could be enhanced
       document.getElementById("storeCategory").textContent = "General"; // Could be enhanced
-      document.getElementById("memberSince").textContent = new Date().toLocaleDateString();
+      document.getElementById("memberSince").textContent =
+        new Date().toLocaleDateString();
 
       // Mock data for products/services (in production, fetch from API)
-      let products = JSON.parse(localStorage.getItem("seller_products") || "[]");
-      let services = JSON.parse(localStorage.getItem("seller_services") || "[]");
+      let products = JSON.parse(
+        localStorage.getItem("seller_products") || "[]"
+      );
+      let services = JSON.parse(
+        localStorage.getItem("seller_services") || "[]"
+      );
 
       function updateStats() {
         document.getElementById("totalProducts").textContent = products.length;
@@ -359,7 +414,8 @@
       function renderProducts() {
         const list = document.getElementById("productsList");
         if (products.length === 0) {
-          list.innerHTML = '<div class="empty-state">No products added yet. Click "Add Product" to get started.</div>';
+          list.innerHTML =
+            '<div class="empty-state">No products added yet. Click "Add Product" to get started.</div>';
           return;
         }
         list.innerHTML = "";
@@ -383,7 +439,8 @@
       function renderServices() {
         const list = document.getElementById("servicesList");
         if (services.length === 0) {
-          list.innerHTML = '<div class="empty-state">No services added yet. Click "Add Service" to get started.</div>';
+          list.innerHTML =
+            '<div class="empty-state">No services added yet. Click "Add Service" to get started.</div>';
           return;
         }
         list.innerHTML = "";

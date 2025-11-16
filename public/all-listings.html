@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>All Listings — spicetrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="container" style="margin-top: 40px; flex: 1 0 auto">
+      <div class="section-header">
+        <h2>All Listings</h2>
+        <p style="color: #666; margin: 0">Browse all available listings</p>
+      </div>
+      <div id="adsList" class="ads-grid" style="margin-top: 24px">
+        Loading listings...
+      </div>
+    </main>
+
+    <footer class="footer">
+      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
+    </footer>
+
+    <script src="/app.js"></script>
+    <script>
+      async function loadAllListings() {
+        const list = document.getElementById("adsList");
+        if (!list) return;
+        list.innerHTML = "Loading...";
+        try {
+          const res = await fetch("/api/ads");
+          const ads = await res.json();
+          renderAds(ads);
+        } catch (err) {
+          list.innerHTML = "<p>Error loading listings</p>";
+        }
+      }
+
+      function renderAds(ads) {
+        const list = document.getElementById("adsList");
+        if (!list) return;
+        if (!ads || !ads.length) {
+          list.innerHTML = "<p>No listings</p>";
+          return;
+        }
+        list.innerHTML = "";
+        ads.forEach((a) => {
+          const el = document.createElement("article");
+          el.className = "ad";
+          el.style.cursor = "pointer";
+          el.addEventListener("click", () => {
+            window.location.href = `/listing.html?id=${a.id}`;
+          });
+
+          if (a.imageUrl) {
+            const img = document.createElement("img");
+            img.className = "ad-image";
+            img.src = a.imageUrl;
+            img.alt = a.title || "ad image";
+            img.loading = "lazy";
+            el.appendChild(img);
+          }
+
+          const body = document.createElement("div");
+          body.className = "ad-body";
+
+          const h3 = document.createElement("h3");
+          h3.textContent = a.title || "";
+          body.appendChild(h3);
+
+          const p = document.createElement("p");
+          p.textContent = a.description || "";
+          body.appendChild(p);
+
+          const meta = document.createElement("div");
+          meta.style.display = "flex";
+          meta.style.justifyContent = "space-between";
+          meta.style.alignItems = "center";
+          meta.style.marginTop = "8px";
+
+          const author = document.createElement("small");
+          author.textContent = `by ${a.author || "anonymous"}`;
+          meta.appendChild(author);
+
+          const date = document.createElement("small");
+          date.textContent = a.createdAt
+            ? new Date(a.createdAt).toLocaleDateString()
+            : "";
+          meta.appendChild(date);
+
+          body.appendChild(meta);
+          el.appendChild(body);
+
+          list.appendChild(el);
+        });
+      }
+
+      loadAllListings();
+    </script>
+  </body>
+</html>

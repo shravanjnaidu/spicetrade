@@ -333,10 +333,7 @@
                 role: roleInput.value,
                 storeName: fd.get("storeName"),
               };
-              localStorage.setItem(
-                "spicetrade_user",
-                JSON.stringify(userObj)
-              );
+              localStorage.setItem("spicetrade_user", JSON.stringify(userObj));
               // redirect sellers to seller dashboard
               if (roleInput.value === "seller") {
                 location.href = "/seller-dashboard.html";
