@@ -40,11 +40,22 @@
           </label>
           <div id="adTagsGroup" style="display: none; margin-bottom: 16px">
             <label style="display: block; margin-bottom: 8px; font-weight: 500"
-              >Select Tags (up to 5) *</label
+              >Select Tag *</label
             >
+            <select
+              id="adTagsDropdown"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #e6e6e6;
+                border-radius: 6px;
+              "
+            >
+              <option value="">Select a tag</option>
+            </select>
             <div
-              id="adTagsContainer"
-              style="display: flex; flex-direction: column; gap: 8px"
+              id="selectedTagsContainer"
+              style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
             ></div>
           </div>
           <button class="btn" type="submit">Publish Ad</button>
@@ -114,47 +125,58 @@
       // Setup tag selection for ad category
       const adCategorySelect = document.getElementById("adCategory");
       const adTagsGroup = document.getElementById("adTagsGroup");
-      const adTagsContainer = document.getElementById("adTagsContainer");
+      const adTagsDropdown = document.getElementById("adTagsDropdown");
+      const selectedTagsContainer = document.getElementById(
+        "selectedTagsContainer"
+      );
+      let selectedTags = [];
 
       adCategorySelect.addEventListener("change", function () {
         const category = this.value;
-        adTagsContainer.innerHTML = "";
+        selectedTags = [];
+        selectedTagsContainer.innerHTML = "";
+        adTagsDropdown.innerHTML = '<option value="">Select a tag</option>';
 
         if (category && categoryTags[category]) {
           adTagsGroup.style.display = "block";
           categoryTags[category].forEach((tag) => {
-            const checkbox = document.createElement("label");
-            checkbox.style.cssText =
-              "display: flex; align-items: center; gap: 8px; cursor: pointer;";
-            checkbox.innerHTML = `
-              <input type="checkbox" name="tags" value="${tag}" style="width: auto;">
-              <span>${tag}</span>
-            `;
-            adTagsContainer.appendChild(checkbox);
-          });
-
-          // Limit to 5 selections
-          const checkboxes = adTagsContainer.querySelectorAll(
-            'input[type="checkbox"]'
-          );
-          checkboxes.forEach((cb) => {
-            cb.addEventListener("change", function () {
-              const checkedCount = adTagsContainer.querySelectorAll(
-                'input[type="checkbox"]:checked'
-              ).length;
-              if (checkedCount >= 5) {
-                checkboxes.forEach((checkbox) => {
-                  if (!checkbox.checked) checkbox.disabled = true;
-                });
-              } else {
-                checkboxes.forEach((checkbox) => (checkbox.disabled = false));
-              }
-            });
+            const option = document.createElement("option");
+            option.value = tag;
+            option.textContent = tag;
+            adTagsDropdown.appendChild(option);
           });
         } else {
           adTagsGroup.style.display = "none";
         }
       });
+
+      adTagsDropdown.addEventListener("change", function () {
+        const tag = this.value;
+        if (tag && !selectedTags.includes(tag) && selectedTags.length < 5) {
+          selectedTags.push(tag);
+          renderSelectedTags();
+          this.value = "";
+        }
+      });
+
+      function renderSelectedTags() {
+        selectedTagsContainer.innerHTML = "";
+        selectedTags.forEach((tag, index) => {
+          const tagElement = document.createElement("span");
+          tagElement.style.cssText =
+            "background: #f0f0f0; padding: 6px 12px; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 14px;";
+          tagElement.innerHTML = `
+            ${tag}
+            <button type="button" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #666; padding: 0; line-height: 1;" onclick="removeAdTag(${index})">&times;</button>
+          `;
+          selectedTagsContainer.appendChild(tagElement);
+        });
+      }
+
+      window.removeAdTag = function (index) {
+        selectedTags.splice(index, 1);
+        renderSelectedTags();
+      };
 
       // Override the original ad form submission to include tags
       const originalAdForm = document.getElementById("adForm");
@@ -164,12 +186,6 @@
         .getElementById("adForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
-
-          const selectedTags = Array.from(
-            document.querySelectorAll(
-              '#adTagsContainer input[type="checkbox"]:checked'
-            )
-          ).map((cb) => cb.value);
 
           if (
             selectedTags.length === 0 &&
@@ -197,8 +213,9 @@
               if (data.success) {
                 alert("Ad posted successfully!");
                 this.reset();
+                selectedTags = [];
                 adTagsGroup.style.display = "none";
-                adTagsContainer.innerHTML = "";
+                selectedTagsContainer.innerHTML = "";
                 loadAds();
               } else {
                 alert(data.error || "Failed to post ad");

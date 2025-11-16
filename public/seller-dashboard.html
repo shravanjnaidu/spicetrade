@@ -293,10 +293,21 @@
             </select>
           </div>
           <div class="form-group" id="productTagsGroup" style="display: none">
-            <label>Select Tags (up to 5) *</label>
+            <label>Select Tag *</label>
+            <select
+              id="productTagsDropdown"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #e6e6e6;
+                border-radius: 6px;
+              "
+            >
+              <option value="">Select a tag</option>
+            </select>
             <div
-              id="productTagsContainer"
-              style="display: flex; flex-direction: column; gap: 8px"
+              id="productSelectedTagsContainer"
+              style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
             ></div>
           </div>
           <div class="form-group">
@@ -366,10 +377,21 @@
             </select>
           </div>
           <div class="form-group" id="serviceTagsGroup" style="display: none">
-            <label>Select Tags (up to 5) *</label>
+            <label>Select Tag *</label>
+            <select
+              id="serviceTagsDropdown"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #e6e6e6;
+                border-radius: 6px;
+              "
+            >
+              <option value="">Select a tag</option>
+            </select>
             <div
-              id="serviceTagsContainer"
-              style="display: flex; flex-direction: column; gap: 8px"
+              id="serviceSelectedTagsContainer"
+              style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
             ></div>
           </div>
           <div class="action-buttons">
@@ -585,53 +607,79 @@
         ],
       };
 
+      // Tag selection state
+      let productSelectedTags = [];
+      let serviceSelectedTags = [];
+
       function setupTagSelection(
         categorySelectId,
         tagsGroupId,
-        tagsContainerId
+        tagsDropdownId,
+        selectedTagsContainerId,
+        selectedTagsArray
       ) {
         const categorySelect = document.getElementById(categorySelectId);
         const tagsGroup = document.getElementById(tagsGroupId);
-        const tagsContainer = document.getElementById(tagsContainerId);
+        const tagsDropdown = document.getElementById(tagsDropdownId);
+        const selectedTagsContainer = document.getElementById(
+          selectedTagsContainerId
+        );
 
         categorySelect.addEventListener("change", function () {
           const category = this.value;
-          tagsContainer.innerHTML = "";
+          selectedTagsArray.length = 0;
+          selectedTagsContainer.innerHTML = "";
+          tagsDropdown.innerHTML = '<option value="">Select a tag</option>';
 
           if (category && categoryTags[category]) {
             tagsGroup.style.display = "block";
             categoryTags[category].forEach((tag) => {
-              const checkbox = document.createElement("label");
-              checkbox.style.cssText =
-                "display: flex; align-items: center; gap: 8px; cursor: pointer;";
-              checkbox.innerHTML = `
-                <input type="checkbox" name="tags" value="${tag}" style="width: auto;">
-                <span>${tag}</span>
-              `;
-              tagsContainer.appendChild(checkbox);
-            });
-
-            // Limit to 5 selections
-            const checkboxes = tagsContainer.querySelectorAll(
-              'input[type="checkbox"]'
-            );
-            checkboxes.forEach((cb) => {
-              cb.addEventListener("change", function () {
-                const checkedCount = tagsContainer.querySelectorAll(
-                  'input[type="checkbox"]:checked'
-                ).length;
-                if (checkedCount >= 5) {
-                  checkboxes.forEach((checkbox) => {
-                    if (!checkbox.checked) checkbox.disabled = true;
-                  });
-                } else {
-                  checkboxes.forEach((checkbox) => (checkbox.disabled = false));
-                }
-              });
+              const option = document.createElement("option");
+              option.value = tag;
+              option.textContent = tag;
+              tagsDropdown.appendChild(option);
             });
           } else {
             tagsGroup.style.display = "none";
           }
+        });
+
+        tagsDropdown.addEventListener("change", function () {
+          const tag = this.value;
+          if (
+            tag &&
+            !selectedTagsArray.includes(tag) &&
+            selectedTagsArray.length < 5
+          ) {
+            selectedTagsArray.push(tag);
+            renderTagsFor(
+              selectedTagsContainer,
+              selectedTagsArray,
+              tagsDropdownId
+            );
+            this.value = "";
+          }
+        });
+      }
+
+      function renderTagsFor(container, tagsArray, dropdownId) {
+        container.innerHTML = "";
+        tagsArray.forEach((tag, index) => {
+          const tagElement = document.createElement("span");
+          tagElement.style.cssText =
+            "background: #f0f0f0; padding: 6px 12px; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 14px;";
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.style.cssText =
+            "background: none; border: none; cursor: pointer; font-size: 16px; color: #666; padding: 0; line-height: 1;";
+          removeBtn.innerHTML = "&times;";
+          removeBtn.onclick = function () {
+            tagsArray.splice(index, 1);
+            renderTagsFor(container, tagsArray, dropdownId);
+          };
+          tagElement.textContent = tag;
+          tagElement.appendChild(removeBtn);
+          container.appendChild(tagElement);
         });
       }
 
@@ -639,7 +687,8 @@
         document.getElementById("productModal").classList.remove("active");
         document.getElementById("productForm").reset();
         document.getElementById("productTagsGroup").style.display = "none";
-        document.getElementById("productTagsContainer").innerHTML = "";
+        productSelectedTags = [];
+        document.getElementById("productSelectedTagsContainer").innerHTML = "";
       }
 
       function openServiceModal() {
@@ -650,7 +699,8 @@
         document.getElementById("serviceModal").classList.remove("active");
         document.getElementById("serviceForm").reset();
         document.getElementById("serviceTagsGroup").style.display = "none";
-        document.getElementById("serviceTagsContainer").innerHTML = "";
+        serviceSelectedTags = [];
+        document.getElementById("serviceSelectedTagsContainer").innerHTML = "";
       }
 
       function editStoreDetails() {
@@ -687,13 +737,8 @@
       document.getElementById("productForm").addEventListener("submit", (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const selectedTags = Array.from(
-          document.querySelectorAll(
-            '#productTagsContainer input[type="checkbox"]:checked'
-          )
-        ).map((cb) => cb.value);
 
-        if (selectedTags.length === 0) {
+        if (productSelectedTags.length === 0) {
           alert("Please select at least one tag");
           return;
         }
@@ -703,7 +748,7 @@
           description: fd.get("description"),
           price: fd.get("price"),
           category: fd.get("category"),
-          tags: selectedTags,
+          tags: [...productSelectedTags],
           userId: user.id,
         };
         products.push(product);
@@ -717,13 +762,8 @@
       document.getElementById("serviceForm").addEventListener("submit", (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const selectedTags = Array.from(
-          document.querySelectorAll(
-            '#serviceTagsContainer input[type="checkbox"]:checked'
-          )
-        ).map((cb) => cb.value);
 
-        if (selectedTags.length === 0) {
+        if (serviceSelectedTags.length === 0) {
           alert("Please select at least one tag");
           return;
         }
@@ -733,7 +773,7 @@
           description: fd.get("description"),
           price: fd.get("price"),
           category: fd.get("category"),
-          tags: selectedTags,
+          tags: [...serviceSelectedTags],
           userId: user.id,
         };
         services.push(service);
@@ -752,12 +792,16 @@
       setupTagSelection(
         "productCategory",
         "productTagsGroup",
-        "productTagsContainer"
+        "productTagsDropdown",
+        "productSelectedTagsContainer",
+        productSelectedTags
       );
       setupTagSelection(
         "serviceCategory",
         "serviceTagsGroup",
-        "serviceTagsContainer"
+        "serviceTagsDropdown",
+        "serviceSelectedTagsContainer",
+        serviceSelectedTags
       );
     </script>
   </body>

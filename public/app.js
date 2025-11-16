@@ -142,7 +142,18 @@ async function loadAds() {
   list.innerHTML = "Loading...";
   try {
     const res = await fetch("/api/ads");
-    const ads = await res.json();
+    let ads = await res.json();
+
+    // Filter ads by current user if on dashboard page
+    if (window.location.pathname.includes("/dashboard.html")) {
+      const user = JSON.parse(
+        localStorage.getItem("spicetrade_user") || "null"
+      );
+      if (user && user.id) {
+        ads = ads.filter((ad) => ad.userId === user.id);
+      }
+    }
+
     renderAds(ads);
   } catch (err) {
     list.innerHTML = "<p>Error loading ads</p>";
@@ -221,8 +232,8 @@ function updateHeader() {
     let dropdownItems = "";
     if (isSeller) {
       dropdownItems = `
-        <a href="/seller-dashboard.html" class="dropdown-item">My Store</a>
-        <a href="/dashboard.html" class="dropdown-item">My Listings</a>
+        <a href="/seller-dashboard.html" class="dropdown-item">Manage Store</a>
+        <a href="/dashboard.html" class="dropdown-item">Manage Listings</a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
       `;
