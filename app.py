@@ -166,15 +166,32 @@ def login():
     try:
         db = get_db()
         cur = db.cursor()
-        cur.execute('SELECT id, name, email, password FROM users WHERE email = ?', (email,))
+        cur.execute('SELECT id, name, email, password, phone, role, storeName, businessType, categories, address, website, logo_path FROM users WHERE email = ?', (email,))
         row = cur.fetchone()
         db.close()
         if not row:
             return jsonify({'error': 'invalid credentials'}), 401
         if not check_password_hash(row['password'], password):
             return jsonify({'error': 'invalid credentials'}), 401
-        return jsonify({'success': True, 'userId': row['id'], 'name': row['name'], 'email': row['email']})
-    except Exception:
+        
+        user_data = {
+            'success': True,
+            'userId': row['id'],
+            'id': row['id'],
+            'name': row['name'],
+            'email': row['email'],
+            'phone': row['phone'],
+            'role': row['role'] or 'buyer',
+            'storeName': row['storeName'],
+            'businessType': row['businessType'],
+            'categories': row['categories'],
+            'address': row['address'],
+            'website': row['website'],
+            'logo': row['logo_path']
+        }
+        return jsonify(user_data)
+    except Exception as e:
+        print('login error', e)
         return jsonify({'error': 'database error'}), 500
 
 

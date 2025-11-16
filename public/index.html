@@ -52,14 +52,54 @@
     </header>
 
     <div class="sub-header">
-      <div class="header-tags">
-        <a class="cat" href="#">Plumbing</a>
-        <a class="cat" href="#">Office Automation</a>
-        <a class="cat" href="#">Process Controllers</a>
-        <a class="cat" href="#">Solar and Renewable Energy</a>
-        <a class="cat" href="#">Commercial lights</a>
-        <a class="cat" href="#">Medical Laboratory Instruments</a>
-        <a class="cat" href="#">Agricultural Equipment</a>
+      <div class="category-scroll-wrapper">
+        <button
+          class="scroll-arrow scroll-left"
+          id="scrollLeft"
+          aria-label="Scroll left"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <div class="header-tags" id="categoryTags">
+          <a class="cat" href="#">Plumbing</a>
+          <a class="cat" href="#">Office Automation</a>
+          <a class="cat" href="#">Process Controllers</a>
+          <a class="cat" href="#">Solar and Renewable Energy</a>
+          <a class="cat" href="#">Commercial lights</a>
+          <a class="cat" href="#">Medical Laboratory Instruments</a>
+          <a class="cat" href="#">Agricultural Equipment</a>
+        </div>
+        <button
+          class="scroll-arrow scroll-right"
+          id="scrollRight"
+          aria-label="Scroll right"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -115,6 +155,41 @@
 
     <script src="/app.js"></script>
     <script>
+      // Category scroll functionality
+      const categoryTags = document.getElementById("categoryTags");
+      const scrollLeftBtn = document.getElementById("scrollLeft");
+      const scrollRightBtn = document.getElementById("scrollRight");
+
+      if (scrollRightBtn && categoryTags) {
+        scrollRightBtn.addEventListener("click", () => {
+          categoryTags.scrollBy({ left: 300, behavior: "smooth" });
+        });
+      }
+
+      if (scrollLeftBtn && categoryTags) {
+        scrollLeftBtn.addEventListener("click", () => {
+          categoryTags.scrollBy({ left: -300, behavior: "smooth" });
+        });
+      }
+
+      // Show/hide arrows based on scroll position
+      function updateScrollArrows() {
+        if (!categoryTags || !scrollLeftBtn || !scrollRightBtn) return;
+        const scrollLeft = categoryTags.scrollLeft;
+        const maxScroll = categoryTags.scrollWidth - categoryTags.clientWidth;
+
+        scrollLeftBtn.style.display = scrollLeft > 0 ? "flex" : "none";
+        scrollRightBtn.style.display =
+          scrollLeft < maxScroll - 5 ? "flex" : "none";
+      }
+
+      if (categoryTags) {
+        categoryTags.addEventListener("scroll", updateScrollArrows);
+        window.addEventListener("resize", updateScrollArrows);
+        // Initial check
+        setTimeout(updateScrollArrows, 100);
+      }
+
       // Load and render stores
       async function loadStores() {
         const list = document.getElementById("storesList");

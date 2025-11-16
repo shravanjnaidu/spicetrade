@@ -217,6 +217,23 @@ function updateHeader() {
       : "/dashboard.html";
     const dashboardLabel = isSeller ? "Manage Store" : "Post an ad";
 
+    // Build dropdown menu items based on role
+    let dropdownItems = "";
+    if (isSeller) {
+      dropdownItems = `
+        <a href="/seller-dashboard.html" class="dropdown-item">My Store</a>
+        <a href="/dashboard.html" class="dropdown-item">My Listings</a>
+        <a href="/profile.html" class="dropdown-item">Profile</a>
+        <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
+      `;
+    } else {
+      dropdownItems = `
+        <a href="/dashboard.html" class="dropdown-item">My Listings</a>
+        <a href="/profile.html" class="dropdown-item">Profile</a>
+        <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
+      `;
+    }
+
     container.innerHTML = `
       <nav>
         <a href="${dashboardLink}" class="btn">${dashboardLabel}</a>
@@ -225,8 +242,7 @@ function updateHeader() {
             user.name || user.email
           )}</span>
           <div class="dropdown-menu">
-            <a href="/profile.html" class="dropdown-item">Profile</a>
-            <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
+            ${dropdownItems}
           </div>
         </div>
       </nav>

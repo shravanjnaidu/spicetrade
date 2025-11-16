@@ -292,6 +292,13 @@
               <option value="Other">Other</option>
             </select>
           </div>
+          <div class="form-group" id="productTagsGroup" style="display: none">
+            <label>Select Tags (up to 5) *</label>
+            <div
+              id="productTagsContainer"
+              style="display: flex; flex-direction: column; gap: 8px"
+            ></div>
+          </div>
           <div class="form-group">
             <label for="productImage">Product Image</label>
             <input
@@ -358,6 +365,13 @@
               <option value="Other">Other</option>
             </select>
           </div>
+          <div class="form-group" id="serviceTagsGroup" style="display: none">
+            <label>Select Tags (up to 5) *</label>
+            <div
+              id="serviceTagsContainer"
+              style="display: flex; flex-direction: column; gap: 8px"
+            ></div>
+          </div>
           <div class="action-buttons">
             <button type="submit" class="btn">Add Service</button>
             <button
@@ -398,13 +412,11 @@
       document.getElementById("memberSince").textContent =
         new Date().toLocaleDateString();
 
-      // Mock data for products/services (in production, fetch from API)
-      let products = JSON.parse(
-        localStorage.getItem("seller_products") || "[]"
-      );
-      let services = JSON.parse(
-        localStorage.getItem("seller_services") || "[]"
-      );
+      // User-specific data for products/services (using userId as key)
+      const productsKey = `seller_products_${user.id}`;
+      const servicesKey = `seller_services_${user.id}`;
+      let products = JSON.parse(localStorage.getItem(productsKey) || "[]");
+      let services = JSON.parse(localStorage.getItem(servicesKey) || "[]");
 
       function updateStats() {
         document.getElementById("totalProducts").textContent = products.length;
@@ -473,9 +485,161 @@
         document.getElementById("productModal").classList.add("active");
       }
 
+      // Tag options by category
+      const categoryTags = {
+        Spices: [
+          "Cloves",
+          "Cardamom",
+          "Pepper",
+          "Salt",
+          "Cinnamon",
+          "Garlic",
+          "Ginger",
+          "Bay leaf",
+          "Mustard",
+          "Coriander seeds",
+        ],
+        Grains: [
+          "Rice",
+          "Wheat",
+          "Barley",
+          "Oats",
+          "Corn",
+          "Millet",
+          "Quinoa",
+          "Rye",
+          "Sorghum",
+          "Buckwheat",
+        ],
+        Packaging: [
+          "Boxes",
+          "Bags",
+          "Containers",
+          "Bottles",
+          "Jars",
+          "Pouches",
+          "Wraps",
+          "Crates",
+          "Pallets",
+          "Labels",
+        ],
+        Machinery: [
+          "Grinders",
+          "Mixers",
+          "Packaging machines",
+          "Conveyors",
+          "Scales",
+          "Pumps",
+          "Dryers",
+          "Sealers",
+          "Sorters",
+          "Mills",
+        ],
+        Consulting: [
+          "Business strategy",
+          "Quality control",
+          "Market research",
+          "Export consulting",
+          "Compliance",
+          "Product development",
+          "Training",
+          "Auditing",
+          "Certification",
+          "Supply chain",
+        ],
+        Logistics: [
+          "Shipping",
+          "Warehousing",
+          "Distribution",
+          "Freight forwarding",
+          "Customs clearance",
+          "Cold storage",
+          "Express delivery",
+          "Cargo handling",
+          "Import/Export",
+          "Last mile",
+        ],
+        Maintenance: [
+          "Equipment servicing",
+          "Preventive maintenance",
+          "Repairs",
+          "Calibration",
+          "Upgrades",
+          "Troubleshooting",
+          "Installation support",
+          "Parts replacement",
+          "Testing",
+          "Inspection",
+        ],
+        Installation: [
+          "Setup",
+          "Configuration",
+          "Testing",
+          "Training",
+          "Integration",
+          "Commissioning",
+          "Documentation",
+          "Support",
+          "Optimization",
+          "Warranty",
+        ],
+      };
+
+      function setupTagSelection(
+        categorySelectId,
+        tagsGroupId,
+        tagsContainerId
+      ) {
+        const categorySelect = document.getElementById(categorySelectId);
+        const tagsGroup = document.getElementById(tagsGroupId);
+        const tagsContainer = document.getElementById(tagsContainerId);
+
+        categorySelect.addEventListener("change", function () {
+          const category = this.value;
+          tagsContainer.innerHTML = "";
+
+          if (category && categoryTags[category]) {
+            tagsGroup.style.display = "block";
+            categoryTags[category].forEach((tag) => {
+              const checkbox = document.createElement("label");
+              checkbox.style.cssText =
+                "display: flex; align-items: center; gap: 8px; cursor: pointer;";
+              checkbox.innerHTML = `
+                <input type="checkbox" name="tags" value="${tag}" style="width: auto;">
+                <span>${tag}</span>
+              `;
+              tagsContainer.appendChild(checkbox);
+            });
+
+            // Limit to 5 selections
+            const checkboxes = tagsContainer.querySelectorAll(
+              'input[type="checkbox"]'
+            );
+            checkboxes.forEach((cb) => {
+              cb.addEventListener("change", function () {
+                const checkedCount = tagsContainer.querySelectorAll(
+                  'input[type="checkbox"]:checked'
+                ).length;
+                if (checkedCount >= 5) {
+                  checkboxes.forEach((checkbox) => {
+                    if (!checkbox.checked) checkbox.disabled = true;
+                  });
+                } else {
+                  checkboxes.forEach((checkbox) => (checkbox.disabled = false));
+                }
+              });
+            });
+          } else {
+            tagsGroup.style.display = "none";
+          }
+        });
+      }
+
       function closeProductModal() {
         document.getElementById("productModal").classList.remove("active");
         document.getElementById("productForm").reset();
+        document.getElementById("productTagsGroup").style.display = "none";
+        document.getElementById("productTagsContainer").innerHTML = "";
       }
 
       function openServiceModal() {
@@ -485,6 +649,8 @@
       function closeServiceModal() {
         document.getElementById("serviceModal").classList.remove("active");
         document.getElementById("serviceForm").reset();
+        document.getElementById("serviceTagsGroup").style.display = "none";
+        document.getElementById("serviceTagsContainer").innerHTML = "";
       }
 
       function editStoreDetails() {
@@ -494,7 +660,7 @@
       function deleteProduct(index) {
         if (confirm("Delete this product?")) {
           products.splice(index, 1);
-          localStorage.setItem("seller_products", JSON.stringify(products));
+          localStorage.setItem(productsKey, JSON.stringify(products));
           renderProducts();
           updateStats();
         }
@@ -503,7 +669,7 @@
       function deleteService(index) {
         if (confirm("Delete this service?")) {
           services.splice(index, 1);
-          localStorage.setItem("seller_services", JSON.stringify(services));
+          localStorage.setItem(servicesKey, JSON.stringify(services));
           renderServices();
           updateStats();
         }
@@ -521,14 +687,27 @@
       document.getElementById("productForm").addEventListener("submit", (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
+        const selectedTags = Array.from(
+          document.querySelectorAll(
+            '#productTagsContainer input[type="checkbox"]:checked'
+          )
+        ).map((cb) => cb.value);
+
+        if (selectedTags.length === 0) {
+          alert("Please select at least one tag");
+          return;
+        }
+
         const product = {
           name: fd.get("name"),
           description: fd.get("description"),
           price: fd.get("price"),
           category: fd.get("category"),
+          tags: selectedTags,
+          userId: user.id,
         };
         products.push(product);
-        localStorage.setItem("seller_products", JSON.stringify(products));
+        localStorage.setItem(productsKey, JSON.stringify(products));
         renderProducts();
         updateStats();
         closeProductModal();
@@ -538,14 +717,27 @@
       document.getElementById("serviceForm").addEventListener("submit", (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
+        const selectedTags = Array.from(
+          document.querySelectorAll(
+            '#serviceTagsContainer input[type="checkbox"]:checked'
+          )
+        ).map((cb) => cb.value);
+
+        if (selectedTags.length === 0) {
+          alert("Please select at least one tag");
+          return;
+        }
+
         const service = {
           name: fd.get("name"),
           description: fd.get("description"),
           price: fd.get("price"),
           category: fd.get("category"),
+          tags: selectedTags,
+          userId: user.id,
         };
         services.push(service);
-        localStorage.setItem("seller_services", JSON.stringify(services));
+        localStorage.setItem(servicesKey, JSON.stringify(services));
         renderServices();
         updateStats();
         closeServiceModal();
@@ -555,6 +747,18 @@
       updateStats();
       renderProducts();
       renderServices();
+
+      // Setup tag selection for products and services
+      setupTagSelection(
+        "productCategory",
+        "productTagsGroup",
+        "productTagsContainer"
+      );
+      setupTagSelection(
+        "serviceCategory",
+        "serviceTagsGroup",
+        "serviceTagsContainer"
+      );
     </script>
   </body>
 </html>

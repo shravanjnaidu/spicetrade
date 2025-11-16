@@ -27,6 +27,26 @@
             >Description
             <textarea name="description" required></textarea>
           </label>
+          <label
+            >Category *
+            <select id="adCategory" name="category" required>
+              <option value="">Select category</option>
+              <option value="Spices">Spices</option>
+              <option value="Grains">Grains</option>
+              <option value="Packaging">Packaging</option>
+              <option value="Machinery">Machinery</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <div id="adTagsGroup" style="display: none; margin-bottom: 16px">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500"
+              >Select Tags (up to 5) *</label
+            >
+            <div
+              id="adTagsContainer"
+              style="display: flex; flex-direction: column; gap: 8px"
+            ></div>
+          </div>
           <button class="btn" type="submit">Publish Ad</button>
         </form>
       </section>
@@ -38,5 +58,157 @@
     </main>
 
     <script src="/app.js"></script>
+    <script>
+      // Tag options by category for buyer listings
+      const categoryTags = {
+        Spices: [
+          "Cloves",
+          "Cardamom",
+          "Pepper",
+          "Salt",
+          "Cinnamon",
+          "Garlic",
+          "Ginger",
+          "Bay leaf",
+          "Mustard",
+          "Coriander seeds",
+        ],
+        Grains: [
+          "Rice",
+          "Wheat",
+          "Barley",
+          "Oats",
+          "Corn",
+          "Millet",
+          "Quinoa",
+          "Rye",
+          "Sorghum",
+          "Buckwheat",
+        ],
+        Packaging: [
+          "Boxes",
+          "Bags",
+          "Containers",
+          "Bottles",
+          "Jars",
+          "Pouches",
+          "Wraps",
+          "Crates",
+          "Pallets",
+          "Labels",
+        ],
+        Machinery: [
+          "Grinders",
+          "Mixers",
+          "Packaging machines",
+          "Conveyors",
+          "Scales",
+          "Pumps",
+          "Dryers",
+          "Sealers",
+          "Sorters",
+          "Mills",
+        ],
+      };
+
+      // Setup tag selection for ad category
+      const adCategorySelect = document.getElementById("adCategory");
+      const adTagsGroup = document.getElementById("adTagsGroup");
+      const adTagsContainer = document.getElementById("adTagsContainer");
+
+      adCategorySelect.addEventListener("change", function () {
+        const category = this.value;
+        adTagsContainer.innerHTML = "";
+
+        if (category && categoryTags[category]) {
+          adTagsGroup.style.display = "block";
+          categoryTags[category].forEach((tag) => {
+            const checkbox = document.createElement("label");
+            checkbox.style.cssText =
+              "display: flex; align-items: center; gap: 8px; cursor: pointer;";
+            checkbox.innerHTML = `
+              <input type="checkbox" name="tags" value="${tag}" style="width: auto;">
+              <span>${tag}</span>
+            `;
+            adTagsContainer.appendChild(checkbox);
+          });
+
+          // Limit to 5 selections
+          const checkboxes = adTagsContainer.querySelectorAll(
+            'input[type="checkbox"]'
+          );
+          checkboxes.forEach((cb) => {
+            cb.addEventListener("change", function () {
+              const checkedCount = adTagsContainer.querySelectorAll(
+                'input[type="checkbox"]:checked'
+              ).length;
+              if (checkedCount >= 5) {
+                checkboxes.forEach((checkbox) => {
+                  if (!checkbox.checked) checkbox.disabled = true;
+                });
+              } else {
+                checkboxes.forEach((checkbox) => (checkbox.disabled = false));
+              }
+            });
+          });
+        } else {
+          adTagsGroup.style.display = "none";
+        }
+      });
+
+      // Override the original ad form submission to include tags
+      const originalAdForm = document.getElementById("adForm");
+      const originalSubmitHandler = originalAdForm.onsubmit;
+
+      document
+        .getElementById("adForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const selectedTags = Array.from(
+            document.querySelectorAll(
+              '#adTagsContainer input[type="checkbox"]:checked'
+            )
+          ).map((cb) => cb.value);
+
+          if (
+            selectedTags.length === 0 &&
+            adTagsGroup.style.display !== "none"
+          ) {
+            alert("Please select at least one tag");
+            return;
+          }
+
+          const fd = new FormData(this);
+          const payload = {
+            title: fd.get("title"),
+            description: fd.get("description"),
+            category: fd.get("category"),
+            tags: selectedTags,
+          };
+
+          fetch("/api/ads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Ad posted successfully!");
+                this.reset();
+                adTagsGroup.style.display = "none";
+                adTagsContainer.innerHTML = "";
+                loadAds();
+              } else {
+                alert(data.error || "Failed to post ad");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Network error");
+            });
+        });
+    </script>
   </body>
 </html>

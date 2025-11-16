@@ -325,13 +325,18 @@
             });
             const data = await res.json();
             if (data.success) {
-              // store user info including role
+              // store complete user info including all seller fields
               const userObj = {
                 id: data.userId,
                 name: fd.get("name"),
                 email: fd.get("email"),
-                role: roleInput.value,
+                phone: fd.get("phone"),
+                role: roleInput.value || "buyer",
                 storeName: fd.get("storeName"),
+                businessType: fd.get("businessType"),
+                categories: fd.get("categories"),
+                address: fd.get("address"),
+                website: fd.get("website"),
               };
               localStorage.setItem("spicetrade_user", JSON.stringify(userObj));
               // redirect sellers to seller dashboard
