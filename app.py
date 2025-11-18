@@ -244,33 +244,47 @@ def get_ads():
         import json
         db = get_db()
         cur = db.cursor()
-        cur.execute('SELECT ads.*, users.name AS author FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY createdAt DESC')
+        cur.execute('SELECT ads.*, users.name AS author, users.storeName, users.role FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY createdAt DESC')
         rows = cur.fetchall()
         db.close()
         results = []
         for r in rows:
+            row_keys = r.keys()
             try:
-                tags_val = r['tags'] if 'tags' in r.keys() else None
+                tags_val = r['tags'] if 'tags' in row_keys else None
                 tags = json.loads(tags_val) if tags_val else []
             except:
                 tags = []
             try:
-                category = r['category'] if 'category' in r.keys() else None
+                category = r['category'] if 'category' in row_keys else None
             except:
                 category = None
+            
+            # Safely get values with defaults
             results.append({
                 'id': r['id'],
                 'title': r['title'],
                 'description': r['description'],
                 'userId': r['userId'],
                 'createdAt': r['createdAt'],
-                'author': r['author'],
+                'author': r['author'] if 'author' in row_keys else None,
+                'storeName': r['storeName'] if 'storeName' in row_keys else None,
+                'role': r['role'] if 'role' in row_keys else None,
                 'category': category,
-                'tags': tags
+                'tags': tags,
+                'price': r['price'] if 'price' in row_keys and r['price'] is not None else None,
+                'unit': r['unit'] if 'unit' in row_keys else None,
+                'minOrder': r['minOrder'] if 'minOrder' in row_keys and r['minOrder'] is not None else 1,
+                'stock': r['stock'] if 'stock' in row_keys else None,
+                'imageUrl': r['imageUrl'] if 'imageUrl' in row_keys else None,
+                'verified': r['verified'] if 'verified' in row_keys and r['verified'] is not None else 0,
+                'views': r['views'] if 'views' in row_keys and r['views'] is not None else 0
             })
         return jsonify(results)
     except Exception as e:
         print('get_ads error:', e)
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
 
 
@@ -282,6 +296,12 @@ def post_ad():
     userId = data.get('userId')
     category = data.get('category')
     tags = data.get('tags', [])
+    price = data.get('price')
+    unit = data.get('unit')
+    minOrder = data.get('minOrder', 1)
+    stock = data.get('stock')
+    imageUrl = data.get('imageUrl')
+    
     if not title or not description:
         return jsonify({'error': 'title and description required'}), 400
     try:
@@ -289,21 +309,53 @@ def post_ad():
         db = get_db()
         cur = db.cursor()
         tags_json = json.dumps(tags) if tags else None
-        cur.execute('INSERT INTO ads (title, description, userId, category, tags) VALUES (?, ?, ?, ?, ?)', 
-                    (title, description, userId, category, tags_json))
+        cur.execute('''INSERT INTO ads (title, description, userId, category, tags, price, unit, minOrder, stock, imageUrl) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                    (title, description, userId, category, tags_json, price, unit, minOrder, stock, imageUrl))
         db.commit()
         last = cur.lastrowid
-        cur.execute('SELECT ads.*, users.name AS author FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = ?', (last,))
+        cur.execute('SELECT ads.*, users.name AS author, users.role FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = ?', (last,))
         row = cur.fetchone()
         db.close()
         if row:
-            result = {'id': row['id'], 'title': row['title'], 'description': row['description'], 
-                     'userId': row['userId'], 'createdAt': row['createdAt'], 'author': row['author'],
-                     'category': row['category'], 'tags': json.loads(row['tags']) if row['tags'] else []}
+            row_keys = row.keys()
+            result = {
+                'id': row['id'], 'title': row['title'], 'description': row['description'], 
+                'userId': row['userId'], 'createdAt': row['createdAt'], 'author': row['author'],
+                'category': row['category'] if 'category' in row_keys else None,
+                'tags': json.loads(row['tags']) if row['tags'] else [],
+                'price': row['price'] if 'price' in row_keys else None,
+                'unit': row['unit'] if 'unit' in row_keys else None,
+                'minOrder': row['minOrder'] if 'minOrder' in row_keys else 1,
+                'stock': row['stock'] if 'stock' in row_keys else None,
+                'imageUrl': row['imageUrl'] if 'imageUrl' in row_keys else None,
+                'verified': row['verified'] if 'verified' in row_keys else 0
+            }
             return jsonify({'success': True, **result})
         return jsonify({'error': 'not found'}), 500
     except Exception as e:
         print('post_ad error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/ads/<int:ad_id>', methods=['DELETE'])
+def delete_ad(ad_id):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM ads WHERE id = ?', (ad_id,))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            return jsonify({'success': False, 'error': 'Ad not found'}), 404
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print('delete_ad error:', e)
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
 
 

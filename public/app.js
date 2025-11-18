@@ -149,6 +149,13 @@ async function loadAds() {
         ads = ads.filter((ad) => ad.userId === user.id);
       }
     }
+    // On home page, show only buyer requirements (not seller products)
+    else if (
+      window.location.pathname === "/" ||
+      window.location.pathname === "/index.html"
+    ) {
+      ads = ads.filter((ad) => ad.role === "buyer" || (!ad.role && !ad.price));
+    }
 
     renderAds(ads);
   } catch (err) {

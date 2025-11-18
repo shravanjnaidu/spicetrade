@@ -108,6 +108,19 @@
         <p class="hint">Trusted listings from the spicetrade community</p>
       </div>
 
+      <!-- Featured Products Section (Amazon-style) -->
+      <section class="featured container">
+        <div class="section-header">
+          <h2>Featured Products</h2>
+          <a href="/seller-dashboard.html" class="view-all"
+            >View all products →</a
+          >
+        </div>
+        <div id="featuredProductsGrid" class="products-grid">
+          Loading products...
+        </div>
+      </section>
+
       <section class="featured container">
         <div class="section-header">
           <h2>Featured Stores</h2>
@@ -118,10 +131,12 @@
 
       <section class="featured container">
         <div class="section-header">
-          <h2>Latest Listings</h2>
-          <a href="/all-listings.html" class="view-all">View all listings →</a>
+          <h2>Latest Buyer Requirements</h2>
+          <a href="/all-listings.html" class="view-all"
+            >View all requirements →</a
+          >
         </div>
-        <div id="adsList" class="ads-grid">Loading listings...</div>
+        <div id="adsList" class="ads-grid">Loading requirements...</div>
       </section>
     </main>
 
@@ -256,7 +271,154 @@
         }
       }
 
+      // Load Featured Products (from sellers only)
+      async function loadFeaturedProducts() {
+        const grid = document.getElementById("featuredProductsGrid");
+        if (!grid) return;
+
+        try {
+          const res = await fetch("/api/ads");
+          const ads = await res.json();
+
+          console.log("Total ads fetched:", ads.length);
+          console.log("Sample ad:", ads[0]);
+
+          // Filter for seller products only (role === 'seller' AND has price)
+          const products = ads.filter((ad) => {
+            const isSeller = ad.role === "seller";
+            const hasPrice = ad.price && ad.price > 0;
+            console.log(
+              `Ad ${ad.id}: role=${ad.role}, price=${ad.price}, passes=${
+                isSeller && hasPrice
+              }`
+            );
+            return isSeller && hasPrice;
+          });
+
+          console.log("Filtered products:", products.length);
+
+          if (!products || products.length === 0) {
+            grid.innerHTML = `
+              <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: #f9f9f9; border-radius: 8px; border: 2px dashed #ddd;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+                <h3 style="margin: 0 0 12px 0; color: #333;">No Products Available Yet</h3>
+                <p style="color: #666; margin: 0 0 20px 0;">Be the first seller to list products with pricing!</p>
+                <a href="/signup.html?role=seller" class="btn" style="display: inline-block; padding: 12px 24px; background: var(--accent); color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">Start Selling</a>
+              </div>
+            `;
+            return;
+          }
+
+          grid.innerHTML = "";
+          // Show first 12 products
+          products.slice(0, 12).forEach((product) => {
+            const card = document.createElement("div");
+            card.className = "product-card";
+            card.onclick = () =>
+              (window.location.href = `/listing.html?id=${product.id}`);
+
+            // Product Image
+            const imgUrl = product.imageUrl || "/placeholder-product.jpg";
+            const img = document.createElement("img");
+            img.className = "product-image";
+            img.src = imgUrl;
+            img.alt = product.title;
+            img.loading = "lazy";
+            img.onerror = function () {
+              this.style.background = "#f5f5f5";
+              this.style.display = "flex";
+              this.style.alignItems = "center";
+              this.style.justifyContent = "center";
+              this.alt = "📦";
+              this.src =
+                'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" font-size="48" text-anchor="middle" dy=".3em">📦</text></svg>';
+            };
+            card.appendChild(img);
+
+            // Product Info
+            const info = document.createElement("div");
+            info.className = "product-info";
+
+            // Product Title
+            const title = document.createElement("h3");
+            title.className = "product-title";
+            title.textContent = product.title;
+            info.appendChild(title);
+
+            // Rating & Reviews (placeholder for now)
+            const rating = document.createElement("div");
+            rating.className = "product-rating";
+            rating.innerHTML = `
+              <span class="stars">⭐⭐⭐⭐⭐</span>
+              <span class="review-count">(${
+                Math.floor(Math.random() * 500) + 50
+              })</span>
+            `;
+            info.appendChild(rating);
+
+            // Price
+            const priceDiv = document.createElement("div");
+            priceDiv.className = "product-price";
+            const priceAmount = document.createElement("span");
+            priceAmount.className = "price-amount";
+            priceAmount.textContent = `$${parseFloat(product.price).toFixed(
+              2
+            )}`;
+            priceDiv.appendChild(priceAmount);
+
+            if (product.unit) {
+              const unit = document.createElement("span");
+              unit.className = "price-unit";
+              unit.textContent = `/${product.unit}`;
+              priceDiv.appendChild(unit);
+            }
+            info.appendChild(priceDiv);
+
+            // MOQ
+            if (product.minOrder) {
+              const moq = document.createElement("div");
+              moq.className = "product-moq";
+              moq.textContent = `Min. Order: ${product.minOrder} ${
+                product.unit || "units"
+              }`;
+              info.appendChild(moq);
+            }
+
+            // Supplier Badge
+            if (product.storeName) {
+              const supplier = document.createElement("div");
+              supplier.className = "product-supplier";
+              supplier.innerHTML = `
+                <span class="supplier-name">🏪 ${escapeHtml(
+                  product.storeName
+                )}</span>
+                ${
+                  product.verified ? '<span class="verified-mini">✓</span>' : ""
+                }
+              `;
+              info.appendChild(supplier);
+            }
+
+            // Prime/Fast Delivery Badge (if in stock)
+            if (product.stock && product.stock > 0) {
+              const badge = document.createElement("div");
+              badge.className = "delivery-badge";
+              badge.textContent = "In Stock";
+              info.appendChild(badge);
+            }
+
+            card.appendChild(info);
+            grid.appendChild(card);
+          });
+        } catch (err) {
+          console.error("Error loading products:", err);
+          grid.innerHTML =
+            '<p class="error-message">Error loading products.</p>';
+        }
+      }
+
       // Initialize
+      loadFeaturedProducts();
       loadStores();
     </script>
   </body>

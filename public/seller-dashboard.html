@@ -434,15 +434,36 @@
       document.getElementById("memberSince").textContent =
         new Date().toLocaleDateString();
 
-      // User-specific data for products/services (using userId as key)
-      const productsKey = `seller_products_${user.id}`;
-      const servicesKey = `seller_services_${user.id}`;
-      let products = JSON.parse(localStorage.getItem(productsKey) || "[]");
-      let services = JSON.parse(localStorage.getItem(servicesKey) || "[]");
+      // Load products/services from database
+      let products = [];
+      let services = [];
 
       function updateStats() {
         document.getElementById("totalProducts").textContent = products.length;
         document.getElementById("totalServices").textContent = services.length;
+      }
+
+      // Load products and services from database
+      function loadProductsFromDB() {
+        fetch("/api/ads")
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              // Filter ads by current user and separate products from services
+              const userAds = data.ads.filter(
+                (ad) => ad.userId === user.id && ad.price
+              );
+              products = userAds.filter((ad) => ad.unit !== "service");
+              services = userAds.filter((ad) => ad.unit === "service");
+
+              renderProducts();
+              renderServices();
+              updateStats();
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to load products:", err);
+          });
       }
 
       function renderProducts() {
@@ -456,9 +477,13 @@
         products.forEach((p, index) => {
           const item = document.createElement("div");
           item.className = "product-item";
+          const tags =
+            typeof p.tags === "string"
+              ? JSON.parse(p.tags || "[]")
+              : p.tags || [];
           const tagsHtml =
-            p.tags && p.tags.length > 0
-              ? `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">${p.tags
+            tags.length > 0
+              ? `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">${tags
                   .map(
                     (tag) =>
                       `<span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-size: 12px; color: #555; text-transform: lowercase;">${escapeHtml(
@@ -469,13 +494,17 @@
               : "";
           item.innerHTML = `
             <div>
-              <h4>${escapeHtml(p.name)}</h4>
+              <h4>${escapeHtml(p.title || p.name)}</h4>
               <p>${escapeHtml(p.description)} • $${p.price}</p>
               ${tagsHtml}
             </div>
             <div class="product-actions">
-              <button class="btn btn-small secondary" onclick="editProduct(${index})">Edit</button>
-              <button class="btn btn-small secondary" onclick="deleteProduct(${index})">Delete</button>
+              <button class="btn btn-small secondary" onclick="editProduct(${
+                p.id
+              })">Edit</button>
+              <button class="btn btn-small secondary" onclick="deleteProduct(${
+                p.id
+              })">Delete</button>
             </div>
           `;
           list.appendChild(item);
@@ -493,9 +522,13 @@
         services.forEach((s, index) => {
           const item = document.createElement("div");
           item.className = "product-item";
+          const tags =
+            typeof s.tags === "string"
+              ? JSON.parse(s.tags || "[]")
+              : s.tags || [];
           const tagsHtml =
-            s.tags && s.tags.length > 0
-              ? `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">${s.tags
+            tags.length > 0
+              ? `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">${tags
                   .map(
                     (tag) =>
                       `<span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-size: 12px; color: #555; text-transform: lowercase;">${escapeHtml(
@@ -506,13 +539,17 @@
               : "";
           item.innerHTML = `
             <div>
-              <h4>${escapeHtml(s.name)}</h4>
+              <h4>${escapeHtml(s.title || s.name)}</h4>
               <p>${escapeHtml(s.description)} • Starting at $${s.price}</p>
               ${tagsHtml}
             </div>
             <div class="product-actions">
-              <button class="btn btn-small secondary" onclick="editService(${index})">Edit</button>
-              <button class="btn btn-small secondary" onclick="deleteService(${index})">Delete</button>
+              <button class="btn btn-small secondary" onclick="editService(${
+                s.id
+              })">Edit</button>
+              <button class="btn btn-small secondary" onclick="deleteService(${
+                s.id
+              })">Delete</button>
             </div>
           `;
           list.appendChild(item);
@@ -711,7 +748,7 @@
         document.getElementById("productModal").classList.remove("active");
         document.getElementById("productForm").reset();
         document.getElementById("productTagsGroup").style.display = "none";
-        productSelectedTags = [];
+        productSelectedTags.length = 0; // Clear array without breaking reference
         document.getElementById("productSelectedTagsContainer").innerHTML = "";
       }
 
@@ -723,7 +760,7 @@
         document.getElementById("serviceModal").classList.remove("active");
         document.getElementById("serviceForm").reset();
         document.getElementById("serviceTagsGroup").style.display = "none";
-        serviceSelectedTags = [];
+        serviceSelectedTags.length = 0; // Clear array without breaking reference
         document.getElementById("serviceSelectedTagsContainer").innerHTML = "";
       }
 
@@ -731,21 +768,45 @@
         alert("Store editing feature coming soon!");
       }
 
-      function deleteProduct(index) {
+      function deleteProduct(id) {
         if (confirm("Delete this product?")) {
-          products.splice(index, 1);
-          localStorage.setItem(productsKey, JSON.stringify(products));
-          renderProducts();
-          updateStats();
+          fetch(`/api/ads/${id}`, {
+            method: "DELETE",
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Product deleted successfully!");
+                loadProductsFromDB();
+              } else {
+                alert(data.error || "Failed to delete product");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Network error");
+            });
         }
       }
 
-      function deleteService(index) {
+      function deleteService(id) {
         if (confirm("Delete this service?")) {
-          services.splice(index, 1);
-          localStorage.setItem(servicesKey, JSON.stringify(services));
-          renderServices();
-          updateStats();
+          fetch(`/api/ads/${id}`, {
+            method: "DELETE",
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Service deleted successfully!");
+                loadProductsFromDB();
+              } else {
+                alert(data.error || "Failed to delete service");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Network error");
+            });
         }
       }
 
@@ -758,59 +819,153 @@
       }
 
       // Product form submission
-      document.getElementById("productForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
+      document
+        .getElementById("productForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
 
-        if (productSelectedTags.length === 0) {
-          alert("Please select at least one tag");
-          return;
-        }
+          console.log("Product tags:", productSelectedTags);
+          if (productSelectedTags.length === 0) {
+            alert("Please select at least one tag");
+            return;
+          }
 
-        const product = {
-          name: fd.get("name"),
-          description: fd.get("description"),
-          price: fd.get("price"),
-          category: fd.get("category"),
-          tags: [...productSelectedTags],
-          userId: user.id,
-        };
-        products.push(product);
-        localStorage.setItem(productsKey, JSON.stringify(products));
-        renderProducts();
-        updateStats();
-        closeProductModal();
-      });
+          // Handle image upload first if present
+          let imageUrl = null;
+          const imageFile = fd.get("image");
+          if (imageFile && imageFile.size > 0) {
+            const imageData = new FormData();
+            imageData.append("file", imageFile);
+            try {
+              const uploadRes = await fetch("/api/upload", {
+                method: "POST",
+                body: imageData,
+              });
+              const uploadData = await uploadRes.json();
+              if (uploadData.success) {
+                imageUrl = uploadData.url;
+              }
+            } catch (err) {
+              console.error("Image upload failed:", err);
+            }
+          }
+
+          const payload = {
+            title: fd.get("name"),
+            description: fd.get("description"),
+            price: parseFloat(fd.get("price")),
+            unit: "piece", // default unit
+            category: fd.get("category"),
+            tags: [...productSelectedTags],
+            userId: user.id,
+            imageUrl: imageUrl,
+          };
+
+          fetch("/api/ads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Product posted successfully!");
+                document.getElementById("productForm").reset();
+                productSelectedTags.length = 0; // Clear without breaking reference
+                document.getElementById("productTagsGroup").style.display =
+                  "none";
+                document.getElementById(
+                  "productSelectedTagsContainer"
+                ).innerHTML = "";
+                closeProductModal();
+                // Reload products from database
+                loadProductsFromDB();
+              } else {
+                alert(data.error || "Failed to post product");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Network error");
+            });
+        });
 
       // Service form submission
-      document.getElementById("serviceForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
+      document
+        .getElementById("serviceForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
 
-        if (serviceSelectedTags.length === 0) {
-          alert("Please select at least one tag");
-          return;
-        }
+          console.log("Service tags:", serviceSelectedTags);
+          if (serviceSelectedTags.length === 0) {
+            alert("Please select at least one tag");
+            return;
+          }
 
-        const service = {
-          name: fd.get("name"),
-          description: fd.get("description"),
-          price: fd.get("price"),
-          category: fd.get("category"),
-          tags: [...serviceSelectedTags],
-          userId: user.id,
-        };
-        services.push(service);
-        localStorage.setItem(servicesKey, JSON.stringify(services));
-        renderServices();
-        updateStats();
-        closeServiceModal();
-      });
+          // Handle image upload first if present
+          let imageUrl = null;
+          const imageFile = fd.get("image");
+          if (imageFile && imageFile.size > 0) {
+            const imageData = new FormData();
+            imageData.append("file", imageFile);
+            try {
+              const uploadRes = await fetch("/api/upload", {
+                method: "POST",
+                body: imageData,
+              });
+              const uploadData = await uploadRes.json();
+              if (uploadData.success) {
+                imageUrl = uploadData.url;
+              }
+            } catch (err) {
+              console.error("Image upload failed:", err);
+            }
+          }
 
-      // Initial render
-      updateStats();
-      renderProducts();
-      renderServices();
+          const payload = {
+            title: fd.get("name"),
+            description: fd.get("description"),
+            price: parseFloat(fd.get("price")),
+            unit: "service", // default unit for services
+            category: fd.get("category"),
+            tags: [...serviceSelectedTags],
+            userId: user.id,
+            imageUrl: imageUrl,
+          };
+
+          fetch("/api/ads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Service posted successfully!");
+                document.getElementById("serviceForm").reset();
+                serviceSelectedTags.length = 0; // Clear without breaking reference
+                document.getElementById("serviceTagsGroup").style.display =
+                  "none";
+                document.getElementById(
+                  "serviceSelectedTagsContainer"
+                ).innerHTML = "";
+                closeServiceModal();
+                // Reload services from database
+                loadProductsFromDB();
+              } else {
+                alert(data.error || "Failed to post service");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Network error");
+            });
+        });
+
+      // Initial render - load from database
+      loadProductsFromDB();
 
       // Setup tag selection for products and services
       setupTagSelection(
