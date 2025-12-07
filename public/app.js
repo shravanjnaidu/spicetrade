@@ -270,6 +270,7 @@ function updateHeader() {
     } else {
       dropdownItems = `
         <a href="/dashboard.html" class="dropdown-item">My Listings</a>
+        <a href="/wishlist.html" class="dropdown-item">My Wishlist</a>
         <a href="/messages.html" class="dropdown-item">Messages</a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>

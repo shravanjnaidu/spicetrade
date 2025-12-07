@@ -47,21 +47,8 @@
           });
           const j = await res.json();
           if (j && j.success) {
-            // Store complete user data including role and store information
-            const userData = {
-              id: j.userId || j.id,
-              email: j.email,
-              name: j.name,
-              phone: j.phone,
-              role: j.role || "buyer",
-              storeName: j.storeName,
-              businessType: j.businessType,
-              categories: j.categories,
-              address: j.address,
-              website: j.website,
-              logo: j.logo,
-            };
-            localStorage.setItem("spicetrade_user", JSON.stringify(userData));
+            // Store complete user data returned from API
+            localStorage.setItem("spicetrade_user", JSON.stringify(j));
             window.location.href = "/";
           } else {
             alert(j.error || "Login failed");

@@ -137,9 +137,17 @@
               <strong id="authorName">—</strong>
             </div>
           </div>
-          <div id="listingActions">
+          <div id="listingActions" style="display: flex; gap: 12px">
             <button class="btn" onclick="contactSeller()" id="contactBtn">
               Contact Seller
+            </button>
+            <button
+              class="btn secondary"
+              onclick="toggleWishlist()"
+              id="wishlistBtn"
+              style="display: none"
+            >
+              Add to Wishlist
             </button>
           </div>
         </div>
@@ -222,6 +230,13 @@
             // For sellers viewing buyer requirements, allow contact only if conversation exists
             if (user.role === "buyer" && listing.role === "seller") {
               contactBtn.onclick = () => contactSeller(listing);
+
+              // Show wishlist button for buyers viewing seller products
+              const wishlistBtn = document.getElementById("wishlistBtn");
+              wishlistBtn.style.display = "inline-block";
+
+              // Check if already in wishlist
+              checkWishlistStatus(user.id, listing.id);
             } else if (user.role === "seller" && listing.role === "buyer") {
               contactBtn.onclick = () => contactBuyer(listing);
             }
@@ -357,6 +372,96 @@
         } catch (err) {
           console.error("Error deleting listing:", err);
           alert("Error deleting listing");
+        }
+      }
+
+      let currentWishlistId = null;
+
+      async function checkWishlistStatus(userId, adId) {
+        try {
+          const res = await fetch("/api/wishlist/check", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, adId }),
+          });
+          const data = await res.json();
+
+          const wishlistBtn = document.getElementById("wishlistBtn");
+          if (data.inWishlist) {
+            wishlistBtn.textContent = "❤️ Wishlisted";
+            wishlistBtn.style.background = "#ff4757";
+            wishlistBtn.style.borderColor = "#ff4757";
+            wishlistBtn.style.color = "white";
+            currentWishlistId = data.wishlistId;
+          } else {
+            wishlistBtn.textContent = "🤍 Add to Wishlist";
+            wishlistBtn.style.background = "";
+            wishlistBtn.style.borderColor = "";
+            wishlistBtn.style.color = "";
+            currentWishlistId = null;
+          }
+        } catch (err) {
+          console.error("Error checking wishlist:", err);
+        }
+      }
+
+      async function toggleWishlist() {
+        const user = JSON.parse(
+          localStorage.getItem("spicetrade_user") || "null"
+        );
+        if (!user || !user.id) {
+          alert("Please sign in to use wishlist");
+          window.location.href = "/login.html";
+          return;
+        }
+
+        const wishlistBtn = document.getElementById("wishlistBtn");
+        wishlistBtn.disabled = true;
+
+        try {
+          if (currentWishlistId) {
+            // Remove from wishlist
+            const res = await fetch(`/api/wishlist/${currentWishlistId}`, {
+              method: "DELETE",
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              wishlistBtn.textContent = "🤍 Add to Wishlist";
+              wishlistBtn.style.background = "";
+              wishlistBtn.style.borderColor = "";
+              wishlistBtn.style.color = "";
+              currentWishlistId = null;
+            } else {
+              alert("Failed to remove from wishlist");
+            }
+          } else {
+            // Add to wishlist
+            const res = await fetch("/api/wishlist", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: user.id,
+                adId: parseInt(listingId),
+              }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              wishlistBtn.textContent = "❤️ Wishlisted";
+              wishlistBtn.style.background = "#ff4757";
+              wishlistBtn.style.borderColor = "#ff4757";
+              wishlistBtn.style.color = "white";
+              currentWishlistId = data.wishlistId;
+            } else {
+              alert(data.message || "Failed to add to wishlist");
+            }
+          }
+        } catch (err) {
+          console.error("Error toggling wishlist:", err);
+          alert("Failed to update wishlist");
+        } finally {
+          wishlistBtn.disabled = false;
         }
       }
     </script>

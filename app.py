@@ -130,6 +130,16 @@ def init_db():
         FOREIGN KEY(conversationId) REFERENCES conversations(id),
         FOREIGN KEY(senderId) REFERENCES users(id)
     )''')
+    
+    cur3.execute('''CREATE TABLE IF NOT EXISTS wishlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
+        adId INTEGER,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(userId) REFERENCES users(id),
+        FOREIGN KEY(adId) REFERENCES ads(id),
+        UNIQUE(userId, adId)
+    )''')
     for col, typ in ads_needed.items():
         if col not in ads_cols:
             try:
@@ -950,6 +960,152 @@ def send_message():
         return jsonify({'success': True, 'messageId': message_id})
     except Exception as e:
         print('send_message error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/wishlist/<int:user_id>', methods=['GET'])
+def get_wishlist(user_id):
+    """Get all wishlist items for a user"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                w.id as wishlistId, w.createdAt as addedAt,
+                ads.*, 
+                users.name AS author, 
+                users.storeName, 
+                users.role, 
+                users.profilePicture
+            FROM wishlist w
+            JOIN ads ON w.adId = ads.id
+            LEFT JOIN users ON ads.userId = users.id
+            WHERE w.userId = ?
+            ORDER BY w.createdAt DESC
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        results = []
+        for r in rows:
+            import json
+            row_keys = r.keys()
+            try:
+                tags_val = r['tags'] if 'tags' in row_keys else None
+                tags = json.loads(tags_val) if tags_val else []
+            except:
+                tags = []
+            
+            results.append({
+                'wishlistId': r['wishlistId'],
+                'addedAt': r['addedAt'],
+                'id': r['id'],
+                'title': r['title'],
+                'description': r['description'],
+                'userId': r['userId'],
+                'createdAt': r['createdAt'],
+                'author': r['author'] if 'author' in row_keys else None,
+                'storeName': r['storeName'] if 'storeName' in row_keys else None,
+                'role': r['role'] if 'role' in row_keys else None,
+                'profilePicture': r['profilePicture'] if 'profilePicture' in row_keys else None,
+                'category': r['category'] if 'category' in row_keys else None,
+                'tags': tags,
+                'price': r['price'] if 'price' in row_keys and r['price'] is not None else None,
+                'unit': r['unit'] if 'unit' in row_keys else None,
+                'minOrder': r['minOrder'] if 'minOrder' in row_keys and r['minOrder'] is not None else 1,
+                'stock': r['stock'] if 'stock' in row_keys else None,
+                'imageUrl': r['imageUrl'] if 'imageUrl' in row_keys else None
+            })
+        
+        db.close()
+        return jsonify(results)
+    except Exception as e:
+        print('get_wishlist error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/wishlist', methods=['POST'])
+def add_to_wishlist():
+    """Add item to wishlist"""
+    try:
+        data = request.get_json() or {}
+        user_id = data.get('userId')
+        ad_id = data.get('adId')
+        
+        if not user_id or not ad_id:
+            return jsonify({'error': 'userId and adId required'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Check if already in wishlist
+        cursor.execute('SELECT id FROM wishlist WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        existing = cursor.fetchone()
+        
+        if existing:
+            db.close()
+            return jsonify({'success': True, 'message': 'Already in wishlist'})
+        
+        # Add to wishlist
+        cursor.execute('INSERT INTO wishlist (userId, adId) VALUES (?, ?)', (user_id, ad_id))
+        db.commit()
+        wishlist_id = cursor.lastrowid
+        db.close()
+        
+        return jsonify({'success': True, 'wishlistId': wishlist_id})
+    except Exception as e:
+        print('add_to_wishlist error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/wishlist/<int:wishlist_id>', methods=['DELETE'])
+def remove_from_wishlist(wishlist_id):
+    """Remove item from wishlist"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('DELETE FROM wishlist WHERE id = ?', (wishlist_id,))
+        db.commit()
+        
+        if cursor.rowcount == 0:
+            db.close()
+            return jsonify({'success': False, 'error': 'Item not found'}), 404
+        
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('remove_from_wishlist error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/wishlist/check', methods=['POST'])
+def check_wishlist():
+    """Check if item is in user's wishlist"""
+    try:
+        data = request.get_json() or {}
+        user_id = data.get('userId')
+        ad_id = data.get('adId')
+        
+        if not user_id or not ad_id:
+            return jsonify({'error': 'userId and adId required'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('SELECT id FROM wishlist WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        result = cursor.fetchone()
+        db.close()
+        
+        return jsonify({'inWishlist': result is not None, 'wishlistId': result[0] if result else None})
+    except Exception as e:
+        print('check_wishlist error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
