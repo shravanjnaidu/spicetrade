@@ -137,7 +137,11 @@
               <strong id="authorName">—</strong>
             </div>
           </div>
-          <button class="btn" onclick="contactSeller()">Contact Seller</button>
+          <div id="listingActions">
+            <button class="btn" onclick="contactSeller()" id="contactBtn">
+              Contact Seller
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -161,7 +165,8 @@
       async function loadListing() {
         try {
           const res = await fetch("/api/ads");
-          const listings = await res.json();
+          const data = await res.json();
+          const listings = data.success ? data.ads : data;
           const listing = listings.find((l) => l.id == listingId);
 
           if (!listing) {
@@ -169,6 +174,12 @@
             location.href = "/";
             return;
           }
+
+          // Get current user
+          const user = JSON.parse(
+            localStorage.getItem("spicetrade_user") || "null"
+          );
+          const isOwner = user && user.id === listing.userId;
 
           // Populate listing details
           document.getElementById("listingTitle").textContent =
@@ -186,6 +197,41 @@
           document.getElementById("authorAvatar").textContent = initial;
           document.getElementById("authorName").textContent =
             listing.author || "Anonymous";
+
+          // Update contact button text based on poster role
+          const contactBtn = document.getElementById("contactBtn");
+          if (listing.role === "buyer") {
+            contactBtn.textContent = "Contact Buyer";
+          } else {
+            contactBtn.textContent = "Contact Seller";
+          }
+
+          // Show edit/delete buttons if user owns this listing
+          const actionsDiv = document.getElementById("listingActions");
+          if (isOwner) {
+            contactBtn.style.display = "none";
+            actionsDiv.innerHTML = `
+              <button class="btn secondary" onclick="editListing()">Edit</button>
+              <button class="btn secondary" onclick="deleteListing()" style="background: #dc3545; border-color: #dc3545;">Delete</button>
+            `;
+          } else if (user && user.id) {
+            // Only show contact button if user is logged in and not the owner
+            contactBtn.style.display = "inline-block";
+
+            // For buyers viewing seller listings, allow contact
+            // For sellers viewing buyer requirements, allow contact only if conversation exists
+            if (user.role === "buyer" && listing.role === "seller") {
+              contactBtn.onclick = () => contactSeller(listing);
+            } else if (user.role === "seller" && listing.role === "buyer") {
+              contactBtn.onclick = () => contactBuyer(listing);
+            }
+          } else {
+            // Not logged in - prompt to sign in
+            contactBtn.onclick = () => {
+              alert("Please sign in to contact the seller");
+              window.location.href = "/login.html";
+            };
+          }
 
           // Show tags if available
           if (listing.tags && listing.tags.length > 0) {
@@ -213,8 +259,105 @@
         }
       }
 
-      function contactSeller() {
-        alert("Contact feature coming soon!");
+      async function contactSeller(listing) {
+        // Buyer contacting seller
+        const user = JSON.parse(
+          localStorage.getItem("spicetrade_user") || "null"
+        );
+
+        if (!user || !user.id) {
+          alert("Please sign in to contact the seller");
+          window.location.href = "/login.html";
+          return;
+        }
+
+        try {
+          // Start or get existing conversation
+          const res = await fetch("/api/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              buyerId: user.id,
+              sellerId: listing.userId,
+              listingId: listing.id,
+            }),
+          });
+
+          const result = await res.json();
+
+          if (result.success) {
+            // Redirect to messages page
+            window.location.href = `/messages.html?conversation=${result.conversationId}`;
+          } else {
+            alert("Failed to start conversation");
+          }
+        } catch (err) {
+          console.error("Error starting conversation:", err);
+          alert("Failed to start conversation");
+        }
+      }
+
+      async function contactBuyer(listing) {
+        // Seller contacting buyer (only if conversation already exists)
+        const user = JSON.parse(
+          localStorage.getItem("spicetrade_user") || "null"
+        );
+
+        if (!user || !user.id) {
+          alert("Please sign in to contact the buyer");
+          window.location.href = "/login.html";
+          return;
+        }
+
+        try {
+          // Check if conversation exists (buyer must have initiated)
+          const res = await fetch(`/api/conversations/${user.id}`);
+          const conversations = await res.json();
+
+          const existingConv = conversations.find(
+            (c) => c.buyerId === listing.userId && c.sellerId === user.id
+          );
+
+          if (existingConv) {
+            // Conversation exists, go to messages
+            window.location.href = `/messages.html?conversation=${existingConv.id}`;
+          } else {
+            // No existing conversation - seller cannot initiate
+            alert(
+              "You can only respond to messages from buyers. Wait for the buyer to contact you first."
+            );
+          }
+        } catch (err) {
+          console.error("Error checking conversation:", err);
+          alert("Failed to check conversation");
+        }
+      }
+
+      function editListing() {
+        alert("Edit feature coming soon! You can delete and recreate for now.");
+      }
+
+      async function deleteListing() {
+        if (!confirm("Are you sure you want to delete this listing?")) {
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/ads/${listingId}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            alert("Listing deleted successfully!");
+            location.href = "/";
+          } else {
+            alert(data.error || "Failed to delete listing");
+          }
+        } catch (err) {
+          console.error("Error deleting listing:", err);
+          alert("Error deleting listing");
+        }
       }
     </script>
   </body>

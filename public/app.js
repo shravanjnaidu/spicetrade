@@ -115,9 +115,33 @@ function renderAds(ads) {
     meta.style.alignItems = "center";
     meta.style.marginTop = "8px";
 
+    const authorWrapper = document.createElement("div");
+    authorWrapper.style.display = "flex";
+    authorWrapper.style.alignItems = "center";
+    authorWrapper.style.gap = "8px";
+
+    // Add profile picture if available
+    if (a.profilePicture) {
+      const profileImg = document.createElement("img");
+      profileImg.src = a.profilePicture;
+      profileImg.style.cssText =
+        "width: 24px; height: 24px; border-radius: 50%; object-fit: cover;";
+      profileImg.alt = a.author || "User";
+      authorWrapper.appendChild(profileImg);
+    } else {
+      // Show initial letter as fallback
+      const initial = document.createElement("div");
+      initial.textContent = (a.author || "A").charAt(0).toUpperCase();
+      initial.style.cssText =
+        "width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;";
+      authorWrapper.appendChild(initial);
+    }
+
     const author = document.createElement("small");
-    author.textContent = `by ${a.author || "anonymous"}`;
-    meta.appendChild(author);
+    author.textContent = a.author || "anonymous";
+    authorWrapper.appendChild(author);
+
+    meta.appendChild(authorWrapper);
 
     const date = document.createElement("small");
     date.textContent = a.createdAt
@@ -217,6 +241,9 @@ document.addEventListener("click", (e) => {
 
 // Update header nav based on login state and handle sign-out
 function updateHeader() {
+  // Skip header update on admin pages
+  if (window.location.pathname.includes("/admin")) return;
+
   const right = document.querySelector(".header-right");
   const navFallback = document.querySelector(".site-header nav");
   const container = right || navFallback;
@@ -229,7 +256,7 @@ function updateHeader() {
     const dashboardLink = isSeller
       ? "/seller-dashboard.html"
       : "/dashboard.html";
-    const dashboardLabel = isSeller ? "Manage Store" : "Post an ad";
+    const dashboardLabel = isSeller ? "Manage Store" : "Post a requirement";
 
     // Build dropdown menu items based on role
     let dropdownItems = "";
@@ -237,12 +264,14 @@ function updateHeader() {
       dropdownItems = `
         <a href="/seller-dashboard.html" class="dropdown-item">Manage Store</a>
         <a href="/dashboard.html" class="dropdown-item">Manage Listings</a>
+        <a href="/messages.html" class="dropdown-item">Messages</a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
       `;
     } else {
       dropdownItems = `
         <a href="/dashboard.html" class="dropdown-item">My Listings</a>
+        <a href="/messages.html" class="dropdown-item">Messages</a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
       `;
@@ -274,7 +303,7 @@ function updateHeader() {
       <nav>
         <a href="/login.html" class="btn">Sign in</a>
         <a href="/signup.html" class="btn">Sign up</a>
-        <a href="/dashboard.html" class="btn secondary">View ads</a>
+        <!-- <a href="/dashboard.html" class="btn secondary">View ads</a> -->
       </nav>
     `;
   }

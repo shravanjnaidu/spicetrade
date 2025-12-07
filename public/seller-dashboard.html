@@ -181,6 +181,15 @@
           <h2>Store Details</h2>
           <div id="storeDetails">
             <div class="store-info-row">
+              <span class="store-info-label">Unique ID:</span>
+              <span
+                class="store-info-value"
+                id="uniqueId"
+                style="font-weight: 600; color: var(--accent)"
+                >—</span
+              >
+            </div>
+            <div class="store-info-row">
               <span class="store-info-label">Store Name:</span>
               <span class="store-info-value" id="storeName">—</span>
             </div>
@@ -195,6 +204,10 @@
             <div class="store-info-row">
               <span class="store-info-label">Category:</span>
               <span class="store-info-value" id="storeCategory">—</span>
+            </div>
+            <div class="store-info-row">
+              <span class="store-info-label">Location:</span>
+              <span class="store-info-value" id="storeLocation">—</span>
             </div>
           </div>
           <div class="action-buttons">
@@ -278,6 +291,30 @@
               id="productPrice"
               name="price"
               step="0.01"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="productUnit">Unit *</label>
+            <select id="productUnit" name="unit" required>
+              <option value="piece">Piece</option>
+              <option value="kg">Kilogram (kg)</option>
+              <option value="lb">Pound (lb)</option>
+              <option value="ton">Ton</option>
+              <option value="box">Box</option>
+              <option value="carton">Carton</option>
+              <option value="bag">Bag</option>
+              <option value="pallet">Pallet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="productMinOrder">Minimum Order Quantity *</label>
+            <input
+              type="number"
+              id="productMinOrder"
+              name="minOrder"
+              min="1"
+              value="1"
               required
             />
           </div>
@@ -426,11 +463,16 @@
       }
 
       // Populate store details
+      document.getElementById("uniqueId").textContent = user.uniqueId || "—";
       document.getElementById("storeName").textContent =
         user.storeName || "Not set";
       document.getElementById("storeEmail").textContent = user.email || "—";
-      document.getElementById("businessType").textContent = "Seller"; // Could be enhanced
-      document.getElementById("storeCategory").textContent = "General"; // Could be enhanced
+      document.getElementById("businessType").textContent =
+        user.businessType || "Seller";
+      document.getElementById("storeCategory").textContent =
+        user.categories || "General";
+      document.getElementById("storeLocation").textContent =
+        user.location || "—";
       document.getElementById("memberSince").textContent =
         new Date().toLocaleDateString();
 
@@ -448,18 +490,19 @@
         fetch("/api/ads")
           .then((res) => res.json())
           .then((data) => {
-            if (data.success) {
-              // Filter ads by current user and separate products from services
-              const userAds = data.ads.filter(
-                (ad) => ad.userId === user.id && ad.price
-              );
-              products = userAds.filter((ad) => ad.unit !== "service");
-              services = userAds.filter((ad) => ad.unit === "service");
+            // API returns array directly, not wrapped in success object
+            const allAds = Array.isArray(data) ? data : [];
 
-              renderProducts();
-              renderServices();
-              updateStats();
-            }
+            // Filter ads by current user and separate products from services
+            const userAds = allAds.filter(
+              (ad) => ad.userId === user.id && ad.price
+            );
+            products = userAds.filter((ad) => ad.unit !== "service");
+            services = userAds.filter((ad) => ad.unit === "service");
+
+            renderProducts();
+            renderServices();
+            updateStats();
           })
           .catch((err) => {
             console.error("Failed to load products:", err);
@@ -492,11 +535,21 @@
                   )
                   .join("")}</div>`
               : "";
+          const imageHtml = p.imageUrl
+            ? `<img src="${
+                p.imageUrl
+              }" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px;" alt="${escapeHtml(
+                p.title || p.name
+              )}">`
+            : `<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>`;
           item.innerHTML = `
-            <div>
-              <h4>${escapeHtml(p.title || p.name)}</h4>
-              <p>${escapeHtml(p.description)} • $${p.price}</p>
-              ${tagsHtml}
+            <div style="display: flex; align-items: start; flex: 1;">
+              ${imageHtml}
+              <div style="flex: 1;">
+                <h4>${escapeHtml(p.title || p.name)}</h4>
+                <p>${escapeHtml(p.description)} • $${p.price}</p>
+                ${tagsHtml}
+              </div>
             </div>
             <div class="product-actions">
               <button class="btn btn-small secondary" onclick="editProduct(${
@@ -537,11 +590,21 @@
                   )
                   .join("")}</div>`
               : "";
+          const imageHtml = s.imageUrl
+            ? `<img src="${
+                s.imageUrl
+              }" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px;" alt="${escapeHtml(
+                s.title || s.name
+              )}">`
+            : `<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">💼</div>`;
           item.innerHTML = `
-            <div>
-              <h4>${escapeHtml(s.title || s.name)}</h4>
-              <p>${escapeHtml(s.description)} • Starting at $${s.price}</p>
-              ${tagsHtml}
+            <div style="display: flex; align-items: start; flex: 1;">
+              ${imageHtml}
+              <div style="flex: 1;">
+                <h4>${escapeHtml(s.title || s.name)}</h4>
+                <p>${escapeHtml(s.description)} • Starting at $${s.price}</p>
+                ${tagsHtml}
+              </div>
             </div>
             <div class="product-actions">
               <button class="btn btn-small secondary" onclick="editService(${
@@ -765,7 +828,7 @@
       }
 
       function editStoreDetails() {
-        alert("Store editing feature coming soon!");
+        window.location.href = "/profile.html";
       }
 
       function deleteProduct(id) {
@@ -855,12 +918,17 @@
             title: fd.get("name"),
             description: fd.get("description"),
             price: parseFloat(fd.get("price")),
-            unit: "piece", // default unit
+            unit: fd.get("unit"),
+            minOrder: parseInt(fd.get("minOrder")) || 1,
             category: fd.get("category"),
             tags: [...productSelectedTags],
             userId: user.id,
-            imageUrl: imageUrl,
           };
+
+          // Only add imageUrl if it exists
+          if (imageUrl) {
+            payload.imageUrl = imageUrl;
+          }
 
           fetch("/api/ads", {
             method: "POST",
@@ -929,11 +997,16 @@
             description: fd.get("description"),
             price: parseFloat(fd.get("price")),
             unit: "service", // default unit for services
+            minOrder: 1, // Services default to 1
             category: fd.get("category"),
             tags: [...serviceSelectedTags],
             userId: user.id,
-            imageUrl: imageUrl,
           };
+
+          // Only add imageUrl if it exists
+          if (imageUrl) {
+            payload.imageUrl = imageUrl;
+          }
 
           fetch("/api/ads", {
             method: "POST",

@@ -17,7 +17,7 @@
 
     <main class="container">
       <section class="card">
-        <h2>Post a new ad</h2>
+        <h2 id="dashboardTitle">Post a new requirement</h2>
         <form id="adForm">
           <label
             >Title
@@ -68,7 +68,9 @@
               style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
             ></div>
           </div>
-          <button class="btn" type="submit">Publish Ad</button>
+          <button class="btn" type="submit" id="publishBtn">
+            Publish Requirement
+          </button>
         </form>
       </section>
 
@@ -80,6 +82,22 @@
 
     <script src="/app.js"></script>
     <script>
+      // Set text based on user role
+      const user = JSON.parse(
+        localStorage.getItem("spicetrade_user") || "null"
+      );
+      const isBuyer = user && user.role === "buyer";
+
+      if (isBuyer) {
+        document.getElementById("dashboardTitle").textContent =
+          "Post a new requirement";
+        document.getElementById("publishBtn").textContent =
+          "Publish Requirement";
+      } else {
+        document.getElementById("dashboardTitle").textContent = "Post a new ad";
+        document.getElementById("publishBtn").textContent = "Publish Ad";
+      }
+
       // Tag options by category for buyer listings
       const categoryTags = {
         Spices: [

@@ -16,7 +16,7 @@
         <div class="auth-header" style="justify-content: center">
           <div>
             <h2 id="signupTitle">Create your seller account</h2>
-            <p class="muted">
+            <p class="muted" id="signupSubtitle">
               Reach buyers, manage listings and grow your store.
             </p>
           </div>
@@ -90,10 +90,36 @@
                     />
                   </div>
                 </div>
+
+                <div class="form-row" id="buyerFields" style="display: none">
+                  <div>
+                    <label for="location">Location *</label>
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      placeholder="e.g., Mumbai, India"
+                      class="form-control"
+                    />
+                  </div>
+                  <div>
+                    <label for="profilePicture"
+                      >Profile Picture
+                      <span class="muted">(optional)</span></label
+                    >
+                    <input
+                      id="profilePicture"
+                      name="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
               </div>
 
               <!-- Store details -->
-              <div class="form-section">
+              <div class="form-section" id="storeDetailsSection">
                 <h3 class="section-title">Store details</h3>
                 <div class="form-row">
                   <div>
@@ -155,7 +181,7 @@
               </div>
 
               <!-- Business info -->
-              <div class="form-section">
+              <div class="form-section" id="businessInfoSection">
                 <h3 class="section-title">Business information</h3>
                 <div class="form-row">
                   <div>
@@ -177,7 +203,7 @@
               </div>
 
               <!-- Store media & shipping -->
-              <div class="form-section">
+              <div class="form-section" id="storeMediaSection">
                 <h3 class="section-title">Store media & shipping</h3>
                 <div class="form-row logo-row">
                   <div>
@@ -217,7 +243,11 @@
                 </div>
 
                 <div class="form-actions">
-                  <button class="btn primary large" type="submit">
+                  <button
+                    class="btn primary large"
+                    type="submit"
+                    id="submitBtn"
+                  >
                     Create seller account
                   </button>
                   <a href="/" class="btn link">Cancel</a>
@@ -287,13 +317,45 @@
         const initialRole = (params.get("role") || "seller").toLowerCase();
         const roleInput = document.getElementById("roleInput");
         const signupTitle = document.getElementById("signupTitle");
+        const signupSubtitle = document.getElementById("signupSubtitle");
         const signupForm = document.getElementById("signupForm");
         const logoInput = document.getElementById("logo");
+        const storeDetailsSection = document.getElementById(
+          "storeDetailsSection"
+        );
+        const businessInfoSection = document.getElementById(
+          "businessInfoSection"
+        );
+        const storeMediaSection = document.getElementById("storeMediaSection");
+        const submitBtn = document.getElementById("submitBtn");
+        const buyerFields = document.getElementById("buyerFields");
+        const locationInput = document.getElementById("location");
 
         function setRole(r) {
           roleInput.value = r;
-          signupTitle.textContent =
-            r === "seller" ? "Create your seller account" : "Create an account";
+          if (r === "seller") {
+            signupTitle.textContent = "Create your seller account";
+            signupSubtitle.textContent =
+              "Reach buyers, manage listings and grow your store.";
+            if (storeDetailsSection)
+              storeDetailsSection.style.display = "block";
+            if (businessInfoSection)
+              businessInfoSection.style.display = "block";
+            if (storeMediaSection) storeMediaSection.style.display = "block";
+            if (buyerFields) buyerFields.style.display = "none";
+            if (locationInput) locationInput.required = false;
+            if (submitBtn) submitBtn.textContent = "Create seller account";
+          } else {
+            signupTitle.textContent = "Create your buyer account";
+            signupSubtitle.textContent =
+              "Find products, connect with sellers and grow your business.";
+            if (storeDetailsSection) storeDetailsSection.style.display = "none";
+            if (businessInfoSection) businessInfoSection.style.display = "none";
+            if (storeMediaSection) storeMediaSection.style.display = "none";
+            if (buyerFields) buyerFields.style.display = "block";
+            if (locationInput) locationInput.required = true;
+            if (submitBtn) submitBtn.textContent = "Create buyer account";
+          }
         }
 
         // set initial role (default to seller for this page)
@@ -325,22 +387,10 @@
             });
             const data = await res.json();
             if (data.success) {
-              // store complete user info including all seller fields
-              const userObj = {
-                id: data.userId,
-                name: fd.get("name"),
-                email: fd.get("email"),
-                phone: fd.get("phone"),
-                role: roleInput.value || "buyer",
-                storeName: fd.get("storeName"),
-                businessType: fd.get("businessType"),
-                categories: fd.get("categories"),
-                address: fd.get("address"),
-                website: fd.get("website"),
-              };
-              localStorage.setItem("spicetrade_user", JSON.stringify(userObj));
+              // Store complete user info returned from API
+              localStorage.setItem("spicetrade_user", JSON.stringify(data));
               // redirect sellers to seller dashboard
-              if (roleInput.value === "seller") {
+              if (data.role === "seller") {
                 location.href = "/seller-dashboard.html";
               } else {
                 location.href = "/dashboard.html";

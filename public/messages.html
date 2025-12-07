@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Messages — SpiceTrade</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .messages-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      .messages-layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 20px;
+        height: calc(100vh - 200px);
+        min-height: 600px;
+      }
+      .conversations-panel {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        overflow-y: auto;
+      }
+      .conversations-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9e9e9;
+      }
+      .conversations-header h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .conversation-item {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f5f5f5;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .conversation-item:hover {
+        background: #f9f9f9;
+      }
+      .conversation-item.active {
+        background: #f0f4ff;
+        border-left: 3px solid var(--accent);
+      }
+      .conversation-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .conversation-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .conversation-avatar-fallback {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 16px;
+      }
+      .conversation-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .conversation-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .conversation-store {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+      }
+      .conversation-last-message {
+        font-size: 13px;
+        color: #888;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .conversation-time {
+        font-size: 11px;
+        color: #999;
+      }
+      .chat-panel {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .chat-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9e9e9;
+        background: #fafafa;
+      }
+      .chat-header-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .chat-header h3 {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+      }
+      .chat-header-subtitle {
+        font-size: 13px;
+        color: #666;
+      }
+      .messages-area {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #f9f9f9;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .message {
+        max-width: 70%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .message.sent {
+        align-self: flex-end;
+        align-items: flex-end;
+      }
+      .message.received {
+        align-self: flex-start;
+        align-items: flex-start;
+      }
+      .message-bubble {
+        padding: 10px 14px;
+        border-radius: 12px;
+        word-wrap: break-word;
+      }
+      .message.sent .message-bubble {
+        background: var(--accent);
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+      .message.received .message-bubble {
+        background: white;
+        border: 1px solid #e9e9e9;
+        border-bottom-left-radius: 4px;
+      }
+      .message-time {
+        font-size: 11px;
+        color: #999;
+        padding: 0 4px;
+      }
+      .message-sender {
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        padding: 0 4px;
+      }
+      .message-input-area {
+        padding: 20px;
+        border-top: 1px solid #e9e9e9;
+        background: white;
+      }
+      .message-input-form {
+        display: flex;
+        gap: 12px;
+      }
+      .message-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid #ddd;
+        border-radius: 24px;
+        font-size: 14px;
+        outline: none;
+      }
+      .message-input:focus {
+        border-color: var(--accent);
+      }
+      .send-button {
+        padding: 12px 24px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .send-button:hover {
+        opacity: 0.9;
+      }
+      .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #999;
+        text-align: center;
+        padding: 40px;
+      }
+      .empty-state h3 {
+        margin: 16px 0 8px 0;
+        color: #666;
+      }
+      @media (max-width: 768px) {
+        .messages-layout {
+          grid-template-columns: 1fr;
+        }
+        .conversations-panel {
+          display: none;
+        }
+        .conversations-panel.mobile-show {
+          display: block;
+        }
+        .chat-panel.mobile-hide {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <div class="header-right"></div>
+    </header>
+
+    <main class="messages-container">
+      <h1 style="margin-bottom: 24px">Messages</h1>
+
+      <div class="messages-layout">
+        <!-- Conversations List -->
+        <div class="conversations-panel">
+          <div class="conversations-header">
+            <h2>Conversations</h2>
+          </div>
+          <div id="conversationsList">
+            <!-- Conversations will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Chat Panel -->
+        <div class="chat-panel" id="chatPanel">
+          <div class="empty-state">
+            <svg
+              width="64"
+              height="64"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+              ></path>
+            </svg>
+            <h3>Select a conversation</h3>
+            <p>Choose a conversation from the list to start messaging</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="/app.js"></script>
+    <script>
+      const currentUser = JSON.parse(
+        localStorage.getItem("spicetrade_user") || "null"
+      );
+
+      if (!currentUser || !currentUser.id) {
+        window.location.href = "/login.html";
+      }
+
+      let conversations = [];
+      let currentConversationId = null;
+      let messages = [];
+      let messagesPollingInterval = null;
+
+      async function loadConversations() {
+        try {
+          const res = await fetch(`/api/conversations/${currentUser.id}`);
+          conversations = await res.json();
+          renderConversations();
+
+          // Check if URL has conversation parameter
+          const urlParams = new URLSearchParams(window.location.search);
+          const conversationParam = urlParams.get("conversation");
+
+          if (conversationParam) {
+            const convId = parseInt(conversationParam);
+            if (conversations.find((c) => c.id === convId)) {
+              selectConversation(convId);
+            }
+          }
+        } catch (err) {
+          console.error("Error loading conversations:", err);
+        }
+      }
+
+      function renderConversations() {
+        const list = document.getElementById("conversationsList");
+
+        if (conversations.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state"><p>No conversations yet</p></div>';
+          return;
+        }
+
+        list.innerHTML = conversations
+          .map((conv) => {
+            const isCurrentUserBuyer = currentUser.id === conv.buyerId;
+            const otherUser = isCurrentUserBuyer
+              ? {
+                  name: conv.sellerName,
+                  email: conv.sellerEmail,
+                  picture: conv.sellerPicture,
+                  store: conv.storeName,
+                }
+              : {
+                  name: conv.buyerName,
+                  email: conv.buyerEmail,
+                  picture: conv.buyerPicture,
+                };
+
+            const initial = (otherUser.name || otherUser.email)
+              .charAt(0)
+              .toUpperCase();
+            const avatar = otherUser.picture
+              ? `<img src="${otherUser.picture}" class="conversation-avatar" alt="${otherUser.name}">`
+              : `<div class="conversation-avatar-fallback">${initial}</div>`;
+
+            const time = conv.lastMessageTime
+              ? new Date(conv.lastMessageTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "";
+
+            return `
+            <div class="conversation-item ${
+              currentConversationId === conv.id ? "active" : ""
+            }" 
+                 onclick="selectConversation(${conv.id})">
+              <div class="conversation-header">
+                ${avatar}
+                <div class="conversation-info">
+                  <div class="conversation-name">${
+                    otherUser.name || otherUser.email
+                  }</div>
+                  ${
+                    otherUser.store
+                      ? `<div class="conversation-store">${otherUser.store}</div>`
+                      : ""
+                  }
+                  ${
+                    conv.lastMessage
+                      ? `<div class="conversation-last-message">${conv.lastMessage}</div>`
+                      : ""
+                  }
+                </div>
+                ${time ? `<div class="conversation-time">${time}</div>` : ""}
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+      }
+
+      async function selectConversation(conversationId) {
+        currentConversationId = conversationId;
+        renderConversations();
+        await loadMessages(conversationId);
+        renderChatPanel();
+
+        // Start polling for new messages
+        if (messagesPollingInterval) {
+          clearInterval(messagesPollingInterval);
+        }
+        messagesPollingInterval = setInterval(
+          () => loadMessages(conversationId),
+          3000
+        );
+      }
+
+      async function loadMessages(conversationId) {
+        try {
+          const res = await fetch(`/api/messages/${conversationId}`);
+          messages = await res.json();
+          renderMessages();
+        } catch (err) {
+          console.error("Error loading messages:", err);
+        }
+      }
+
+      function renderChatPanel() {
+        const panel = document.getElementById("chatPanel");
+        const conv = conversations.find((c) => c.id === currentConversationId);
+
+        if (!conv) return;
+
+        const isCurrentUserBuyer = currentUser.id === conv.buyerId;
+        const otherUser = isCurrentUserBuyer
+          ? {
+              name: conv.sellerName,
+              email: conv.sellerEmail,
+              picture: conv.sellerPicture,
+              store: conv.storeName,
+            }
+          : {
+              name: conv.buyerName,
+              email: conv.buyerEmail,
+              picture: conv.buyerPicture,
+            };
+
+        const initial = (otherUser.name || otherUser.email)
+          .charAt(0)
+          .toUpperCase();
+        const avatar = otherUser.picture
+          ? `<img src="${otherUser.picture}" class="conversation-avatar" alt="${otherUser.name}">`
+          : `<div class="conversation-avatar-fallback">${initial}</div>`;
+
+        panel.innerHTML = `
+          <div class="chat-header">
+            <div class="chat-header-content">
+              ${avatar}
+              <div>
+                <h3>${otherUser.name || otherUser.email}</h3>
+                ${
+                  otherUser.store
+                    ? `<div class="chat-header-subtitle">${otherUser.store}</div>`
+                    : ""
+                }
+              </div>
+            </div>
+          </div>
+          <div class="messages-area" id="messagesArea">
+            <!-- Messages will be loaded here -->
+          </div>
+          <div class="message-input-area">
+            <form class="message-input-form" id="messageForm">
+              <input 
+                type="text" 
+                class="message-input" 
+                id="messageInput" 
+                placeholder="Type a message..."
+                required
+              />
+              <button type="submit" class="send-button">Send</button>
+            </form>
+          </div>
+        `;
+
+        // Attach form handler
+        document
+          .getElementById("messageForm")
+          .addEventListener("submit", handleSendMessage);
+
+        renderMessages();
+      }
+
+      function renderMessages() {
+        const area = document.getElementById("messagesArea");
+        if (!area) return;
+
+        if (messages.length === 0) {
+          area.innerHTML =
+            '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
+          return;
+        }
+
+        area.innerHTML = messages
+          .map((msg) => {
+            const isSent = msg.senderId === currentUser.id;
+            const time = new Date(msg.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return `
+            <div class="message ${isSent ? "sent" : "received"}">
+              ${
+                !isSent
+                  ? `<div class="message-sender">${
+                      msg.senderName || msg.senderEmail
+                    }</div>`
+                  : ""
+              }
+              <div class="message-bubble">${escapeHtml(msg.message)}</div>
+              <div class="message-time">${time}</div>
+            </div>
+          `;
+          })
+          .join("");
+
+        // Scroll to bottom
+        area.scrollTop = area.scrollHeight;
+      }
+
+      async function handleSendMessage(e) {
+        e.preventDefault();
+
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        try {
+          const res = await fetch("/api/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId: currentConversationId,
+              senderId: currentUser.id,
+              message: message,
+            }),
+          });
+
+          const result = await res.json();
+
+          if (result.success) {
+            input.value = "";
+            await loadMessages(currentConversationId);
+            await loadConversations(); // Update conversation list with new message
+          } else {
+            alert("Failed to send message");
+          }
+        } catch (err) {
+          console.error("Error sending message:", err);
+          alert("Failed to send message");
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Clean up polling on page unload
+      window.addEventListener("beforeunload", () => {
+        if (messagesPollingInterval) {
+          clearInterval(messagesPollingInterval);
+        }
+      });
+
+      // Initial load
+      loadConversations();
+    </script>
+  </body>
+</html>
