@@ -68,9 +68,7 @@
               style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
             ></div>
           </div>
-          <button class="btn" type="submit" id="publishBtn">
-            Publish Requirement
-          </button>
+          <button class="btn" type="submit" id="publishBtn">Publish Requirement</button>
         </form>
       </section>
 
@@ -83,16 +81,12 @@
     <script src="/app.js"></script>
     <script>
       // Set text based on user role
-      const user = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null"
-      );
+      const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
       const isBuyer = user && user.role === "buyer";
-
+      
       if (isBuyer) {
-        document.getElementById("dashboardTitle").textContent =
-          "Post a new requirement";
-        document.getElementById("publishBtn").textContent =
-          "Publish Requirement";
+        document.getElementById("dashboardTitle").textContent = "Post a new requirement";
+        document.getElementById("publishBtn").textContent = "Publish Requirement";
       } else {
         document.getElementById("dashboardTitle").textContent = "Post a new ad";
         document.getElementById("publishBtn").textContent = "Publish Ad";

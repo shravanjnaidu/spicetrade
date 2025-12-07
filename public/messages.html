@@ -247,7 +247,7 @@
 
     <main class="messages-container">
       <h1 style="margin-bottom: 24px">Messages</h1>
-
+      
       <div class="messages-layout">
         <!-- Conversations List -->
         <div class="conversations-panel">
@@ -262,17 +262,8 @@
         <!-- Chat Panel -->
         <div class="chat-panel" id="chatPanel">
           <div class="empty-state">
-            <svg
-              width="64"
-              height="64"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-              ></path>
+            <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
             <h3>Select a conversation</h3>
             <p>Choose a conversation from the list to start messaging</p>
@@ -283,12 +274,10 @@
 
     <script src="/app.js"></script>
     <script>
-      const currentUser = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null"
-      );
-
+      const currentUser = JSON.parse(localStorage.getItem('spicetrade_user') || 'null');
+      
       if (!currentUser || !currentUser.id) {
-        window.location.href = "/login.html";
+        window.location.href = '/login.html';
       }
 
       let conversations = [];
@@ -301,89 +290,67 @@
           const res = await fetch(`/api/conversations/${currentUser.id}`);
           conversations = await res.json();
           renderConversations();
-
+          
           // Check if URL has conversation parameter
           const urlParams = new URLSearchParams(window.location.search);
-          const conversationParam = urlParams.get("conversation");
-
+          const conversationParam = urlParams.get('conversation');
+          
           if (conversationParam) {
             const convId = parseInt(conversationParam);
-            if (conversations.find((c) => c.id === convId)) {
+            if (conversations.find(c => c.id === convId)) {
               selectConversation(convId);
             }
           }
         } catch (err) {
-          console.error("Error loading conversations:", err);
+          console.error('Error loading conversations:', err);
         }
       }
 
       function renderConversations() {
-        const list = document.getElementById("conversationsList");
-
+        const list = document.getElementById('conversationsList');
+        
         if (conversations.length === 0) {
-          list.innerHTML =
-            '<div class="empty-state"><p>No conversations yet</p></div>';
+          list.innerHTML = '<div class="empty-state"><p>No conversations yet</p></div>';
           return;
         }
 
-        list.innerHTML = conversations
-          .map((conv) => {
-            const isCurrentUserBuyer = currentUser.id === conv.buyerId;
-            const otherUser = isCurrentUserBuyer
-              ? {
-                  name: conv.sellerName,
-                  email: conv.sellerEmail,
-                  picture: conv.sellerPicture,
-                  store: conv.storeName,
-                }
-              : {
-                  name: conv.buyerName,
-                  email: conv.buyerEmail,
-                  picture: conv.buyerPicture,
-                };
+        list.innerHTML = conversations.map(conv => {
+          const isCurrentUserBuyer = currentUser.id === conv.buyerId;
+          const otherUser = isCurrentUserBuyer ? {
+            name: conv.sellerName,
+            email: conv.sellerEmail,
+            picture: conv.sellerPicture,
+            store: conv.storeName
+          } : {
+            name: conv.buyerName,
+            email: conv.buyerEmail,
+            picture: conv.buyerPicture
+          };
 
-            const initial = (otherUser.name || otherUser.email)
-              .charAt(0)
-              .toUpperCase();
-            const avatar = otherUser.picture
-              ? `<img src="${otherUser.picture}" class="conversation-avatar" alt="${otherUser.name}">`
-              : `<div class="conversation-avatar-fallback">${initial}</div>`;
+          const initial = (otherUser.name || otherUser.email).charAt(0).toUpperCase();
+          const avatar = otherUser.picture 
+            ? `<img src="${otherUser.picture}" class="conversation-avatar" alt="${otherUser.name}">`
+            : `<div class="conversation-avatar-fallback">${initial}</div>`;
 
-            const time = conv.lastMessageTime
-              ? new Date(conv.lastMessageTime).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "";
+          const time = conv.lastMessageTime 
+            ? new Date(conv.lastMessageTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+            : '';
 
-            return `
-            <div class="conversation-item ${
-              currentConversationId === conv.id ? "active" : ""
-            }" 
+          return `
+            <div class="conversation-item ${currentConversationId === conv.id ? 'active' : ''}" 
                  onclick="selectConversation(${conv.id})">
               <div class="conversation-header">
                 ${avatar}
                 <div class="conversation-info">
-                  <div class="conversation-name">${
-                    otherUser.name || otherUser.email
-                  }</div>
-                  ${
-                    otherUser.store
-                      ? `<div class="conversation-store">${otherUser.store}</div>`
-                      : ""
-                  }
-                  ${
-                    conv.lastMessage
-                      ? `<div class="conversation-last-message">${conv.lastMessage}</div>`
-                      : ""
-                  }
+                  <div class="conversation-name">${otherUser.name || otherUser.email}</div>
+                  ${otherUser.store ? `<div class="conversation-store">${otherUser.store}</div>` : ''}
+                  ${conv.lastMessage ? `<div class="conversation-last-message">${conv.lastMessage}</div>` : ''}
                 </div>
-                ${time ? `<div class="conversation-time">${time}</div>` : ""}
+                ${time ? `<div class="conversation-time">${time}</div>` : ''}
               </div>
             </div>
           `;
-          })
-          .join("");
+        }).join('');
       }
 
       async function selectConversation(conversationId) {
@@ -391,15 +358,12 @@
         renderConversations();
         await loadMessages(conversationId);
         renderChatPanel();
-
+        
         // Start polling for new messages
         if (messagesPollingInterval) {
           clearInterval(messagesPollingInterval);
         }
-        messagesPollingInterval = setInterval(
-          () => loadMessages(conversationId),
-          3000
-        );
+        messagesPollingInterval = setInterval(() => loadMessages(conversationId), 3000);
       }
 
       async function loadMessages(conversationId) {
@@ -408,34 +372,30 @@
           messages = await res.json();
           renderMessages();
         } catch (err) {
-          console.error("Error loading messages:", err);
+          console.error('Error loading messages:', err);
         }
       }
 
       function renderChatPanel() {
-        const panel = document.getElementById("chatPanel");
-        const conv = conversations.find((c) => c.id === currentConversationId);
-
+        const panel = document.getElementById('chatPanel');
+        const conv = conversations.find(c => c.id === currentConversationId);
+        
         if (!conv) return;
 
         const isCurrentUserBuyer = currentUser.id === conv.buyerId;
-        const otherUser = isCurrentUserBuyer
-          ? {
-              name: conv.sellerName,
-              email: conv.sellerEmail,
-              picture: conv.sellerPicture,
-              store: conv.storeName,
-            }
-          : {
-              name: conv.buyerName,
-              email: conv.buyerEmail,
-              picture: conv.buyerPicture,
-            };
+        const otherUser = isCurrentUserBuyer ? {
+          name: conv.sellerName,
+          email: conv.sellerEmail,
+          picture: conv.sellerPicture,
+          store: conv.storeName
+        } : {
+          name: conv.buyerName,
+          email: conv.buyerEmail,
+          picture: conv.buyerPicture
+        };
 
-        const initial = (otherUser.name || otherUser.email)
-          .charAt(0)
-          .toUpperCase();
-        const avatar = otherUser.picture
+        const initial = (otherUser.name || otherUser.email).charAt(0).toUpperCase();
+        const avatar = otherUser.picture 
           ? `<img src="${otherUser.picture}" class="conversation-avatar" alt="${otherUser.name}">`
           : `<div class="conversation-avatar-fallback">${initial}</div>`;
 
@@ -445,11 +405,7 @@
               ${avatar}
               <div>
                 <h3>${otherUser.name || otherUser.email}</h3>
-                ${
-                  otherUser.store
-                    ? `<div class="chat-header-subtitle">${otherUser.store}</div>`
-                    : ""
-                }
+                ${otherUser.store ? `<div class="chat-header-subtitle">${otherUser.store}</div>` : ''}
               </div>
             </div>
           </div>
@@ -471,46 +427,32 @@
         `;
 
         // Attach form handler
-        document
-          .getElementById("messageForm")
-          .addEventListener("submit", handleSendMessage);
-
+        document.getElementById('messageForm').addEventListener('submit', handleSendMessage);
+        
         renderMessages();
       }
 
       function renderMessages() {
-        const area = document.getElementById("messagesArea");
+        const area = document.getElementById('messagesArea');
         if (!area) return;
 
         if (messages.length === 0) {
-          area.innerHTML =
-            '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
+          area.innerHTML = '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
           return;
         }
 
-        area.innerHTML = messages
-          .map((msg) => {
-            const isSent = msg.senderId === currentUser.id;
-            const time = new Date(msg.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-
-            return `
-            <div class="message ${isSent ? "sent" : "received"}">
-              ${
-                !isSent
-                  ? `<div class="message-sender">${
-                      msg.senderName || msg.senderEmail
-                    }</div>`
-                  : ""
-              }
+        area.innerHTML = messages.map(msg => {
+          const isSent = msg.senderId === currentUser.id;
+          const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+          
+          return `
+            <div class="message ${isSent ? 'sent' : 'received'}">
+              ${!isSent ? `<div class="message-sender">${msg.senderName || msg.senderEmail}</div>` : ''}
               <div class="message-bubble">${escapeHtml(msg.message)}</div>
               <div class="message-time">${time}</div>
             </div>
           `;
-          })
-          .join("");
+        }).join('');
 
         // Scroll to bottom
         area.scrollTop = area.scrollHeight;
@@ -518,46 +460,46 @@
 
       async function handleSendMessage(e) {
         e.preventDefault();
-
-        const input = document.getElementById("messageInput");
+        
+        const input = document.getElementById('messageInput');
         const message = input.value.trim();
-
+        
         if (!message) return;
 
         try {
-          const res = await fetch("/api/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          const res = await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               conversationId: currentConversationId,
               senderId: currentUser.id,
-              message: message,
-            }),
+              message: message
+            })
           });
 
           const result = await res.json();
-
+          
           if (result.success) {
-            input.value = "";
+            input.value = '';
             await loadMessages(currentConversationId);
             await loadConversations(); // Update conversation list with new message
           } else {
-            alert("Failed to send message");
+            alert('Failed to send message');
           }
         } catch (err) {
-          console.error("Error sending message:", err);
-          alert("Failed to send message");
+          console.error('Error sending message:', err);
+          alert('Failed to send message');
         }
       }
 
       function escapeHtml(text) {
-        const div = document.createElement("div");
+        const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
       }
 
       // Clean up polling on page unload
-      window.addEventListener("beforeunload", () => {
+      window.addEventListener('beforeunload', () => {
         if (messagesPollingInterval) {
           clearInterval(messagesPollingInterval);
         }

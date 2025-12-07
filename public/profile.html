@@ -131,12 +131,7 @@
         <div class="info-grid" id="accountInfo">
           <div class="info-item">
             <span class="info-label">Unique ID</span>
-            <span
-              class="info-value"
-              id="infoUniqueId"
-              style="font-weight: 600; color: var(--accent)"
-              >—</span
-            >
+            <span class="info-value" id="infoUniqueId" style="font-weight: 600; color: var(--accent);">—</span>
           </div>
           <div class="info-item">
             <span class="info-label">Full Name</span>
@@ -199,80 +194,46 @@
 
     <!-- Edit Profile Modal -->
     <div id="editModal" class="modal">
-      <div class="modal-content" style="max-width: 600px">
+      <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
           <h3>Edit Profile</h3>
-          <button class="close-modal" onclick="closeEditModal()">
-            &times;
-          </button>
+          <button class="close-modal" onclick="closeEditModal()">&times;</button>
         </div>
         <form id="editProfileForm">
-          <div class="form-group" style="margin-bottom: 16px">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label>Profile Picture</label>
             <input type="file" id="profilePictureInput" accept="image/*" />
-            <div id="currentPicPreview" style="margin-top: 8px"></div>
+            <div id="currentPicPreview" style="margin-top: 8px;"></div>
           </div>
-          <div class="form-group" style="margin-bottom: 16px">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label>Full Name</label>
             <input type="text" id="editName" name="name" class="form-control" />
           </div>
-          <div class="form-group" style="margin-bottom: 16px">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label>Phone</label>
-            <input
-              type="tel"
-              id="editPhone"
-              name="phone"
-              class="form-control"
-            />
+            <input type="tel" id="editPhone" name="phone" class="form-control" />
           </div>
-          <div class="form-group" style="margin-bottom: 16px">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label>Location</label>
-            <input
-              type="text"
-              id="editLocation"
-              name="location"
-              class="form-control"
-              placeholder="e.g., Mumbai, India"
-            />
+            <input type="text" id="editLocation" name="location" class="form-control" placeholder="e.g., Mumbai, India" />
           </div>
-          <div id="sellerFields" style="display: none">
-            <div class="form-group" style="margin-bottom: 16px">
+          <div id="sellerFields" style="display: none;">
+            <div class="form-group" style="margin-bottom: 16px;">
               <label>Store Name</label>
-              <input
-                type="text"
-                id="editStoreName"
-                name="storeName"
-                class="form-control"
-              />
+              <input type="text" id="editStoreName" name="storeName" class="form-control" />
             </div>
-            <div class="form-group" style="margin-bottom: 16px">
+            <div class="form-group" style="margin-bottom: 16px;">
               <label>Business Type</label>
-              <input
-                type="text"
-                id="editBusinessType"
-                name="businessType"
-                class="form-control"
-              />
+              <input type="text" id="editBusinessType" name="businessType" class="form-control" />
             </div>
-            <div class="form-group" style="margin-bottom: 16px">
+            <div class="form-group" style="margin-bottom: 16px;">
               <label>Address</label>
-              <input
-                type="text"
-                id="editAddress"
-                name="address"
-                class="form-control"
-              />
+              <input type="text" id="editAddress" name="address" class="form-control" />
             </div>
           </div>
-          <div class="action-buttons" style="margin-top: 20px">
+          <div class="action-buttons" style="margin-top: 20px;">
             <button type="submit" class="btn primary">Save Changes</button>
-            <button
-              type="button"
-              class="btn secondary"
-              onclick="closeEditModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn secondary" onclick="closeEditModal()">Cancel</button>
           </div>
         </form>
       </div>
@@ -297,25 +258,20 @@
         if (user.profilePicture) {
           avatarDiv.innerHTML = `<img src="${user.profilePicture}" alt="Profile" />`;
         } else {
-          const initial = (user.name || user.email || "U")
-            .charAt(0)
-            .toUpperCase();
+          const initial = (user.name || user.email || "U").charAt(0).toUpperCase();
           avatarDiv.textContent = initial;
         }
-
-        document.getElementById("profileName").textContent =
-          user.name || "User";
+        
+        document.getElementById("profileName").textContent = user.name || "User";
         document.getElementById("profileEmail").textContent = user.email || "—";
         document.getElementById("profileRole").textContent =
           user.role === "seller" ? "Seller" : "Buyer";
 
-        document.getElementById("infoUniqueId").textContent =
-          user.uniqueId || "—";
+        document.getElementById("infoUniqueId").textContent = user.uniqueId || "—";
         document.getElementById("infoName").textContent = user.name || "—";
         document.getElementById("infoEmail").textContent = user.email || "—";
         document.getElementById("infoPhone").textContent = user.phone || "—";
-        document.getElementById("infoLocation").textContent =
-          user.location || "—";
+        document.getElementById("infoLocation").textContent = user.location || "—";
         document.getElementById("infoRole").textContent =
           user.role === "seller" ? "Seller" : "Buyer";
 
@@ -338,22 +294,20 @@
         document.getElementById("editName").value = user.name || "";
         document.getElementById("editPhone").value = user.phone || "";
         document.getElementById("editLocation").value = user.location || "";
-
+        
         if (user.role === "seller") {
           document.getElementById("sellerFields").style.display = "block";
           document.getElementById("editStoreName").value = user.storeName || "";
-          document.getElementById("editBusinessType").value =
-            user.businessType || "";
+          document.getElementById("editBusinessType").value = user.businessType || "";
           document.getElementById("editAddress").value = user.address || "";
         }
-
+        
         // Show current profile picture
         if (user.profilePicture) {
-          document.getElementById(
-            "currentPicPreview"
-          ).innerHTML = `<img src="${user.profilePicture}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;" />`;
+          document.getElementById("currentPicPreview").innerHTML = 
+            `<img src="${user.profilePicture}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;" />`;
         }
-
+        
         document.getElementById("editModal").classList.add("open");
       }
 
@@ -362,65 +316,47 @@
       }
 
       // Handle edit form submission
-      document
-        .getElementById("editProfileForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const formData = new FormData();
-          formData.append("userId", user.id);
-          formData.append("name", document.getElementById("editName").value);
-          formData.append("phone", document.getElementById("editPhone").value);
-          formData.append(
-            "location",
-            document.getElementById("editLocation").value
-          );
-
-          if (user.role === "seller") {
-            formData.append(
-              "storeName",
-              document.getElementById("editStoreName").value
-            );
-            formData.append(
-              "businessType",
-              document.getElementById("editBusinessType").value
-            );
-            formData.append(
-              "address",
-              document.getElementById("editAddress").value
-            );
+      document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append("userId", user.id);
+        formData.append("name", document.getElementById("editName").value);
+        formData.append("phone", document.getElementById("editPhone").value);
+        formData.append("location", document.getElementById("editLocation").value);
+        
+        if (user.role === "seller") {
+          formData.append("storeName", document.getElementById("editStoreName").value);
+          formData.append("businessType", document.getElementById("editBusinessType").value);
+          formData.append("address", document.getElementById("editAddress").value);
+        }
+        
+        const picFile = document.getElementById("profilePictureInput").files[0];
+        if (picFile) {
+          formData.append("profilePicture", picFile);
+        }
+        
+        try {
+          const res = await fetch("/api/user/profile", {
+            method: "PUT",
+            body: formData,
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            // Update localStorage
+            const updatedUser = { ...user, ...data };
+            localStorage.setItem("spicetrade_user", JSON.stringify(updatedUser));
+            alert("Profile updated successfully!");
+            location.reload();
+          } else {
+            alert(data.error || "Failed to update profile");
           }
-
-          const picFile = document.getElementById("profilePictureInput")
-            .files[0];
-          if (picFile) {
-            formData.append("profilePicture", picFile);
-          }
-
-          try {
-            const res = await fetch("/api/user/profile", {
-              method: "PUT",
-              body: formData,
-            });
-            const data = await res.json();
-
-            if (data.success) {
-              // Update localStorage
-              const updatedUser = { ...user, ...data };
-              localStorage.setItem(
-                "spicetrade_user",
-                JSON.stringify(updatedUser)
-              );
-              alert("Profile updated successfully!");
-              location.reload();
-            } else {
-              alert(data.error || "Failed to update profile");
-            }
-          } catch (err) {
-            console.error(err);
-            alert("Network error");
-          }
-        });
+        } catch (err) {
+          console.error(err);
+          alert("Network error");
+        }
+      });
 
       function changePassword() {
         alert("Change password feature coming soon!");

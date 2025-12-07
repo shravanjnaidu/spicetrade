@@ -815,11 +815,8 @@
         document.getElementById("productSelectedTagsContainer").innerHTML = "";
         editingProductId = null;
         // Reset modal title and button text
-        document.querySelector("#productModal .modal-header h3").textContent =
-          "Add Product";
-        document.querySelector(
-          "#productForm button[type='submit']"
-        ).textContent = "Add Product";
+        document.querySelector("#productModal .modal-header h3").textContent = "Add Product";
+        document.querySelector("#productForm button[type='submit']").textContent = "Add Product";
       }
 
       function openServiceModal() {
@@ -834,11 +831,8 @@
         document.getElementById("serviceSelectedTagsContainer").innerHTML = "";
         editingServiceId = null;
         // Reset modal title and button text
-        document.querySelector("#serviceModal .modal-header h3").textContent =
-          "Add Service";
-        document.querySelector(
-          "#serviceForm button[type='submit']"
-        ).textContent = "Add Service";
+        document.querySelector("#serviceModal .modal-header h3").textContent = "Add Service";
+        document.querySelector("#serviceForm button[type='submit']").textContent = "Add Service";
       }
 
       function editStoreDetails() {
@@ -891,81 +885,64 @@
       let editingServiceId = null;
 
       function editProduct(productId) {
-        const product = products.find((p) => p.id === productId);
+        const product = products.find(p => p.id === productId);
         if (!product) return;
 
         editingProductId = productId;
-
+        
         // Populate form with existing data
         document.getElementById("productName").value = product.title || "";
-        document.getElementById("productDescription").value =
-          product.description || "";
+        document.getElementById("productDescription").value = product.description || "";
         document.getElementById("productPrice").value = product.price || "";
         document.getElementById("productUnit").value = product.unit || "piece";
-        document.getElementById("productMinOrder").value =
-          product.minOrder || 1;
-        document.getElementById("productCategory").value =
-          product.category || "";
-
+        document.getElementById("productMinOrder").value = product.minOrder || 1;
+        document.getElementById("productCategory").value = product.category || "";
+        
         // Load tags
-        const tags =
-          typeof product.tags === "string"
-            ? JSON.parse(product.tags || "[]")
-            : product.tags || [];
+        const tags = typeof product.tags === 'string' ? JSON.parse(product.tags || '[]') : (product.tags || []);
         productSelectedTags.length = 0;
         productSelectedTags.push(...tags);
-
+        
         // Trigger category change to load tags dropdown
         const categorySelect = document.getElementById("productCategory");
         if (categorySelect.value) {
-          categorySelect.dispatchEvent(new Event("change"));
+          categorySelect.dispatchEvent(new Event('change'));
         }
-
+        
         // Change modal title and button text
-        document.querySelector("#productModal .modal-header h3").textContent =
-          "Edit Product";
-        document.querySelector(
-          "#productForm button[type='submit']"
-        ).textContent = "Update Product";
-
+        document.querySelector("#productModal .modal-header h3").textContent = "Edit Product";
+        document.querySelector("#productForm button[type='submit']").textContent = "Update Product";
+        
         openProductModal();
       }
 
       function editService(serviceId) {
-        const service = services.find((s) => s.id === serviceId);
+        const service = services.find(s => s.id === serviceId);
         if (!service) return;
 
         editingServiceId = serviceId;
-
+        
         // Populate form with existing data
         document.getElementById("serviceName").value = service.title || "";
-        document.getElementById("serviceDescription").value =
-          service.description || "";
+        document.getElementById("serviceDescription").value = service.description || "";
         document.getElementById("servicePrice").value = service.price || "";
-        document.getElementById("serviceCategory").value =
-          service.category || "";
-
+        document.getElementById("serviceCategory").value = service.category || "";
+        
         // Load tags
-        const tags =
-          typeof service.tags === "string"
-            ? JSON.parse(service.tags || "[]")
-            : service.tags || [];
+        const tags = typeof service.tags === 'string' ? JSON.parse(service.tags || '[]') : (service.tags || []);
         serviceSelectedTags.length = 0;
         serviceSelectedTags.push(...tags);
-
+        
         // Trigger category change to load tags dropdown
         const categorySelect = document.getElementById("serviceCategory");
         if (categorySelect.value) {
-          categorySelect.dispatchEvent(new Event("change"));
+          categorySelect.dispatchEvent(new Event('change'));
         }
-
+        
         // Change modal title and button text
-        document.querySelector("#serviceModal .modal-header h3").textContent =
-          "Edit Service";
-        document.querySelector(
-          "#serviceForm button[type='submit']"
-        ).textContent = "Update Service";
-
+        document.querySelector("#serviceModal .modal-header h3").textContent = "Edit Service";
+        document.querySelector("#serviceForm button[type='submit']").textContent = "Update Service";
+        
         openServiceModal();
       }
 
@@ -1031,11 +1008,7 @@
             .then((res) => res.json())
             .then((data) => {
               if (data.success) {
-                alert(
-                  isEditing
-                    ? "Product updated successfully!"
-                    : "Product posted successfully!"
-                );
+                alert(isEditing ? "Product updated successfully!" : "Product posted successfully!");
                 document.getElementById("productForm").reset();
                 productSelectedTags.length = 0; // Clear without breaking reference
                 document.getElementById("productTagsGroup").style.display =
@@ -1047,12 +1020,7 @@
                 // Reload products from database
                 loadProductsFromDB();
               } else {
-                alert(
-                  data.error ||
-                    (isEditing
-                      ? "Failed to update product"
-                      : "Failed to post product")
-                );
+                alert(data.error || (isEditing ? "Failed to update product" : "Failed to post product"));
               }
             })
             .catch((err) => {
@@ -1123,11 +1091,7 @@
             .then((res) => res.json())
             .then((data) => {
               if (data.success) {
-                alert(
-                  isEditing
-                    ? "Service updated successfully!"
-                    : "Service posted successfully!"
-                );
+                alert(isEditing ? "Service updated successfully!" : "Service posted successfully!");
                 document.getElementById("serviceForm").reset();
                 serviceSelectedTags.length = 0; // Clear without breaking reference
                 document.getElementById("serviceTagsGroup").style.display =
@@ -1139,12 +1103,7 @@
                 // Reload services from database
                 loadProductsFromDB();
               } else {
-                alert(
-                  data.error ||
-                    (isEditing
-                      ? "Failed to update service"
-                      : "Failed to post service")
-                );
+                alert(data.error || (isEditing ? "Failed to update service" : "Failed to post service"));
               }
             })
             .catch((err) => {
