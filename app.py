@@ -458,6 +458,69 @@ def post_ad():
         return jsonify({'error': 'database error'}), 500
 
 
+@app.route('/api/ads/<int:ad_id>', methods=['PUT'])
+def update_ad(ad_id):
+    """Update an existing ad/product/service"""
+    try:
+        data = request.get_json() or {}
+        
+        # Build update query dynamically based on provided fields
+        update_fields = []
+        values = []
+        
+        if 'title' in data:
+            update_fields.append('title = ?')
+            values.append(data['title'])
+        if 'description' in data:
+            update_fields.append('description = ?')
+            values.append(data['description'])
+        if 'price' in data:
+            update_fields.append('price = ?')
+            values.append(data['price'])
+        if 'unit' in data:
+            update_fields.append('unit = ?')
+            values.append(data['unit'])
+        if 'minOrder' in data:
+            update_fields.append('minOrder = ?')
+            values.append(data['minOrder'])
+        if 'category' in data:
+            update_fields.append('category = ?')
+            values.append(data['category'])
+        if 'tags' in data:
+            import json
+            update_fields.append('tags = ?')
+            values.append(json.dumps(data['tags']))
+        if 'imageUrl' in data:
+            update_fields.append('imageUrl = ?')
+            values.append(data['imageUrl'])
+        if 'stock' in data:
+            update_fields.append('stock = ?')
+            values.append(data['stock'])
+        
+        if not update_fields:
+            return jsonify({'error': 'No fields to update'}), 400
+        
+        values.append(ad_id)
+        
+        db = get_db()
+        cursor = db.cursor()
+        query = f"UPDATE ads SET {', '.join(update_fields)} WHERE id = ?"
+        cursor.execute(query, values)
+        db.commit()
+        
+        if cursor.rowcount == 0:
+            db.close()
+            return jsonify({'success': False, 'error': 'Ad not found'}), 404
+        
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('update_ad error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
 @app.route('/api/ads/<int:ad_id>', methods=['DELETE'])
 def delete_ad(ad_id):
     try:

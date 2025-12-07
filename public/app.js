@@ -263,7 +263,6 @@ function updateHeader() {
     if (isSeller) {
       dropdownItems = `
         <a href="/seller-dashboard.html" class="dropdown-item">Manage Store</a>
-        <a href="/dashboard.html" class="dropdown-item">Manage Listings</a>
         <a href="/messages.html" class="dropdown-item">Messages</a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
