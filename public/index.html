@@ -103,9 +103,95 @@
     </div>
 
     <main class="market-hero">
-      <div class="search-wrap">
-        <h1>Find products, service providers & offers</h1>
-        <p class="hint">Trusted listings from the spicetrade community</p>
+      <!-- Hero Banner Carousel -->
+      <div class="hero-carousel">
+        <div class="carousel-slides">
+          <div class="carousel-slide active">
+            <img
+              src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&h=500&fit=crop"
+              alt="Industrial Equipment"
+            />
+            <div class="carousel-caption">
+              <h1>Premium Industrial Equipment</h1>
+              <p>Connect with verified suppliers worldwide</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img
+              src="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=1600&h=500&fit=crop"
+              alt="Office Solutions"
+            />
+            <div class="carousel-caption">
+              <h1>Office Automation Solutions</h1>
+              <p>Transform your workspace with cutting-edge technology</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img
+              src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&h=500&fit=crop"
+              alt="Agricultural Products"
+            />
+            <div class="carousel-caption">
+              <h1>Agricultural Excellence</h1>
+              <p>Quality equipment for modern farming</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img
+              src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=500&fit=crop"
+              alt="Solar Energy"
+            />
+            <div class="carousel-caption">
+              <h1>Solar & Renewable Energy</h1>
+              <p>Sustainable solutions for a greener future</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <img
+              src="https://images.unsplash.com/photo-1581092918484-8313e1f7e8c6?w=1600&h=500&fit=crop"
+              alt="Medical Equipment"
+            />
+            <div class="carousel-caption">
+              <h1>Medical Laboratory Instruments</h1>
+              <p>Precision tools for healthcare professionals</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carousel Navigation -->
+        <button class="carousel-btn prev" aria-label="Previous slide">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <button class="carousel-btn next" aria-label="Next slide">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
+
+        <!-- Carousel Indicators -->
+        <div class="carousel-indicators">
+          <button class="indicator active" data-slide="0"></button>
+          <button class="indicator" data-slide="1"></button>
+          <button class="indicator" data-slide="2"></button>
+          <button class="indicator" data-slide="3"></button>
+          <button class="indicator" data-slide="4"></button>
+        </div>
       </div>
 
       <!-- Featured Products Section (Amazon-style) -->
@@ -169,6 +255,88 @@
 
     <script src="/app.js"></script>
     <script>
+      // Hero Carousel
+      let currentSlide = 0;
+      const slides = document.querySelectorAll(".carousel-slide");
+      const indicators = document.querySelectorAll(
+        ".carousel-indicators .indicator"
+      );
+      const totalSlides = slides.length;
+      let autoSlideInterval;
+
+      function showSlide(index) {
+        // Remove active class from all slides and indicators
+        slides.forEach((slide) => slide.classList.remove("active"));
+        indicators.forEach((indicator) => indicator.classList.remove("active"));
+
+        // Wrap around if index is out of bounds
+        if (index >= totalSlides) {
+          currentSlide = 0;
+        } else if (index < 0) {
+          currentSlide = totalSlides - 1;
+        } else {
+          currentSlide = index;
+        }
+
+        // Add active class to current slide and indicator
+        slides[currentSlide].classList.add("active");
+        indicators[currentSlide].classList.add("active");
+      }
+
+      function nextSlide() {
+        showSlide(currentSlide + 1);
+      }
+
+      function prevSlide() {
+        showSlide(currentSlide - 1);
+      }
+
+      function startAutoSlide() {
+        autoSlideInterval = setInterval(nextSlide, 4000); // Change slide every 4 seconds
+      }
+
+      function stopAutoSlide() {
+        clearInterval(autoSlideInterval);
+      }
+
+      // Navigation button event listeners
+      const nextBtn = document.querySelector(".carousel-btn.next");
+      const prevBtn = document.querySelector(".carousel-btn.prev");
+
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          nextSlide();
+          stopAutoSlide();
+          startAutoSlide(); // Restart auto-slide after manual navigation
+        });
+      }
+
+      if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+          prevSlide();
+          stopAutoSlide();
+          startAutoSlide();
+        });
+      }
+
+      // Indicator click event listeners
+      indicators.forEach((indicator, index) => {
+        indicator.addEventListener("click", () => {
+          showSlide(index);
+          stopAutoSlide();
+          startAutoSlide();
+        });
+      });
+
+      // Pause auto-slide on hover, resume on mouse leave
+      const carousel = document.querySelector(".hero-carousel");
+      if (carousel) {
+        carousel.addEventListener("mouseenter", stopAutoSlide);
+        carousel.addEventListener("mouseleave", startAutoSlide);
+        // Start auto-slide on page load
+        startAutoSlide();
+      }
+
       // Category scroll functionality
       const categoryTags = document.getElementById("categoryTags");
       const scrollLeftBtn = document.getElementById("scrollLeft");
