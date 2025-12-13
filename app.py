@@ -105,6 +105,7 @@ def init_db():
         'minOrder': 'INTEGER',
         'stock': 'INTEGER',
         'imageUrl': 'TEXT',
+        'images': 'TEXT',
         'verified': 'INTEGER',
         'views': 'INTEGER'
     }
@@ -140,6 +141,20 @@ def init_db():
         FOREIGN KEY(adId) REFERENCES ads(id),
         UNIQUE(userId, adId)
     )''')
+    
+    # Create reviews table
+    cur3.execute('''CREATE TABLE IF NOT EXISTS reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        adId INTEGER,
+        userId INTEGER,
+        rating INTEGER CHECK(rating >= 1 AND rating <= 5),
+        reviewText TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(adId) REFERENCES ads(id),
+        FOREIGN KEY(userId) REFERENCES users(id),
+        UNIQUE(userId, adId)
+    )''')
+    
     for col, typ in ads_needed.items():
         if col not in ads_cols:
             try:
@@ -159,31 +174,43 @@ init_db()
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
-    """Generic file upload endpoint for images"""
+    """Generic file upload endpoint for images - supports multiple files"""
     try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
+        files = request.files.getlist('file')
+        if not files or len(files) == 0:
+            return jsonify({'error': 'No files provided'}), 400
         
         # Create uploads directory if it doesn't exist
         uploads_dir = BASE_DIR / 'public' / 'uploads'
         uploads_dir.mkdir(parents=True, exist_ok=True)
         
-        # Generate secure filename with timestamp
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"{timestamp}_{filename}"
+        uploaded_urls = []
         
-        # Save file
-        save_path = uploads_dir / filename
-        file.save(str(save_path))
+        for file in files:
+            if file.filename == '':
+                continue
+            
+            # Generate secure filename with timestamp
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+            filename = f"{timestamp}_{filename}"
+            
+            # Save file
+            save_path = uploads_dir / filename
+            file.save(str(save_path))
+            
+            # Add URL path
+            url = f"/uploads/{filename}"
+            uploaded_urls.append(url)
         
-        # Return URL path
-        url = f"/uploads/{filename}"
-        return jsonify({'success': True, 'url': url})
+        if len(uploaded_urls) == 0:
+            return jsonify({'error': 'No valid files uploaded'}), 400
+        
+        # Return single URL for backward compatibility, or array for multiple
+        if len(uploaded_urls) == 1:
+            return jsonify({'success': True, 'url': uploaded_urls[0]})
+        else:
+            return jsonify({'success': True, 'urls': uploaded_urls})
     except Exception as e:
         print('upload_file error:', e)
         import traceback
@@ -405,6 +432,7 @@ def get_ads():
                 'minOrder': r['minOrder'] if 'minOrder' in row_keys and r['minOrder'] is not None else 1,
                 'stock': r['stock'] if 'stock' in row_keys else None,
                 'imageUrl': r['imageUrl'] if 'imageUrl' in row_keys else None,
+                'images': r['images'] if 'images' in row_keys else None,
                 'verified': r['verified'] if 'verified' in row_keys and r['verified'] is not None else 0,
                 'views': r['views'] if 'views' in row_keys and r['views'] is not None else 0
             })
@@ -429,6 +457,7 @@ def post_ad():
     minOrder = data.get('minOrder', 1)
     stock = data.get('stock')
     imageUrl = data.get('imageUrl')
+    images = data.get('images')
     
     if not title or not description:
         return jsonify({'error': 'title and description required'}), 400
@@ -437,9 +466,9 @@ def post_ad():
         db = get_db()
         cur = db.cursor()
         tags_json = json.dumps(tags) if tags else None
-        cur.execute('''INSERT INTO ads (title, description, userId, category, tags, price, unit, minOrder, stock, imageUrl) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
-                    (title, description, userId, category, tags_json, price, unit, minOrder, stock, imageUrl))
+        cur.execute('''INSERT INTO ads (title, description, userId, category, tags, price, unit, minOrder, stock, imageUrl, images) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                    (title, description, userId, category, tags_json, price, unit, minOrder, stock, imageUrl, images))
         db.commit()
         last = cur.lastrowid
         cur.execute('SELECT ads.*, users.name AS author, users.role FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = ?', (last,))
@@ -457,6 +486,7 @@ def post_ad():
                 'minOrder': row['minOrder'] if 'minOrder' in row_keys else 1,
                 'stock': row['stock'] if 'stock' in row_keys else None,
                 'imageUrl': row['imageUrl'] if 'imageUrl' in row_keys else None,
+                'images': row['images'] if 'images' in row_keys else None,
                 'verified': row['verified'] if 'verified' in row_keys else 0
             }
             return jsonify({'success': True, **result})
@@ -503,6 +533,9 @@ def update_ad(ad_id):
         if 'imageUrl' in data:
             update_fields.append('imageUrl = ?')
             values.append(data['imageUrl'])
+        if 'images' in data:
+            update_fields.append('images = ?')
+            values.append(data['images'])
         if 'stock' in data:
             update_fields.append('stock = ?')
             values.append(data['stock'])
@@ -1106,6 +1139,144 @@ def check_wishlist():
         return jsonify({'inWishlist': result is not None, 'wishlistId': result[0] if result else None})
     except Exception as e:
         print('check_wishlist error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+# ===== REVIEWS API =====
+@app.route('/api/reviews/<int:ad_id>', methods=['GET'])
+def get_reviews(ad_id):
+    """Get all reviews for a product"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('''
+            SELECT r.id, r.adId, r.userId, r.rating, r.reviewText, r.createdAt,
+                   u.name as userName, u.profilePicture
+            FROM reviews r
+            LEFT JOIN users u ON r.userId = u.id
+            WHERE r.adId = ?
+            ORDER BY r.createdAt DESC
+        ''', (ad_id,))
+        
+        reviews = []
+        for row in cursor.fetchall():
+            reviews.append({
+                'id': row[0],
+                'adId': row[1],
+                'userId': row[2],
+                'rating': row[3],
+                'reviewText': row[4],
+                'createdAt': row[5],
+                'userName': row[6],
+                'profilePicture': row[7]
+            })
+        
+        db.close()
+        return jsonify(reviews)
+    except Exception as e:
+        print('get_reviews error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/reviews', methods=['POST'])
+def add_review():
+    """Add a new review"""
+    try:
+        data = request.get_json() or {}
+        ad_id = data.get('adId')
+        user_id = data.get('userId')
+        rating = data.get('rating')
+        review_text = data.get('reviewText', '')
+        
+        if not ad_id or not user_id or not rating:
+            return jsonify({'success': False, 'message': 'adId, userId, and rating required'}), 400
+        
+        if rating < 1 or rating > 5:
+            return jsonify({'success': False, 'message': 'Rating must be between 1 and 5'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Check if user already reviewed this product
+        cursor.execute('SELECT id FROM reviews WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        if cursor.fetchone():
+            db.close()
+            return jsonify({'success': False, 'message': 'You have already reviewed this product'}), 400
+        
+        cursor.execute('''
+            INSERT INTO reviews (adId, userId, rating, reviewText)
+            VALUES (?, ?, ?, ?)
+        ''', (ad_id, user_id, rating, review_text))
+        
+        db.commit()
+        review_id = cursor.lastrowid
+        db.close()
+        
+        return jsonify({'success': True, 'reviewId': review_id})
+    except Exception as e:
+        print('add_review error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/reviews/<int:review_id>', methods=['DELETE'])
+def delete_review(review_id):
+    """Delete a review"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('DELETE FROM reviews WHERE id = ?', (review_id,))
+        db.commit()
+        db.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print('delete_review error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/reviews/stats/<int:ad_id>', methods=['GET'])
+def get_review_stats(ad_id):
+    """Get review statistics for a product"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('''
+            SELECT 
+                COUNT(*) as totalReviews,
+                AVG(rating) as averageRating,
+                SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as fiveStars,
+                SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as fourStars,
+                SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as threeStars,
+                SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as twoStars,
+                SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as oneStar
+            FROM reviews
+            WHERE adId = ?
+        ''', (ad_id,))
+        
+        row = cursor.fetchone()
+        db.close()
+        
+        stats = {
+            'totalReviews': row[0] or 0,
+            'averageRating': round(row[1], 1) if row[1] else 0,
+            'fiveStars': row[2] or 0,
+            'fourStars': row[3] or 0,
+            'threeStars': row[4] or 0,
+            'twoStars': row[5] or 0,
+            'oneStar': row[6] or 0
+        }
+        
+        return jsonify(stats)
+    except Exception as e:
+        print('get_review_stats error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
