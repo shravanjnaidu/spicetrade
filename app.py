@@ -162,6 +162,17 @@ def init_db():
             except Exception:
                 pass
     db3.commit()
+    
+    # Add isRead column to messages table
+    cur3.execute("PRAGMA table_info(messages)")
+    messages_cols = [r[1] for r in cur3.fetchall()]
+    if 'isRead' not in messages_cols:
+        try:
+            cur3.execute("ALTER TABLE messages ADD COLUMN isRead INTEGER DEFAULT 0")
+            db3.commit()
+        except Exception:
+            pass
+    
     db3.close()
 
 
@@ -879,13 +890,14 @@ def get_user_conversations(user_id):
                 seller.name as sellerName, seller.email as sellerEmail, seller.profilePicture as sellerPicture,
                 seller.storeName,
                 (SELECT message FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessage,
-                (SELECT createdAt FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessageTime
+                (SELECT createdAt FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessageTime,
+                (SELECT COUNT(*) FROM messages WHERE conversationId = c.id AND senderId != ? AND isRead = 0) as unreadCount
             FROM conversations c
             JOIN users buyer ON c.buyerId = buyer.id
             JOIN users seller ON c.sellerId = seller.id
             WHERE c.buyerId = ? OR c.sellerId = ?
-            ORDER BY c.createdAt DESC
-        ''', (user_id, user_id))
+            ORDER BY lastMessageTime DESC, c.createdAt DESC
+        ''', (user_id, user_id, user_id))
         
         rows = cursor.fetchall()
         conversations = []
@@ -904,7 +916,8 @@ def get_user_conversations(user_id):
                 'sellerPicture': r[10],
                 'storeName': r[11],
                 'lastMessage': r[12],
-                'lastMessageTime': r[13]
+                'lastMessageTime': r[13],
+                'unreadCount': r[14]
             })
         
         db.close()
@@ -983,8 +996,8 @@ def send_message():
         
         # Insert message
         cursor.execute('''
-            INSERT INTO messages (conversationId, senderId, message)
-            VALUES (?, ?, ?)
+            INSERT INTO messages (conversationId, senderId, message, isRead)
+            VALUES (?, ?, ?, 0)
         ''', (conversation_id, sender_id, message))
         db.commit()
         message_id = cursor.lastrowid
@@ -993,6 +1006,66 @@ def send_message():
         return jsonify({'success': True, 'messageId': message_id})
     except Exception as e:
         print('send_message error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/messages/unread/<int:user_id>', methods=['GET'])
+def get_unread_count(user_id):
+    """Get count of unread messages for a user"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Count unread messages where user is the recipient (not the sender)
+        cursor.execute('''
+            SELECT COUNT(*) FROM messages m
+            JOIN conversations c ON m.conversationId = c.id
+            WHERE m.isRead = 0 
+            AND m.senderId != ?
+            AND (c.buyerId = ? OR c.sellerId = ?)
+        ''', (user_id, user_id, user_id))
+        
+        count = cursor.fetchone()[0]
+        db.close()
+        
+        return jsonify({'unreadCount': count})
+    except Exception as e:
+        print('get_unread_count error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/messages/mark-read/<int:conversation_id>', methods=['POST'])
+def mark_messages_read(conversation_id):
+    """Mark all messages in a conversation as read for the current user"""
+    try:
+        data = request.get_json() or {}
+        user_id = data.get('userId')
+        
+        if not user_id:
+            return jsonify({'error': 'userId required'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Mark messages as read where user is the recipient
+        cursor.execute('''
+            UPDATE messages 
+            SET isRead = 1 
+            WHERE conversationId = ? 
+            AND senderId != ?
+            AND isRead = 0
+        ''', (conversation_id, user_id))
+        
+        db.commit()
+        db.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print('mark_messages_read error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500

@@ -263,7 +263,7 @@ function updateHeader() {
     if (isSeller) {
       dropdownItems = `
         <a href="/seller-dashboard.html" class="dropdown-item">Manage Store</a>
-        <a href="/messages.html" class="dropdown-item">Messages</a>
+        <a href="/messages.html" class="dropdown-item">Messages <span id="messagesBadge" class="notification-badge"></span></a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
       `;
@@ -271,7 +271,7 @@ function updateHeader() {
       dropdownItems = `
         <a href="/dashboard.html" class="dropdown-item">My Listings</a>
         <a href="/wishlist.html" class="dropdown-item">My Wishlist</a>
-        <a href="/messages.html" class="dropdown-item">Messages</a>
+        <a href="/messages.html" class="dropdown-item">Messages <span id="messagesBadge" class="notification-badge"></span></a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
       `;
@@ -281,9 +281,14 @@ function updateHeader() {
       <nav>
         <a href="${dashboardLink}" class="btn">${dashboardLabel}</a>
         <div class="user-dropdown">
-          <span class="user">Welcome, ${escapeHtml(
-            user.name || user.email
-          )}</span>
+          <span class="user">
+            <span class="user-notification-icon" id="userNotificationIcon" style="display: none;">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                <circle cx="4" cy="4" r="4" fill="#ff4444"/>
+              </svg>
+            </span>
+            Welcome, ${escapeHtml(user.name || user.email)}
+          </span>
           <div class="dropdown-menu">
             ${dropdownItems}
           </div>
@@ -310,6 +315,43 @@ function updateHeader() {
 }
 
 updateHeader();
+
+// Fetch and update unread message count
+async function updateMessageNotification() {
+  const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
+  if (!user) return;
+
+  try {
+    const response = await fetch(`/api/messages/unread/${user.id}`);
+    const data = await response.json();
+
+    if (data.unreadCount > 0) {
+      const badge = document.getElementById("messagesBadge");
+      if (badge) {
+        badge.textContent = data.unreadCount;
+        badge.style.display = "inline-block";
+      }
+
+      // Show notification icon on user welcome text
+      const userIcon = document.getElementById("userNotificationIcon");
+      if (userIcon) {
+        userIcon.style.display = "inline-block";
+      }
+    } else {
+      // Hide notification icon when no unread messages
+      const userIcon = document.getElementById("userNotificationIcon");
+      if (userIcon) {
+        userIcon.style.display = "none";
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch unread count:", error);
+  }
+}
+
+// Check for new messages every 10 seconds
+updateMessageNotification();
+setInterval(updateMessageNotification, 10000);
 
 function filterByCategory(cat) {
   const qInput = document.getElementById("q");
