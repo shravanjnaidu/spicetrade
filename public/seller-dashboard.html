@@ -348,7 +348,7 @@
             ></div>
           </div>
           <div class="form-group">
-            <label for="productImage">Product Images (up to 5)</label>
+            <label for="productImage">Product Images (up to 10)</label>
             <input
               type="file"
               id="productImage"
@@ -364,7 +364,7 @@
                 margin-top: 4px;
               "
             >
-              Select multiple images for your product
+              Select multiple images for your product (max 10)
             </small>
             <div
               id="productImagePreviews"
@@ -944,6 +944,26 @@
           categorySelect.dispatchEvent(new Event("change"));
         }
 
+        // Show existing images in preview
+        const previewContainer = document.getElementById(
+          "productImagePreviews"
+        );
+        previewContainer.innerHTML = "";
+        if (product.images) {
+          try {
+            const images = JSON.parse(product.images);
+            images.forEach((imgUrl) => {
+              const img = document.createElement("img");
+              img.src = imgUrl;
+              img.style.cssText =
+                "width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin-right: 8px; margin-bottom: 8px;";
+              previewContainer.appendChild(img);
+            });
+          } catch (e) {
+            console.error("Error loading existing images:", e);
+          }
+        }
+
         // Change modal title and button text
         document.querySelector("#productModal .modal-header h3").textContent =
           "Edit Product";
@@ -964,7 +984,7 @@
           previewContainer.innerHTML = "";
 
           const files = e.target.files;
-          for (let i = 0; i < Math.min(files.length, 5); i++) {
+          for (let i = 0; i < Math.min(files.length, 10); i++) {
             const file = files[i];
             const reader = new FileReader();
 
@@ -972,15 +992,15 @@
               const img = document.createElement("img");
               img.src = event.target.result;
               img.style.cssText =
-                "width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;";
+                "width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin-right: 8px; margin-bottom: 8px;";
               previewContainer.appendChild(img);
             };
 
             reader.readAsDataURL(file);
           }
 
-          if (files.length > 5) {
-            alert("Maximum 5 images allowed. Only first 5 will be uploaded.");
+          if (files.length > 10) {
+            alert("Maximum 10 images allowed. Only first 10 will be uploaded.");
           }
         });
 
@@ -1043,8 +1063,8 @@
 
           if (imageFiles && imageFiles.length > 0) {
             const imageData = new FormData();
-            // Add up to 5 images
-            for (let i = 0; i < Math.min(imageFiles.length, 5); i++) {
+            // Add up to 10 images
+            for (let i = 0; i < Math.min(imageFiles.length, 10); i++) {
               imageData.append("file", imageFiles[i]);
             }
 
@@ -1083,11 +1103,29 @@
           if (imageUrl) {
             payload.imageUrl = imageUrl;
           }
+
+          // Merge new images with existing images
+          let finalImages = [];
+          if (editingProductId && existingProductImages) {
+            try {
+              const existing = JSON.parse(existingProductImages);
+              if (Array.isArray(existing)) {
+                finalImages = [...existing];
+              }
+            } catch (e) {
+              console.error("Error parsing existing images:", e);
+            }
+          }
+
           if (imageUrls.length > 0) {
-            payload.images = JSON.stringify(imageUrls);
-          } else if (editingProductId && existingProductImages) {
-            // Preserve existing images if editing and no new images uploaded
-            payload.images = existingProductImages;
+            finalImages = [...finalImages, ...imageUrls];
+            // Limit to 10 images total
+            finalImages = finalImages.slice(0, 10);
+            payload.imageUrl = finalImages[0]; // First image as main
+          }
+
+          if (finalImages.length > 0) {
+            payload.images = JSON.stringify(finalImages);
           }
 
           // Determine if we're editing or creating
