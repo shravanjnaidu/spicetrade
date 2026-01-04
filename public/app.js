@@ -41,20 +41,426 @@ if (signupForm) {
 // Ad form handler is in dashboard.html to include tags
 // Removed from here to prevent duplicate submissions
 
-// Search handler (on index page)
+// Enhanced Amazon-style search handler
 const searchForm = document.getElementById("searchForm");
+const searchInput = document.getElementById("q");
+let searchTimeout = null;
+let allAds = []; // Cache all ads for faster filtering
+
+// Fetch all ads once for search
+async function fetchAllAds() {
+  try {
+    const res = await fetch("/api/ads");
+    allAds = await res.json();
+  } catch (err) {
+    console.error("Failed to fetch ads:", err);
+    allAds = [];
+  }
+}
+
+// Enhanced search function that searches across multiple fields
+function performSearch(query) {
+  const listingsTitle = document.getElementById("listingsTitle");
+  const searchResultsContainer = document.getElementById("searchResultsContainer");
+  const homeContent = document.getElementById("homeContent");
+  const searchBreadcrumb = document.getElementById("searchBreadcrumb");
+  
+  if (!query || query.trim() === "") {
+    // Show home content, hide search results
+    if (searchResultsContainer) searchResultsContainer.style.display = "none";
+    if (homeContent) homeContent.style.display = "block";
+    renderAds(allAds);
+    if (listingsTitle) {
+      listingsTitle.textContent = "Latest Buyer Requirements";
+    }
+    return;
+  }
+
+  // Show search results, hide home content
+  if (searchResultsContainer) searchResultsContainer.style.display = "block";
+  if (homeContent) homeContent.style.display = "none";
+
+  const q = query.toLowerCase().trim();
+  const searchTerms = q.split(/\s+/); // Split by spaces for multi-word search
+
+  const filtered = allAds.filter((ad) => {
+    // Search in title
+    const titleMatch = (ad.title || "").toLowerCase().includes(q);
+    
+    // Search in description
+    const descMatch = (ad.description || "").toLowerCase().includes(q);
+    
+    // Search in tags
+    const tagsMatch = ad.tags && ad.tags.some(tag => 
+      tag.toLowerCase().includes(q)
+    );
+    
+    // Search in category
+    const categoryMatch = (ad.category || "").toLowerCase().includes(q);
+    
+    // Search in author/store name
+    const authorMatch = (ad.author || "").toLowerCase().includes(q);
+    
+    // Multi-word search: check if all terms match at least one field
+    const multiWordMatch = searchTerms.every(term => {
+      const t = term.toLowerCase();
+      return (
+        (ad.title || "").toLowerCase().includes(t) ||
+        (ad.description || "").toLowerCase().includes(t) ||
+        (ad.category || "").toLowerCase().includes(t) ||
+        (ad.author || "").toLowerCase().includes(t) ||
+        (ad.tags && ad.tags.some(tag => tag.toLowerCase().includes(t)))
+      );
+    });
+
+    return titleMatch || descMatch || tagsMatch || categoryMatch || authorMatch || multiWordMatch;
+  });
+
+  // Update breadcrumb
+  if (searchBreadcrumb) {
+    searchBreadcrumb.textContent = `Results for "${query}"`;
+  }
+
+  // Update results count
+  const resultsCount = document.getElementById("resultsCount");
+  if (resultsCount) {
+    resultsCount.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for "${query}"`;
+  }
+
+  // Render Amazon-style results
+  renderAmazonResults(filtered, query);
+  
+  // Build filters from results
+  buildFilters(filtered);
+}
+
+// Render products in Amazon-style grid
+function renderAmazonResults(products, query) {
+  const grid = document.getElementById("searchResultsGrid");
+  if (!grid) return;
+  
+  if (!products || products.length === 0) {
+    grid.innerHTML = `
+      <div class="amazon-empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <h3>No results found for "${escapeHtml(query)}"</h3>
+        <p>Try checking your spelling or use more general terms</p>
+        <button onclick="document.getElementById('q').value=''; document.getElementById('clearSearch').click();" class="apply-filter-btn">Clear Search</button>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = "";
+  products.forEach(product => {
+    const card = document.createElement("div");
+    card.className = "amazon-product-card";
+    card.onclick = () => window.location.href = `/listing.html?id=${product.id}`;
+    
+    // Product image
+    const img = document.createElement("img");
+    img.className = "amazon-product-image";
+    img.src = product.imageUrl || "https://via.placeholder.com/300x300?text=No+Image";
+    img.alt = product.title || "Product";
+    img.loading = "lazy";
+    card.appendChild(img);
+    
+    // Product title
+    const title = document.createElement("h3");
+    title.className = "amazon-product-title";
+    title.textContent = product.title || "Untitled";
+    card.appendChild(title);
+    
+    // Rating (placeholder - can be enhanced with real ratings)
+    if (product.rating || Math.random() > 0.3) {
+      const rating = document.createElement("div");
+      rating.className = "amazon-product-rating";
+      
+      const stars = document.createElement("div");
+      stars.className = "amazon-stars";
+      const numStars = product.rating || Math.floor(Math.random() * 2) + 4;
+      stars.innerHTML = "★".repeat(numStars) + "☆".repeat(5 - numStars);
+      
+      const count = document.createElement("span");
+      count.className = "amazon-rating-count";
+      count.textContent = product.reviewCount || Math.floor(Math.random() * 500) + 10;
+      
+      rating.appendChild(stars);
+      rating.appendChild(count);
+      card.appendChild(rating);
+    }
+    
+    // Price
+    if (product.price) {
+      const price = document.createElement("div");
+      price.className = "amazon-product-price";
+      price.innerHTML = `<span class="amazon-product-price-small">$</span>${parseFloat(product.price).toFixed(2)}`;
+      card.appendChild(price);
+    }
+    
+    // Tags
+    if (product.tags && product.tags.length > 0) {
+      const tagsDiv = document.createElement("div");
+      tagsDiv.className = "amazon-product-tags";
+      product.tags.slice(0, 3).forEach(tag => {
+        const tagSpan = document.createElement("span");
+        tagSpan.className = "amazon-product-tag";
+        tagSpan.textContent = tag;
+        tagsDiv.appendChild(tagSpan);
+      });
+      card.appendChild(tagsDiv);
+    }
+    
+    // Store name
+    if (product.author) {
+      const store = document.createElement("div");
+      store.className = "amazon-product-store";
+      store.textContent = `by ${product.author}`;
+      card.appendChild(store);
+    }
+    
+    grid.appendChild(card);
+  });
+}
+
+// Build dynamic filters from search results
+function buildFilters(products) {
+  // Category filters
+  const categories = {};
+  const tags = {};
+  const stores = {};
+  
+  products.forEach(p => {
+    if (p.category) {
+      categories[p.category] = (categories[p.category] || 0) + 1;
+    }
+    if (p.tags) {
+      p.tags.forEach(tag => {
+        tags[tag] = (tags[tag] || 0) + 1;
+      });
+    }
+    if (p.author) {
+      stores[p.author] = (stores[p.author] || 0) + 1;
+    }
+  });
+  
+  // Render category filters
+  const categoryFilters = document.getElementById("categoryFilters");
+  if (categoryFilters) {
+    categoryFilters.innerHTML = Object.entries(categories)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([cat, count]) => `
+        <label>
+          <input type="checkbox" class="category-filter" value="${escapeHtml(cat)}">
+          <span>${escapeHtml(cat)}</span>
+          <span class="count">(${count})</span>
+        </label>
+      `).join('');
+    
+    // Add event listeners
+    categoryFilters.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', applyFilters);
+    });
+  }
+  
+  // Render tags filters
+  const tagsFilters = document.getElementById("tagsFilters");
+  if (tagsFilters) {
+    tagsFilters.innerHTML = Object.entries(tags)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15)
+      .map(([tag, count]) => `
+        <label>
+          <input type="checkbox" class="tag-filter" value="${escapeHtml(tag)}">
+          <span>${escapeHtml(tag)}</span>
+          <span class="count">(${count})</span>
+        </label>
+      `).join('');
+    
+    tagsFilters.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', applyFilters);
+    });
+  }
+  
+  // Render store filters
+  const storesFilters = document.getElementById("storesFilters");
+  if (storesFilters) {
+    storesFilters.innerHTML = Object.entries(stores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([store, count]) => `
+        <label>
+          <input type="checkbox" class="store-filter" value="${escapeHtml(store)}">
+          <span>${escapeHtml(store)}</span>
+          <span class="count">(${count})</span>
+        </label>
+      `).join('');
+    
+    storesFilters.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', applyFilters);
+    });
+  }
+}
+
+// Apply filters to search results
+let currentFilteredResults = [];
+
+function applyFilters() {
+  const query = document.getElementById("q").value.trim();
+  
+  // Get base filtered results
+  const q = query.toLowerCase().trim();
+  const searchTerms = q.split(/\s+/);
+  
+  let filtered = allAds.filter((ad) => {
+    const titleMatch = (ad.title || "").toLowerCase().includes(q);
+    const descMatch = (ad.description || "").toLowerCase().includes(q);
+    const tagsMatch = ad.tags && ad.tags.some(tag => tag.toLowerCase().includes(q));
+    const categoryMatch = (ad.category || "").toLowerCase().includes(q);
+    const authorMatch = (ad.author || "").toLowerCase().includes(q);
+    const multiWordMatch = searchTerms.every(term => {
+      const t = term.toLowerCase();
+      return (
+        (ad.title || "").toLowerCase().includes(t) ||
+        (ad.description || "").toLowerCase().includes(t) ||
+        (ad.category || "").toLowerCase().includes(t) ||
+        (ad.author || "").toLowerCase().includes(t) ||
+        (ad.tags && ad.tags.some(tag => tag.toLowerCase().includes(t)))
+      );
+    });
+    return titleMatch || descMatch || tagsMatch || categoryMatch || authorMatch || multiWordMatch;
+  });
+  
+  // Apply category filters
+  const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(cb => cb.value);
+  if (selectedCategories.length > 0) {
+    filtered = filtered.filter(ad => selectedCategories.includes(ad.category));
+  }
+  
+  // Apply tag filters
+  const selectedTags = Array.from(document.querySelectorAll('.tag-filter:checked')).map(cb => cb.value);
+  if (selectedTags.length > 0) {
+    filtered = filtered.filter(ad => ad.tags && ad.tags.some(tag => selectedTags.includes(tag)));
+  }
+  
+  // Apply store filters
+  const selectedStores = Array.from(document.querySelectorAll('.store-filter:checked')).map(cb => cb.value);
+  if (selectedStores.length > 0) {
+    filtered = filtered.filter(ad => selectedStores.includes(ad.author));
+  }
+  
+  // Apply price filter
+  const minPrice = parseFloat(document.getElementById("minPrice")?.value);
+  const maxPrice = parseFloat(document.getElementById("maxPrice")?.value);
+  if (!isNaN(minPrice) && minPrice >= 0) {
+    filtered = filtered.filter(ad => ad.price && parseFloat(ad.price) >= minPrice);
+  }
+  if (!isNaN(maxPrice) && maxPrice >= 0) {
+    filtered = filtered.filter(ad => ad.price && parseFloat(ad.price) <= maxPrice);
+  }
+  
+  currentFilteredResults = filtered;
+  
+  // Update results count
+  const resultsCount = document.getElementById("resultsCount");
+  if (resultsCount) {
+    resultsCount.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`;
+  }
+  
+  // Apply sorting
+  const sortSelect = document.getElementById("sortSelect");
+  if (sortSelect) {
+    applySorting(filtered, sortSelect.value);
+  } else {
+    renderAmazonResults(filtered, query);
+  }
+}
+
+// Apply sorting
+function applySorting(products, sortBy) {
+  let sorted = [...products];
+  
+  switch(sortBy) {
+    case 'price-low':
+      sorted.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+      break;
+    case 'price-high':
+      sorted.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+      break;
+    case 'newest':
+      sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      break;
+    case 'rating':
+      sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      break;
+    default: // featured
+      // Keep original order
+      break;
+  }
+  
+  const query = document.getElementById("q").value.trim();
+  renderAmazonResults(sorted, query);
+}
+
+// Search form submit handler
 if (searchForm) {
   searchForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const q = document.getElementById("q").value.trim().toLowerCase();
-    const res = await fetch("/api/ads");
-    const ads = await res.json();
-    const filtered = ads.filter(
-      (a) =>
-        (a.title || "").toLowerCase().includes(q) ||
-        (a.description || "").toLowerCase().includes(q)
-    );
-    renderAds(filtered);
+    const query = searchInput.value.trim();
+    
+    if (allAds.length === 0) {
+      await fetchAllAds();
+    }
+    
+    performSearch(query);
+  });
+}
+
+// Real-time search as you type (like Amazon)
+if (searchInput) {
+  // Fetch ads when page loads
+  fetchAllAds();
+  
+  const clearBtn = document.getElementById("clearSearch");
+  
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value.trim();
+    
+    // Show/hide clear button
+    if (clearBtn) {
+      clearBtn.style.display = query ? "flex" : "none";
+    }
+    
+    // Debounce search - wait 300ms after user stops typing
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      if (allAds.length > 0) {
+        performSearch(query);
+      }
+    }, 300);
+  });
+  
+  // Clear search button functionality
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearBtn.style.display = "none";
+      renderAds(allAds);
+      searchInput.focus();
+    });
+  }
+  
+  // Clear on Escape key
+  searchInput.addEventListener("keyup", (e) => {
+    if (e.key === "Escape") {
+      searchInput.value = "";
+      if (clearBtn) clearBtn.style.display = "none";
+      renderAds(allAds);
+    }
   });
 }
 
@@ -388,6 +794,44 @@ document
       filterByCategory(cat);
     });
   });
+
+// Amazon-style filter controls
+const sortSelect = document.getElementById("sortSelect");
+if (sortSelect) {
+  sortSelect.addEventListener("change", (e) => {
+    const query = document.getElementById("q")?.value.trim();
+    if (query && currentFilteredResults.length > 0) {
+      applySorting(currentFilteredResults, e.target.value);
+    }
+  });
+}
+
+const applyPriceBtn = document.getElementById("applyPriceFilter");
+if (applyPriceBtn) {
+  applyPriceBtn.addEventListener("click", applyFilters);
+}
+
+const clearFiltersBtn = document.getElementById("clearFilters");
+if (clearFiltersBtn) {
+  clearFiltersBtn.addEventListener("click", () => {
+    // Clear all checkboxes
+    document.querySelectorAll('.category-filter, .tag-filter, .store-filter').forEach(cb => {
+      cb.checked = false;
+    });
+    
+    // Clear price inputs
+    const minPrice = document.getElementById("minPrice");
+    const maxPrice = document.getElementById("maxPrice");
+    if (minPrice) minPrice.value = "";
+    if (maxPrice) maxPrice.value = "";
+    
+    // Re-apply search without filters
+    const query = document.getElementById("q")?.value.trim();
+    if (query) {
+      performSearch(query);
+    }
+  });
+}
 
 // init
 loadAds();
