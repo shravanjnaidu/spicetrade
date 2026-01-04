@@ -135,6 +135,17 @@ class APIService {
         )
     }
     
+    // MARK: - Stores
+    
+    func getStores() async throws -> [Store] {
+        return try await makeRequest(endpoint: "/api/stores", method: "GET", responseType: [Store].self)
+    }
+    
+    func getStoreProducts(sellerId: Int) async throws -> [Product] {
+        let allProducts = try await getProducts()
+        return allProducts.filter { $0.userId == sellerId }
+    }
+    
     // MARK: - Products/Ads
     
     func getProducts() async throws -> [Product] {

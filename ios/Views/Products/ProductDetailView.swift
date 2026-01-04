@@ -116,45 +116,72 @@ struct ProductDetailView: View {
                     Divider()
                     
                     // Seller info
-                    if let storeName = product.storeName {
+                    if let storeName = product.storeName, let sellerId = product.userId {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Seller Information")
                                 .font(.headline)
                             
-                            HStack {
-                                if let profilePicture = product.profilePicture {
-                                    AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
-                                        switch phase {
-                                        case .success(let image):
-                                            image.resizable()
-                                        default:
-                                            Image(systemName: "person.circle.fill")
-                                                .resizable()
+                            Button(action: {
+                                // Navigate to store detail - will be handled by NavigationLink
+                            }) {
+                                HStack {
+                                    if let profilePicture = product.profilePicture {
+                                        AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
+                                            switch phase {
+                                            case .success(let image):
+                                                image.resizable()
+                                            default:
+                                                Image(systemName: "person.circle.fill")
+                                                    .resizable()
+                                            }
                                         }
-                                    }
-                                    .frame(width: 50, height: 50)
-                                    .clipShape(Circle())
-                                } else {
-                                    Image(systemName: "storefront.circle.fill")
-                                        .resizable()
                                         .frame(width: 50, height: 50)
-                                        .foregroundColor(.orange)
-                                }
-                                
-                                VStack(alignment: .leading) {
-                                    Text(storeName)
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                    
-                                    if let author = product.author {
-                                        Text(author)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                        .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "storefront.circle.fill")
+                                            .resizable()
+                                            .frame(width: 50, height: 50)
+                                            .foregroundColor(.orange)
                                     }
+                                    
+                                    VStack(alignment: .leading) {
+                                        Text(storeName)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+                                        
+                                        if let author = product.author {
+                                            Text(author)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Text("View Store →")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+                                    
+                                    Spacer()
                                 }
-                                
-                                Spacer()
                             }
+                            .buttonStyle(PlainButtonStyle())
+                            .background(
+                                NavigationLink(destination: StoreDetailView(store: Store(
+                                    id: sellerId,
+                                    name: product.author,
+                                    email: nil,
+                                    storeName: product.storeName,
+                                    businessType: nil,
+                                    categories: product.category,
+                                    address: nil,
+                                    website: nil,
+                                    logo: product.profilePicture,
+                                    createdAt: nil
+                                ))) {
+                                    EmptyView()
+                                }
+                                .opacity(0)
+                            )
                         }
                         
                         Divider()

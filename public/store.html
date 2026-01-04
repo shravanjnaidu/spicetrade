@@ -196,7 +196,7 @@
                 ></span
               >
             </div>
-            <button class="btn contact-btn" onclick="contactStore()">
+            <button class="btn contact-btn" id="contactStoreBtn" onclick="contactStore()">
               Contact Store
             </button>
           </div>
@@ -230,6 +230,26 @@
             alert("Store not found.");
             location.href = "/";
             return;
+          }
+
+          // Store the store data globally for contactStore function
+          window.currentStore = store;
+
+          // Check if current user should see contact button
+          const user = JSON.parse(
+            localStorage.getItem("spicetrade_user") || "null"
+          );
+          const contactBtn = document.getElementById("contactStoreBtn");
+          
+          if (!user || !user.id || user.id === store.id) {
+            // Hide contact button if not logged in or viewing own store
+            contactBtn.style.display = "none";
+          } else if (user.role === "buyer") {
+            // Show for buyers
+            contactBtn.style.display = "block";
+          } else {
+            // Hide for sellers (they can only respond, not initiate)
+            contactBtn.style.display = "none";
           }
 
           // Populate store details
@@ -287,8 +307,57 @@
         }
       }
 
-      function contactStore() {
-        alert("Contact feature coming soon!");
+      async function contactStore() {
+        const user = JSON.parse(
+          localStorage.getItem("spicetrade_user") || "null"
+        );
+
+        if (!user || !user.id) {
+          alert("Please sign in to contact this store");
+          window.location.href = "/login.html";
+          return;
+        }
+
+        if (!window.currentStore) {
+          alert("Store information not loaded");
+          return;
+        }
+
+        // Prevent buyers from contacting themselves or sellers from initiating contact
+        if (user.id === window.currentStore.id) {
+          alert("You cannot contact your own store");
+          return;
+        }
+
+        if (user.role === "seller") {
+          alert("Sellers can only respond to messages from buyers. Buyers must initiate contact first.");
+          return;
+        }
+
+        try {
+          // Create or get conversation with the store (seller)
+          const res = await fetch("/api/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              buyerId: user.id,
+              sellerId: window.currentStore.id,
+              listingId: null, // No specific listing, just general store contact
+            }),
+          });
+
+          const result = await res.json();
+
+          if (result.success) {
+            // Redirect to messages page with the conversation
+            window.location.href = `/messages.html?conversation=${result.conversationId}`;
+          } else {
+            alert("Failed to start conversation: " + (result.error || "Unknown error"));
+          }
+        } catch (err) {
+          console.error("Error starting conversation:", err);
+          alert("Failed to start conversation. Please try again.");
+        }
       }
     </script>
   </body>

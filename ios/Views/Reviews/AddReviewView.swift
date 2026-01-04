@@ -19,15 +19,25 @@ struct AddReviewView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Rating") {
-                    HStack {
-                        ForEach(1...5, id: \.self) { star in
-                            Button(action: { rating = star }) {
-                                Image(systemName: star <= rating ? "star.fill" : "star")
-                                    .font(.title)
-                                    .foregroundColor(.orange)
+                Section {
+                    VStack(spacing: 12) {
+                        Text("Rating")
+                            .font(.headline)
+                        
+                        HStack(spacing: 20) {
+                            ForEach(1...5, id: \.self) { star in
+                                Button(action: { 
+                                    rating = star
+                                    print("Rating set to: \(star)")
+                                }) {
+                                    Image(systemName: star <= rating ? "star.fill" : "star")
+                                        .font(.system(size: 36))
+                                        .foregroundColor(star <= rating ? .orange : .gray)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
+                        .padding(.vertical, 8)
                     }
                     .frame(maxWidth: .infinity)
                 }

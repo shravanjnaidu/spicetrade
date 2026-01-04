@@ -19,19 +19,26 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
+            // Stores
+            StoresListView()
+                .tabItem {
+                    Label("Stores", systemImage: "storefront.fill")
+                }
+                .tag(1)
+            
             // Wishlist (Buyers) or Dashboard (Sellers)
             if authViewModel.currentUser?.isSeller == true {
                 SellerDashboardView()
                     .tabItem {
                         Label("Dashboard", systemImage: "chart.bar.fill")
                     }
-                    .tag(1)
+                    .tag(2)
             } else {
                 WishlistView()
                     .tabItem {
                         Label("Wishlist", systemImage: "heart.fill")
                     }
-                    .tag(1)
+                    .tag(2)
             }
             
             // Messages
@@ -41,14 +48,14 @@ struct MainTabView: View {
                     Label("Messages", systemImage: "message.fill")
                 }
                 .badge(messageViewModel.unreadCount > 0 ? messageViewModel.unreadCount : 0)
-                .tag(2)
+                .tag(3)
             
             // Profile
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
-                .tag(3)
+                .tag(4)
         }
         .tint(.orange)
         .task {

@@ -881,11 +881,9 @@
               "block";
           }
 
-          // Show review form for logged-in buyers
-          if (user && user.id && user.role === "buyer" && !isOwner) {
-            document.getElementById("reviewFormSection").style.display =
-              "block";
-            initStarRating();
+          // Check if user can review and show form if eligible
+          if (user && user.id) {
+            checkCanReview();
           }
         } catch (err) {
           console.error("Error loading listing:", err);
@@ -923,6 +921,41 @@
             star.classList.remove("active");
           }
         });
+      }
+
+      // Check if user can review
+      async function checkCanReview() {
+        const user = JSON.parse(
+          localStorage.getItem("spicetrade_user") || "null"
+        );
+        if (!user || !user.id) return;
+
+        try {
+          const res = await fetch(`/api/reviews/can-review/${listingId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.id }),
+          });
+
+          const data = await res.json();
+
+          if (data.canReview) {
+            document.getElementById("reviewFormSection").style.display =
+              "block";
+            initStarRating();
+          } else if (data.reason) {
+            // Optionally show the reason in the review section
+            const reviewFormSection = document.getElementById("reviewFormSection");
+            reviewFormSection.style.display = "block";
+            reviewFormSection.innerHTML = `
+              <p style="color: #565959; padding: 12px; background: #F7F7F7; border-radius: 8px;">
+                ${data.reason}
+              </p>
+            `;
+          }
+        } catch (err) {
+          console.error("Error checking review eligibility:", err);
+        }
       }
 
       // Load reviews
@@ -1073,6 +1106,8 @@
             updateStarDisplay(0);
             loadReviews();
             loadReviewStats();
+            // Hide review form and show message that user already reviewed
+            checkCanReview();
           } else {
             alert(data.message || "Failed to submit review");
           }
@@ -1099,8 +1134,8 @@
             alert("Review deleted successfully");
             loadReviews();
             loadReviewStats();
-            document.getElementById("reviewFormSection").style.display =
-              "block";
+            // Show review form again since user can now review
+            checkCanReview();
           } else {
             alert("Failed to delete review");
           }

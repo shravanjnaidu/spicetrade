@@ -606,15 +606,23 @@
             title.textContent = product.title;
             info.appendChild(title);
 
-            // Rating & Reviews (placeholder for now)
+            // Rating & Reviews (use real data)
             const rating = document.createElement("div");
             rating.className = "product-rating";
-            rating.innerHTML = `
-              <span class="stars">⭐⭐⭐⭐⭐</span>
-              <span class="review-count">(${
-                Math.floor(Math.random() * 500) + 50
-              })</span>
-            `;
+            
+            // Show rating only if there are reviews
+            if (product.reviewCount > 0) {
+              const numStars = Math.round(product.averageRating);
+              rating.innerHTML = `
+                <span class="stars">${"⭐".repeat(numStars)}${"☆".repeat(5 - numStars)}</span>
+                <span class="review-count">(${product.reviewCount})</span>
+              `;
+            } else {
+              rating.innerHTML = `
+                <span class="stars">☆☆☆☆☆</span>
+                <span class="review-count">(0)</span>
+              `;
+            }
             info.appendChild(rating);
 
             // Price

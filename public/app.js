@@ -174,19 +174,19 @@ function renderAmazonResults(products, query) {
     title.textContent = product.title || "Untitled";
     card.appendChild(title);
     
-    // Rating (placeholder - can be enhanced with real ratings)
-    if (product.rating || Math.random() > 0.3) {
+    // Rating (use real data from product)
+    if (product.reviewCount > 0) {
       const rating = document.createElement("div");
       rating.className = "amazon-product-rating";
       
       const stars = document.createElement("div");
       stars.className = "amazon-stars";
-      const numStars = product.rating || Math.floor(Math.random() * 2) + 4;
+      const numStars = Math.round(product.averageRating || 0);
       stars.innerHTML = "★".repeat(numStars) + "☆".repeat(5 - numStars);
       
       const count = document.createElement("span");
       count.className = "amazon-rating-count";
-      count.textContent = product.reviewCount || Math.floor(Math.random() * 500) + 10;
+      count.textContent = product.reviewCount;
       
       rating.appendChild(stars);
       rating.appendChild(count);

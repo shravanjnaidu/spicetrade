@@ -31,6 +31,8 @@
 		A1000043000000000000001 /* AddReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000044000000000000001 /* AddReviewView.swift */; };
 		A1000045000000000000001 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000046000000000000001 /* ProfileView.swift */; };
 		A1000047000000000000001 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000048000000000000001 /* MainTabView.swift */; };
+		A1000049000000000000001 /* StoreDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000050000000000000002 /* StoreDetailView.swift */; };
+		A1000051000000000000001 /* StoresListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000052000000000000002 /* StoresListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +61,8 @@
 		A1000046000000000000001 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A1000048000000000000001 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		A1000050000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1000050000000000000002 /* StoreDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDetailView.swift; sourceTree = "<group>"; };
+		A1000052000000000000002 /* StoresListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoresListView.swift; sourceTree = "<group>"; };
 		A1000100000000000000001 /* SpiceTrade.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpiceTrade.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -126,6 +130,7 @@
 				A1001300000000000000001 /* Wishlist */,
 				A1001400000000000000001 /* Reviews */,
 				A1001500000000000000001 /* Profile */,
+				A1001650000000000000001 /* Stores */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -199,6 +204,15 @@
 				A1000046000000000000001 /* ProfileView.swift */,
 			);
 			path = Profile;
+			sourceTree = "<group>";
+		};
+		A1001650000000000000001 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				A1000050000000000000002 /* StoreDetailView.swift */,
+				A1000052000000000000002 /* StoresListView.swift */,
+			);
+			path = Stores;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -293,6 +307,8 @@
 				A1000043000000000000001 /* AddReviewView.swift in Sources */,
 				A1000045000000000000001 /* ProfileView.swift in Sources */,
 				A1000047000000000000001 /* MainTabView.swift in Sources */,
+				A1000049000000000000001 /* StoreDetailView.swift in Sources */,
+				A1000051000000000000001 /* StoresListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

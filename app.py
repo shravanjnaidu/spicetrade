@@ -411,7 +411,7 @@ def get_ads():
         cur = db.cursor()
         cur.execute('SELECT ads.*, users.name AS author, users.storeName, users.role, users.profilePicture FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY createdAt DESC')
         rows = cur.fetchall()
-        db.close()
+        
         results = []
         for r in rows:
             row_keys = r.keys()
@@ -424,6 +424,19 @@ def get_ads():
                 category = r['category'] if 'category' in row_keys else None
             except:
                 category = None
+            
+            # Get review stats for this product
+            ad_id = r['id']
+            cur.execute('''
+                SELECT 
+                    COUNT(*) as totalReviews,
+                    AVG(rating) as averageRating
+                FROM reviews
+                WHERE adId = ?
+            ''', (ad_id,))
+            review_row = cur.fetchone()
+            total_reviews = review_row[0] if review_row else 0
+            avg_rating = round(review_row[1], 1) if review_row and review_row[1] else 0
             
             # Safely get values with defaults
             results.append({
@@ -445,8 +458,12 @@ def get_ads():
                 'imageUrl': r['imageUrl'] if 'imageUrl' in row_keys else None,
                 'images': r['images'] if 'images' in row_keys else None,
                 'verified': r['verified'] if 'verified' in row_keys and r['verified'] is not None else 0,
-                'views': r['views'] if 'views' in row_keys and r['views'] is not None else 0
+                'views': r['views'] if 'views' in row_keys and r['views'] is not None else 0,
+                'reviewCount': total_reviews,
+                'averageRating': avg_rating
             })
+        
+        db.close()
         return jsonify(results)
     except Exception as e:
         print('get_ads error:', e)
@@ -1274,6 +1291,13 @@ def add_review():
         db = get_db()
         cursor = db.cursor()
         
+        # Check if user owns this product
+        cursor.execute('SELECT userId FROM ads WHERE id = ?', (ad_id,))
+        ad_row = cursor.fetchone()
+        if ad_row and ad_row[0] == user_id:
+            db.close()
+            return jsonify({'success': False, 'message': 'You cannot review your own product'}), 400
+        
         # Check if user already reviewed this product
         cursor.execute('SELECT id FROM reviews WHERE userId = ? AND adId = ?', (user_id, ad_id))
         if cursor.fetchone():
@@ -1350,6 +1374,45 @@ def get_review_stats(ad_id):
         return jsonify(stats)
     except Exception as e:
         print('get_review_stats error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/reviews/can-review/<int:ad_id>', methods=['POST'])
+def can_review(ad_id):
+    """Check if a user can review a product"""
+    try:
+        data = request.get_json() or {}
+        user_id = data.get('userId')
+        
+        if not user_id:
+            return jsonify({'canReview': False, 'reason': 'User not logged in'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Check if user owns this product
+        cursor.execute('SELECT userId FROM ads WHERE id = ?', (ad_id,))
+        ad_row = cursor.fetchone()
+        if not ad_row:
+            db.close()
+            return jsonify({'canReview': False, 'reason': 'Product not found'}), 404
+            
+        if ad_row[0] == user_id:
+            db.close()
+            return jsonify({'canReview': False, 'reason': 'Cannot review your own product'})
+        
+        # Check if user already reviewed this product
+        cursor.execute('SELECT id FROM reviews WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        if cursor.fetchone():
+            db.close()
+            return jsonify({'canReview': False, 'reason': 'You have already reviewed this product'})
+        
+        db.close()
+        return jsonify({'canReview': True, 'reason': ''})
+    except Exception as e:
+        print('can_review error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500

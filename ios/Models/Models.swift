@@ -259,3 +259,21 @@ struct CanReviewResponse: Codable {
     let canReview: Bool
     let reason: String?
 }
+
+// MARK: - Store Model
+struct Store: Codable, Identifiable {
+    let id: Int
+    let name: String?
+    let email: String?
+    let storeName: String?
+    let businessType: String?
+    let categories: String?
+    let address: String?
+    let website: String?
+    let logo: String?
+    let createdAt: String?
+    
+    var displayName: String {
+        storeName ?? name ?? "Store"
+    }
+}
