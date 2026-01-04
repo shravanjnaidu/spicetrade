@@ -17,7 +17,7 @@ struct ProfileView: View {
                     HStack(spacing: 16) {
                         // Profile picture
                         if let profilePicture = authViewModel.currentUser?.profilePicture {
-                            AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
+                            AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)?v=\(Date().timeIntervalSince1970)")) { phase in
                                 switch phase {
                                 case .success(let image):
                                     image
@@ -30,6 +30,7 @@ struct ProfileView: View {
                             }
                             .frame(width: 80, height: 80)
                             .clipShape(Circle())
+                            .id(profilePicture)
                         } else if let logo = authViewModel.currentUser?.logo {
                             AsyncImage(url: URL(string: "http://localhost:3000\(logo)")) { phase in
                                 switch phase {
@@ -187,7 +188,7 @@ struct EditProfileView: View {
                                 .frame(width: 80, height: 80)
                                 .clipShape(Circle())
                         } else if let profilePicture = authViewModel.currentUser?.profilePicture {
-                            AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
+                            AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)?v=\(Date().timeIntervalSince1970)")) { phase in
                                 switch phase {
                                 case .success(let image):
                                     image
@@ -200,6 +201,7 @@ struct EditProfileView: View {
                             }
                             .frame(width: 80, height: 80)
                             .clipShape(Circle())
+                            .id(profilePicture)
                         } else {
                             Image(systemName: "person.circle.fill")
                                 .resizable()

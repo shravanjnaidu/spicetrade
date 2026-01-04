@@ -24,7 +24,8 @@ struct ProductDetailView: View {
                 if !product.imageURLs.isEmpty {
                     TabView(selection: $selectedImageIndex) {
                         ForEach(Array(product.imageURLs.enumerated()), id: \.offset) { index, imageUrl in
-                            AsyncImage(url: URL(string: "http://localhost:3000\(imageUrl)")) { phase in
+                            let fullURL = product.fullImageURL(for: imageUrl)
+                            AsyncImage(url: URL(string: fullURL)) { phase in
                                 switch phase {
                                 case .empty:
                                     Rectangle()

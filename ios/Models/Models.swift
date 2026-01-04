@@ -86,6 +86,27 @@ struct Product: Codable, Identifiable {
         return []
     }
     
+    /// Returns full URLs for images, ensuring they have the correct format
+    func fullImageURL(for imagePath: String) -> String {
+        // If already a full URL, return as is
+        if imagePath.hasPrefix("http://") || imagePath.hasPrefix("https://") {
+            return imagePath
+        }
+        
+        // If starts with /uploads/, prepend base URL
+        if imagePath.hasPrefix("/uploads/") {
+            return "http://localhost:3000\(imagePath)"
+        }
+        
+        // If just filename, add /uploads/ prefix
+        if !imagePath.hasPrefix("/") {
+            return "http://localhost:3000/uploads/\(imagePath)"
+        }
+        
+        // Otherwise prepend base URL
+        return "http://localhost:3000\(imagePath)"
+    }
+    
     var priceText: String {
         if let price = price {
             return "$\(String(format: "%.2f", price))\(unit != nil ? "/\(unit!)" : "")"
