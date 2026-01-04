@@ -360,16 +360,19 @@ struct AmazonStyleProductCard: View {
                     .lineLimit(2)
                     .frame(height: 36, alignment: .top)
                 
-                // Star rating (placeholder)
-                HStack(spacing: 2) {
-                    ForEach(0..<5) { index in
-                        Image(systemName: index < 4 ? "star.fill" : "star")
+                // Star rating (use real review data)
+                if let reviewCount = product.reviewCount, reviewCount > 0 {
+                    HStack(spacing: 2) {
+                        let stars = Int(round(product.averageRating ?? 0))
+                        ForEach(0..<5) { index in
+                            Image(systemName: index < stars ? "star.fill" : "star")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                        }
+                        Text("(\(reviewCount))")
                             .font(.caption2)
-                            .foregroundColor(.orange)
+                            .foregroundColor(.blue)
                     }
-                    Text("(42)")
-                        .font(.caption2)
-                        .foregroundColor(.blue)
                 }
                 
                 // Price

@@ -282,6 +282,12 @@ class APIService {
         return try await makeRequest(endpoint: "/api/reviews/\(adId)", method: "GET", responseType: [Review].self)
     }
     
+    func canReview(adId: Int, userId: Int) async throws -> CanReviewResponse {
+        let body = ["userId": userId] as [String: Any]
+        let jsonData = try JSONSerialization.data(withJSONObject: body)
+        return try await makeRequest(endpoint: "/api/reviews/can-review/\(adId)", method: "POST", body: jsonData, responseType: CanReviewResponse.self)
+    }
+    
     func addReview(adId: Int, userId: Int, rating: Int, reviewText: String) async throws {
         let body = [
             "adId": adId,

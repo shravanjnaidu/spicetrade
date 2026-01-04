@@ -74,6 +74,8 @@ struct Product: Codable, Identifiable {
     var images: String?
     var verified: Int?
     var views: Int?
+    var reviewCount: Int?
+    var averageRating: Double?
     
     var imageURLs: [String] {
         if let images = images, !images.isEmpty {
@@ -250,4 +252,10 @@ struct ReviewAddResponse: Codable {
     let success: Bool
     let reviewId: Int?
     let message: String?
+}
+
+// MARK: - Can Review Response
+struct CanReviewResponse: Codable {
+    let canReview: Bool
+    let reason: String?
 }

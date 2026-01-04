@@ -14,6 +14,8 @@ struct ProductDetailView: View {
     @State private var showContactSeller = false
     @State private var showReviewSheet = false
     @State private var selectedImageIndex = 0
+    @State private var canReview = false
+    @State private var canReviewMessage: String?
     
     var body: some View {
         ScrollView {
@@ -178,13 +180,23 @@ struct ProductDetailView: View {
                             
                             Spacer()
                             
-                            if authViewModel.currentUser?.isBuyer == true {
+                            if canReview {
                                 Button("Write Review") {
                                     showReviewSheet = true
                                 }
                                 .font(.subheadline)
                                 .foregroundColor(.orange)
                             }
+                        }
+                        
+                        // Show message if user can't review
+                        if !canReview, let message = canReviewMessage, authViewModel.currentUser != nil {
+                            Text(message)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(12)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
                         }
                         
                         if let stats = reviewViewModel.stats {
@@ -220,8 +232,16 @@ struct ProductDetailView: View {
                                 .frame(maxWidth: .infinity)
                         } else if !reviewViewModel.reviews.isEmpty {
                             ForEach(reviewViewModel.reviews.prefix(5)) { review in
-                                ReviewRowView(review: review)
-                                    .padding(.vertical, 4)
+                                ReviewRowView(
+                                    review: review,
+                                    currentUserId: authViewModel.currentUser?.id,
+                                    onDelete: {
+                                        Task {
+                                            await deleteReview(review.id)
+                                        }
+                                    }
+                                )
+                                .padding(.vertical, 4)
                             }
                         } else {
                             Text("No reviews yet")
@@ -277,6 +297,7 @@ struct ProductDetailView: View {
                     Task {
                         await reviewViewModel.loadReviews(productId: product.id)
                         await reviewViewModel.loadStats(productId: product.id)
+                        await checkCanReview()
                     }
                 }
             }
@@ -287,7 +308,35 @@ struct ProductDetailView: View {
             
             if let userId = authViewModel.currentUser?.id {
                 await checkWishlistStatus(userId: userId)
+                await checkCanReview()
             }
+        }
+    }
+    
+    private func checkCanReview() async {
+        guard let userId = authViewModel.currentUser?.id else {
+            canReview = false
+            return
+        }
+        
+        do {
+            let response = try await APIService.shared.canReview(adId: product.id, userId: userId)
+            canReview = response.canReview
+            canReviewMessage = response.reason
+        } catch {
+            print("Error checking review eligibility: \(error)")
+            canReview = false
+        }
+    }
+    
+    private func deleteReview(_ reviewId: Int) async {
+        do {
+            try await APIService.shared.deleteReview(reviewId: reviewId)
+            await reviewViewModel.loadReviews(productId: product.id)
+            await reviewViewModel.loadStats(productId: product.id)
+            await checkCanReview()
+        } catch {
+            print("Error deleting review: \(error)")
         }
     }
     
@@ -364,6 +413,10 @@ struct ReviewBarView: View {
 
 struct ReviewRowView: View {
     let review: Review
+    let currentUserId: Int?
+    let onDelete: () -> Void
+    
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -402,6 +455,15 @@ struct ReviewRowView: View {
                 }
                 
                 Spacer()
+                
+                // Show delete button if this is the current user's review
+                if currentUserId == review.userId {
+                    Button(action: { showDeleteConfirmation = true }) {
+                        Image(systemName: "trash")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
             }
             
             if let reviewText = review.reviewText, !reviewText.isEmpty {
@@ -413,6 +475,18 @@ struct ReviewRowView: View {
         .padding(12)
         .background(Color(.systemGray6))
         .cornerRadius(10)
+        .confirmationDialog(
+            "Delete Review",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                onDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete this review?")
+        }
     }
 }
 
