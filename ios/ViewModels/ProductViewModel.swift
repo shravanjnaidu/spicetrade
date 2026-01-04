@@ -6,6 +6,13 @@
 import Foundation
 import SwiftUI
 
+enum SortOption {
+    case featured
+    case priceLowToHigh
+    case priceHighToLow
+    case newest
+}
+
 @MainActor
 class ProductViewModel: ObservableObject {
     @Published var products: [Product] = []
@@ -14,6 +21,22 @@ class ProductViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var selectedCategory: String?
     @Published var selectedTags: Set<String> = []
+    @Published var sortOption: SortOption = .featured
+    
+    var searchSuggestions: [Product] {
+        guard !searchText.isEmpty else { return [] }
+        
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces).lowercased()
+        guard trimmed.count >= 2 else { return [] }
+        
+        return products.filter { product in
+            product.title.localizedCaseInsensitiveContains(trimmed) ||
+            product.description.localizedCaseInsensitiveContains(trimmed) ||
+            (product.category?.localizedCaseInsensitiveContains(trimmed) ?? false) ||
+            (product.storeName?.localizedCaseInsensitiveContains(trimmed) ?? false) ||
+            (product.tags?.contains(where: { $0.localizedCaseInsensitiveContains(trimmed) }) ?? false)
+        }
+    }
     
     var filteredProducts: [Product] {
         var result = products
@@ -23,6 +46,8 @@ class ProductViewModel: ObservableObject {
             result = result.filter { product in
                 product.title.localizedCaseInsensitiveContains(searchText) ||
                 product.description.localizedCaseInsensitiveContains(searchText) ||
+                (product.category?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                (product.storeName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
                 (product.tags?.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ?? false)
             }
         }
@@ -40,7 +65,24 @@ class ProductViewModel: ObservableObject {
             }
         }
         
+        // Apply sorting
+        switch sortOption {
+        case .featured:
+            // Keep original order
+            break
+        case .priceLowToHigh:
+            result = result.sorted { ($0.price ?? 0) < ($1.price ?? 0) }
+        case .priceHighToLow:
+            result = result.sorted { ($0.price ?? 0) > ($1.price ?? 0) }
+        case .newest:
+            result = result.sorted { ($0.createdAt ?? "") > ($1.createdAt ?? "") }
+        }
+        
         return result
+    }
+    
+    var hasActiveFilters: Bool {
+        selectedCategory != nil || !selectedTags.isEmpty
     }
     
     var availableCategories: [String] {
@@ -75,7 +117,6 @@ class ProductViewModel: ObservableObject {
     }
     
     func clearFilters() {
-        searchText = ""
         selectedCategory = nil
         selectedTags.removeAll()
     }

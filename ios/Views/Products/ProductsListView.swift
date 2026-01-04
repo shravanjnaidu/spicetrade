@@ -8,189 +8,413 @@ import SwiftUI
 struct ProductsListView: View {
     @StateObject private var viewModel = ProductViewModel()
     @State private var showFilters = false
+    @State private var showSuggestions = false
+    @FocusState private var searchFieldFocused: Bool
     
     var body: some View {
         NavigationStack {
             ZStack {
-                if viewModel.isLoading && viewModel.products.isEmpty {
-                    ProgressView("Loading products...")
-                } else if let errorMessage = viewModel.errorMessage {
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 50))
-                            .foregroundColor(.orange)
-                        
-                        Text("Error Loading Products")
-                            .font(.headline)
-                        
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        
-                        Button("Try Again") {
-                            Task { await viewModel.loadProducts() }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.orange)
-                    }
-                    .padding()
-                } else if viewModel.filteredProducts.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        
-                        Text("No Products Found")
-                            .font(.headline)
-                        
-                        if !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil || !viewModel.selectedTags.isEmpty {
-                            Button("Clear Filters") {
-                                viewModel.clearFilters()
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(viewModel.filteredProducts) { product in
-                                NavigationLink(destination: ProductDetailView(product: product)) {
-                                    ProductCardView(product: product)
+                VStack(spacing: 0) {
+                    // Custom Search Bar with Autocomplete
+                    VStack(spacing: 0) {
+                        HStack(spacing: 12) {
+                            // Search icon
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                            
+                            // Search text field
+                            TextField("Search products, categories, stores...", text: $viewModel.searchText)
+                                .focused($searchFieldFocused)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .onChange(of: viewModel.searchText) { _, newValue in
+                                    showSuggestions = !newValue.isEmpty && searchFieldFocused
                                 }
-                                .buttonStyle(PlainButtonStyle())
+                                .onSubmit {
+                                    showSuggestions = false
+                                    searchFieldFocused = false
+                                }
+                            
+                            // Clear button
+                            if !viewModel.searchText.isEmpty {
+                                Button(action: {
+                                    viewModel.searchText = ""
+                                    showSuggestions = false
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.gray)
+                                }
                             }
+                            
+                            // Filter button
+                            Button(action: { showFilters.toggle() }) {
+                                Image(systemName: "line.3.horizontal.decrease.circle")
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .padding(12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        
+                        // Autocomplete Suggestions
+                        if showSuggestions && !viewModel.searchSuggestions.isEmpty {
+                            ScrollView {
+                                VStack(spacing: 0) {
+                                    ForEach(viewModel.searchSuggestions.prefix(8)) { product in
+                                        SuggestionRow(product: product) {
+                                            viewModel.searchText = product.title
+                                            showSuggestions = false
+                                            searchFieldFocused = false
+                                        }
+                                        
+                                        if product.id != viewModel.searchSuggestions.prefix(8).last?.id {
+                                            Divider()
+                                        }
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 300)
+                            .background(Color(.systemBackground))
+                            .cornerRadius(10)
+                            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                            .padding(.horizontal)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    
+                    // Active filters chips
+                    if viewModel.hasActiveFilters {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                if let category = viewModel.selectedCategory {
+                                    FilterChip(text: category, color: .orange) {
+                                        viewModel.selectedCategory = nil
+                                    }
+                                }
+                                
+                                ForEach(Array(viewModel.selectedTags), id: \.self) { tag in
+                                    FilterChip(text: tag, color: .blue) {
+                                        viewModel.selectedTags.remove(tag)
+                                    }
+                                }
+                                
+                                if viewModel.hasActiveFilters {
+                                    Button("Clear all") {
+                                        viewModel.clearFilters()
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    
+                    // Results count
+                    if !viewModel.searchText.isEmpty || viewModel.hasActiveFilters {
+                        HStack {
+                            Text("\(viewModel.filteredProducts.count) result\(viewModel.filteredProducts.count != 1 ? "s" : "")")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            Spacer()
+                            
+                            Menu {
+                                Button("Featured") { viewModel.sortOption = .featured }
+                                Button("Price: Low to High") { viewModel.sortOption = .priceLowToHigh }
+                                Button("Price: High to Low") { viewModel.sortOption = .priceHighToLow }
+                                Button("Newest") { viewModel.sortOption = .newest }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Text("Sort")
+                                    Image(systemName: "chevron.down")
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.orange)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                    }
+                    
+                    // Content
+                    if viewModel.isLoading && viewModel.products.isEmpty {
+                        Spacer()
+                        ProgressView("Loading products...")
+                        Spacer()
+                    } else if let errorMessage = viewModel.errorMessage {
+                        Spacer()
+                        VStack(spacing: 16) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 50))
+                                .foregroundColor(.orange)
+                            
+                            Text("Error Loading Products")
+                                .font(.headline)
+                            
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                            
+                            Button("Try Again") {
+                                Task { await viewModel.loadProducts() }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.orange)
                         }
                         .padding()
-                    }
-                    .refreshable {
-                        await viewModel.loadProducts()
+                        Spacer()
+                    } else if viewModel.filteredProducts.isEmpty {
+                        Spacer()
+                        VStack(spacing: 16) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                            
+                            Text("No Products Found")
+                                .font(.headline)
+                            
+                            if !viewModel.searchText.isEmpty || viewModel.hasActiveFilters {
+                                Button("Clear Filters") {
+                                    viewModel.clearFilters()
+                                    viewModel.searchText = ""
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                        }
+                        Spacer()
+                    } else {
+                        ScrollView {
+                            LazyVGrid(columns: [
+                                GridItem(.flexible(), spacing: 12),
+                                GridItem(.flexible(), spacing: 12)
+                            ], spacing: 16) {
+                                ForEach(viewModel.filteredProducts) { product in
+                                    NavigationLink(destination: ProductDetailView(product: product)) {
+                                        AmazonStyleProductCard(product: product)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                            }
+                            .padding()
+                        }
+                        .refreshable {
+                            await viewModel.loadProducts()
+                        }
                     }
                 }
             }
             .navigationTitle("SpiceTrade")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showFilters.toggle() }) {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                            .foregroundColor(.orange)
-                    }
-                }
-            }
-            .searchable(text: $viewModel.searchText, prompt: "Search products...")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showFilters) {
                 FilterView(viewModel: viewModel)
             }
             .task {
                 await viewModel.loadProducts()
             }
+            .onTapGesture {
+                showSuggestions = false
+                searchFieldFocused = false
+            }
         }
     }
 }
 
-struct ProductCardView: View {
+// Autocomplete Suggestion Row
+struct SuggestionRow: View {
+    let product: Product
+    let onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 12) {
+                // Product image
+                if let imageUrl = product.imageURLs.first {
+                    AsyncImage(url: URL(string: "http://localhost:3000\(imageUrl)")) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        default:
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
+                                .overlay(Image(systemName: "photo").foregroundColor(.gray))
+                        }
+                    }
+                    .frame(width: 50, height: 50)
+                    .cornerRadius(8)
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 50, height: 50)
+                        .overlay(Image(systemName: "photo").foregroundColor(.gray))
+                        .cornerRadius(8)
+                }
+                
+                // Product info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(product.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                    
+                    HStack(spacing: 8) {
+                        if let price = product.price, price > 0 {
+                            Text(product.priceText)
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                        }
+                        
+                        if let category = product.category {
+                            Text(category)
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                Image(systemName: "magnifyingglass")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// Filter Chip
+struct FilterChip: View {
+    let text: String
+    let color: Color
+    let onRemove: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(text)
+                .font(.caption)
+            
+            Button(action: onRemove) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.caption)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(color.opacity(0.2))
+        .foregroundColor(color)
+        .cornerRadius(16)
+    }
+}
+
+// Amazon-Style Product Card (Grid)
+struct AmazonStyleProductCard: View {
     let product: Product
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 8) {
             // Product image
             if let imageUrl = product.imageURLs.first {
                 AsyncImage(url: URL(string: "http://localhost:3000\(imageUrl)")) { phase in
                     switch phase {
                     case .empty:
                         Rectangle()
-                            .fill(Color.gray.opacity(0.2))
+                            .fill(Color.white)
                             .overlay(ProgressView())
                     case .success(let image):
                         image
                             .resizable()
-                            .scaledToFill()
+                            .scaledToFit()
                     case .failure:
                         Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .foregroundColor(.gray)
-                            )
+                            .fill(Color.gray.opacity(0.1))
+                            .overlay(Image(systemName: "photo").foregroundColor(.gray))
                     @unknown default:
                         EmptyView()
                     }
                 }
-                .frame(height: 200)
-                .clipped()
+                .frame(height: 140)
+                .frame(maxWidth: .infinity)
+                .background(Color.white)
             } else {
                 Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 200)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .font(.system(size: 40))
-                            .foregroundColor(.gray)
-                    )
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(height: 140)
+                    .overlay(Image(systemName: "photo").font(.largeTitle).foregroundColor(.gray))
             }
             
             // Product info
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(product.title)
-                    .font(.headline)
+                    .font(.subheadline)
                     .foregroundColor(.primary)
                     .lineLimit(2)
+                    .frame(height: 36, alignment: .top)
                 
-                if let storeName = product.storeName {
-                    HStack(spacing: 4) {
-                        Image(systemName: "storefront")
-                            .font(.caption)
-                        Text(storeName)
-                            .font(.caption)
+                // Star rating (placeholder)
+                HStack(spacing: 2) {
+                    ForEach(0..<5) { index in
+                        Image(systemName: index < 4 ? "star.fill" : "star")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
                     }
-                    .foregroundColor(.secondary)
+                    Text("(42)")
+                        .font(.caption2)
+                        .foregroundColor(.blue)
                 }
                 
-                Text(product.description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                
-                HStack {
-                    Text(product.priceText)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.orange)
-                    
-                    Spacer()
-                    
-                    if let category = product.category {
-                        Text(category)
+                // Price
+                if let price = product.price, price > 0 {
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        Text("$")
                             .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.orange.opacity(0.2))
-                            .foregroundColor(.orange)
-                            .cornerRadius(8)
+                            .foregroundColor(.primary)
+                        Text(String(format: "%.2f", price))
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
                     }
                 }
                 
                 // Tags
                 if let tags = product.tags, !tags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
-                            ForEach(tags.prefix(3), id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 3)
-                                    .background(Color.gray.opacity(0.2))
-                                    .cornerRadius(6)
-                            }
+                    HStack(spacing: 4) {
+                        ForEach(tags.prefix(2), id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption2)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Color.gray.opacity(0.15))
+                                .cornerRadius(4)
                         }
                     }
                 }
+                
+                // Store name
+                if let storeName = product.storeName {
+                    Text("by \(storeName)")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .lineLimit(1)
+                }
             }
-            .padding()
+            .padding(10)
         }
         .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
