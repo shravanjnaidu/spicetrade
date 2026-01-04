@@ -412,6 +412,18 @@ if (searchForm) {
     e.preventDefault();
     const query = searchInput.value.trim();
     
+    // Hide suggestions when submitting
+    hideSuggestions();
+    
+    if (!query) {
+      // If empty, show home content
+      const searchResultsContainer = document.getElementById("searchResultsContainer");
+      const homeContent = document.getElementById("homeContent");
+      if (searchResultsContainer) searchResultsContainer.style.display = "none";
+      if (homeContent) homeContent.style.display = "block";
+      return;
+    }
+    
     if (allAds.length === 0) {
       await fetchAllAds();
     }
@@ -421,11 +433,14 @@ if (searchForm) {
 }
 
 // Real-time search as you type (like Amazon)
+let selectedSuggestionIndex = -1;
+
 if (searchInput) {
   // Fetch ads when page loads
   fetchAllAds();
   
   const clearBtn = document.getElementById("clearSearch");
+  const suggestionsDropdown = document.getElementById("searchSuggestions");
   
   searchInput.addEventListener("input", (e) => {
     const query = e.target.value.trim();
@@ -435,13 +450,39 @@ if (searchInput) {
       clearBtn.style.display = query ? "flex" : "none";
     }
     
-    // Debounce search - wait 300ms after user stops typing
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      if (allAds.length > 0) {
-        performSearch(query);
-      }
-    }, 300);
+    // Show autocomplete suggestions
+    if (query && query.length >= 2) {
+      showSearchSuggestions(query);
+    } else {
+      hideSuggestions();
+    }
+    
+    // Don't auto-search anymore - only on Enter or selection
+    selectedSuggestionIndex = -1;
+  });
+  
+  // Handle keyboard navigation in suggestions
+  searchInput.addEventListener("keydown", (e) => {
+    if (!suggestionsDropdown || suggestionsDropdown.style.display === "none") {
+      return;
+    }
+    
+    const suggestions = suggestionsDropdown.querySelectorAll(".search-suggestion-item");
+    
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestions.length - 1);
+      updateSuggestionHighlight(suggestions);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+      updateSuggestionHighlight(suggestions);
+    } else if (e.key === "Enter" && selectedSuggestionIndex >= 0) {
+      e.preventDefault();
+      suggestions[selectedSuggestionIndex].click();
+    } else if (e.key === "Escape") {
+      hideSuggestions();
+    }
   });
   
   // Clear search button functionality
@@ -449,17 +490,158 @@ if (searchInput) {
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";
       clearBtn.style.display = "none";
-      renderAds(allAds);
+      hideSuggestions();
+      
+      // Show home content
+      const searchResultsContainer = document.getElementById("searchResultsContainer");
+      const homeContent = document.getElementById("homeContent");
+      if (searchResultsContainer) searchResultsContainer.style.display = "none";
+      if (homeContent) homeContent.style.display = "block";
+      
       searchInput.focus();
     });
   }
   
   // Clear on Escape key
   searchInput.addEventListener("keyup", (e) => {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" && !suggestionsDropdown?.style.display !== "none") {
       searchInput.value = "";
       if (clearBtn) clearBtn.style.display = "none";
-      renderAds(allAds);
+      hideSuggestions();
+      
+      const searchResultsContainer = document.getElementById("searchResultsContainer");
+      const homeContent = document.getElementById("homeContent");
+      if (searchResultsContainer) searchResultsContainer.style.display = "none";
+      if (homeContent) homeContent.style.display = "block";
+    }
+  });
+  
+  // Close suggestions when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!searchInput.contains(e.target) && !suggestionsDropdown?.contains(e.target)) {
+      hideSuggestions();
+    }
+  });
+}
+
+// Show search suggestions dropdown
+function showSearchSuggestions(query) {
+  if (allAds.length === 0) return;
+  
+  const suggestionsDropdown = document.getElementById("searchSuggestions");
+  if (!suggestionsDropdown) return;
+  
+  const q = query.toLowerCase().trim();
+  
+  // Find matching products
+  const matches = allAds.filter((ad) => {
+    const titleMatch = (ad.title || "").toLowerCase().includes(q);
+    const descMatch = (ad.description || "").toLowerCase().includes(q);
+    const tagsMatch = ad.tags && ad.tags.some(tag => tag.toLowerCase().includes(q));
+    const categoryMatch = (ad.category || "").toLowerCase().includes(q);
+    const authorMatch = (ad.author || "").toLowerCase().includes(q);
+    
+    return titleMatch || descMatch || tagsMatch || categoryMatch || authorMatch;
+  }).slice(0, 8); // Show max 8 suggestions
+  
+  if (matches.length === 0) {
+    suggestionsDropdown.innerHTML = '<div class="search-no-suggestions">No matching products found</div>';
+    suggestionsDropdown.style.display = "block";
+    return;
+  }
+  
+  suggestionsDropdown.innerHTML = '<div class="search-suggestions-header">Suggested Products</div>';
+  
+  matches.forEach((product, index) => {
+    const item = document.createElement("div");
+    item.className = "search-suggestion-item";
+    item.dataset.index = index;
+    
+    // Product image
+    if (product.imageUrl) {
+      const img = document.createElement("img");
+      img.className = "search-suggestion-image";
+      img.src = product.imageUrl;
+      img.alt = product.title || "Product";
+      img.loading = "lazy";
+      item.appendChild(img);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "search-suggestion-image";
+      placeholder.style.background = "#f0f0f0";
+      placeholder.style.display = "flex";
+      placeholder.style.alignItems = "center";
+      placeholder.style.justifyContent = "center";
+      placeholder.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+      item.appendChild(placeholder);
+    }
+    
+    // Product info
+    const content = document.createElement("div");
+    content.className = "search-suggestion-content";
+    
+    const title = document.createElement("div");
+    title.className = "search-suggestion-title";
+    title.textContent = product.title || "Untitled";
+    content.appendChild(title);
+    
+    const meta = document.createElement("div");
+    meta.className = "search-suggestion-meta";
+    
+    if (product.price) {
+      const price = document.createElement("span");
+      price.className = "search-suggestion-price";
+      price.textContent = `$${parseFloat(product.price).toFixed(2)}`;
+      meta.appendChild(price);
+    }
+    
+    if (product.category) {
+      const category = document.createElement("span");
+      category.className = "search-suggestion-category";
+      category.textContent = product.category;
+      meta.appendChild(category);
+    }
+    
+    content.appendChild(meta);
+    item.appendChild(content);
+    
+    // Icon
+    const icon = document.createElement("div");
+    icon.className = "search-suggestion-icon";
+    icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+    item.appendChild(icon);
+    
+    // Click handler
+    item.addEventListener("click", () => {
+      searchInput.value = product.title;
+      hideSuggestions();
+      performSearch(product.title);
+    });
+    
+    suggestionsDropdown.appendChild(item);
+  });
+  
+  suggestionsDropdown.style.display = "block";
+  selectedSuggestionIndex = -1;
+}
+
+// Hide suggestions dropdown
+function hideSuggestions() {
+  const suggestionsDropdown = document.getElementById("searchSuggestions");
+  if (suggestionsDropdown) {
+    suggestionsDropdown.style.display = "none";
+  }
+  selectedSuggestionIndex = -1;
+}
+
+// Update suggestion highlight for keyboard navigation
+function updateSuggestionHighlight(suggestions) {
+  suggestions.forEach((item, index) => {
+    if (index === selectedSuggestionIndex) {
+      item.classList.add("active");
+      item.scrollIntoView({ block: "nearest" });
+    } else {
+      item.classList.remove("active");
     }
   });
 }
