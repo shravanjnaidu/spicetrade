@@ -137,7 +137,7 @@ def init_db():
     users_without_id = cur.fetchall()
     for row in users_without_id:
         unique_id = 'ST' + str(uuid.uuid4())[:8].upper()
-        cur.execute("UPDATE users SET uniqueId = %s WHERE id = %s", (unique_id, row[0]))
+        cur.execute("UPDATE users SET uniqueId = %s WHERE id = %s", (unique_id, row['id']))
     conn.commit()
     
     cur.close()
@@ -267,10 +267,10 @@ def signup():
     hashed = generate_password_hash(password)
     try:
         db = get_db()
-        cur = db.cursor()
+        cur = dict_cursor(db)
         cur.execute('INSERT INTO users (name, email, password, phone, role, storeName, businessType, categories, taxNumber, address, website, shippingLocations, logo_path, uniqueId, location, profilePicture) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id',
                     (name, email, hashed, phone, role, storeName, businessType, categories, taxNumber, address, website, shipping, logo_path, unique_id, location, profile_picture))
-        user_id = cur.fetchone()[0]
+        user_id = cur.fetchone()['id']
         db.commit()
         
         # Return complete user data
@@ -327,15 +327,15 @@ def login():
             'email': row['email'],
             'phone': row['phone'],
             'role': row['role'] or 'buyer',
-            'storeName': row['storeName'],
-            'businessType': row['businessType'],
+            'storeName': row['storename'],
+            'businessType': row['businesstype'],
             'categories': row['categories'],
             'address': row['address'],
             'website': row['website'],
             'logo': row['logo_path'],
-            'uniqueId': row['uniqueId'],
+            'uniqueId': row['uniqueid'],
             'location': row['location'],
-            'profilePicture': row['profilePicture']
+            'profilePicture': row['profilepicture']
         }
         return jsonify(user_data)
     except Exception as e:
@@ -357,13 +357,13 @@ def get_stores():
                 'id': r['id'],
                 'name': r['name'],
                 'email': r['email'],
-                'storeName': r['storeName'],
-                'businessType': r['businessType'],
+                'storeName': r['storename'],
+                'businessType': r['businesstype'],
                 'categories': r['categories'],
                 'address': r['address'],
                 'website': r['website'],
                 'logo': r['logo_path'],
-                'createdAt': r['createdAt']
+                'createdAt': r['createdat']
             })
         return jsonify(results)
     except Exception as e:
@@ -406,24 +406,24 @@ def get_ads():
             total_reviews = review_row['totalreviews'] if review_row else 0
             avg_rating = round(review_row['averagerating'], 1) if review_row and review_row['averagerating'] else 0
             
-            # Safely get values with defaults
+            # Safely get values with defaults (PostgreSQL returns lowercase column names)
             results.append({
                 'id': r['id'],
                 'title': r['title'],
                 'description': r['description'],
-                'userId': r['userId'],
-                'createdAt': r['createdAt'],
+                'userId': r['userid'],
+                'createdAt': r['createdat'],
                 'author': r['author'] if 'author' in row_keys else None,
-                'storeName': r['storeName'] if 'storeName' in row_keys else None,
+                'storeName': r['storename'] if 'storename' in row_keys else None,
                 'role': r['role'] if 'role' in row_keys else None,
-                'profilePicture': r['profilePicture'] if 'profilePicture' in row_keys else None,
+                'profilePicture': r['profilepicture'] if 'profilepicture' in row_keys else None,
                 'category': category,
                 'tags': tags,
                 'price': r['price'] if 'price' in row_keys and r['price'] is not None else None,
                 'unit': r['unit'] if 'unit' in row_keys else None,
-                'minOrder': r['minOrder'] if 'minOrder' in row_keys and r['minOrder'] is not None else 1,
+                'minOrder': r['minorder'] if 'minorder' in row_keys and r['minorder'] is not None else 1,
                 'stock': r['stock'] if 'stock' in row_keys else None,
-                'imageUrl': r['imageUrl'] if 'imageUrl' in row_keys else None,
+                'imageUrl': r['imageurl'] if 'imageurl' in row_keys else None,
                 'images': r['images'] if 'images' in row_keys else None,
                 'verified': r['verified'] if 'verified' in row_keys and r['verified'] is not None else 0,
                 'views': r['views'] if 'views' in row_keys and r['views'] is not None else 0,
@@ -474,14 +474,14 @@ def post_ad():
             row_keys = row.keys()
             result = {
                 'id': row['id'], 'title': row['title'], 'description': row['description'], 
-                'userId': row['userId'], 'createdAt': row['createdAt'], 'author': row['author'],
+                'userId': row['userid'], 'createdAt': row['createdat'], 'author': row['author'],
                 'category': row['category'] if 'category' in row_keys else None,
                 'tags': json.loads(row['tags']) if row['tags'] else [],
                 'price': row['price'] if 'price' in row_keys else None,
                 'unit': row['unit'] if 'unit' in row_keys else None,
-                'minOrder': row['minOrder'] if 'minOrder' in row_keys else 1,
+                'minOrder': row['minorder'] if 'minorder' in row_keys else 1,
                 'stock': row['stock'] if 'stock' in row_keys else None,
-                'imageUrl': row['imageUrl'] if 'imageUrl' in row_keys else None,
+                'imageUrl': row['imageurl'] if 'imageurl' in row_keys else None,
                 'images': row['images'] if 'images' in row_keys else None,
                 'verified': row['verified'] if 'verified' in row_keys else 0
             }
@@ -542,7 +542,7 @@ def update_ad(ad_id):
         values.append(ad_id)
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         query = f"UPDATE ads SET {', '.join(update_fields)} WHERE id = %s"
         cursor.execute(query, values)
         db.commit()
@@ -659,15 +659,15 @@ def update_profile():
             'email': row['email'],
             'phone': row['phone'],
             'role': row['role'],
-            'storeName': row['storeName'],
-            'businessType': row['businessType'],
+            'storeName': row['storename'],
+            'businessType': row['businesstype'],
             'categories': row['categories'],
             'address': row['address'],
             'website': row['website'],
             'logo': row['logo_path'],
-            'uniqueId': row['uniqueId'],
+            'uniqueId': row['uniqueid'],
             'location': row['location'],
-            'profilePicture': row['profilePicture']
+            'profilePicture': row['profilepicture']
         }
         return jsonify(user_data)
     except Exception as e:
@@ -695,16 +695,16 @@ def admin_get_users():
                 'email': row['email'],
                 'phone': row['phone'],
                 'role': row['role'],
-                'storeName': row['storeName'],
-                'businessType': row['businessType'],
+                'storeName': row['storename'],
+                'businessType': row['businesstype'],
                 'categories': row['categories'],
                 'address': row['address'],
                 'website': row['website'],
                 'logo': row['logo_path'],
-                'uniqueId': row['uniqueId'],
+                'uniqueId': row['uniqueid'],
                 'location': row['location'],
-                'profilePicture': row['profilePicture'],
-                'createdAt': row['createdAt']
+                'profilePicture': row['profilepicture'],
+                'createdAt': row['createdat']
             })
         
         return jsonify({'success': True, 'users': users})
@@ -753,7 +753,7 @@ def admin_update_user(user_id):
         query = f"UPDATE users SET {', '.join(updates)} WHERE id = %s"
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute(query, params)
         db.commit()
         db.close()
@@ -778,7 +778,7 @@ def admin_reset_password(user_id):
         hashed = generate_password_hash(password)
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('UPDATE users SET password = %s WHERE id = %s', (hashed, user_id))
         db.commit()
         db.close()
@@ -795,7 +795,7 @@ def admin_reset_password(user_id):
 def admin_delete_user(user_id):
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Delete user's ads first
         cursor.execute('DELETE FROM ads WHERE userId = %s', (user_id,))
@@ -830,7 +830,7 @@ def start_conversation():
             return jsonify({'error': 'buyerId and sellerId required'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Check if conversation already exists
         cursor.execute('''
@@ -848,7 +848,7 @@ def start_conversation():
             INSERT INTO conversations (buyerId, sellerId, listingId)
             VALUES (%s, %s, %s) RETURNING id
         ''', (buyer_id, seller_id, listing_id))
-        conversation_id = cursor.fetchone()[0]
+        conversation_id = cursor.fetchone()['id']
         db.commit()
         db.close()
         
@@ -865,7 +865,7 @@ def get_user_conversations(user_id):
     """Get all conversations for a user"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Get conversations where user is buyer or seller
         cursor.execute('''
@@ -888,21 +888,21 @@ def get_user_conversations(user_id):
         conversations = []
         for r in rows:
             conversations.append({
-                'id': r[0],
-                'buyerId': r[1],
-                'sellerId': r[2],
-                'listingId': r[3],
-                'createdAt': r[4],
-                'buyerName': r[5],
-                'buyerEmail': r[6],
-                'buyerPicture': r[7],
-                'sellerName': r[8],
-                'sellerEmail': r[9],
-                'sellerPicture': r[10],
-                'storeName': r[11],
-                'lastMessage': r[12],
-                'lastMessageTime': r[13],
-                'unreadCount': r[14]
+                'id': r['id'],
+                'buyerId': r['buyerid'],
+                'sellerId': r['sellerid'],
+                'listingId': r['listingid'],
+                'createdAt': r['createdat'],
+                'buyerName': r['buyername'],
+                'buyerEmail': r['buyeremail'],
+                'buyerPicture': r['buyerpicture'],
+                'sellerName': r['sellername'],
+                'sellerEmail': r['selleremail'],
+                'sellerPicture': r['sellerpicture'],
+                'storeName': r['storename'],
+                'lastMessage': r['lastmessage'],
+                'lastMessageTime': r['lastmessagetime'],
+                'unreadCount': r['unreadcount']
             })
         
         db.close()
@@ -919,7 +919,7 @@ def get_messages(conversation_id):
     """Get all messages in a conversation"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         cursor.execute('''
             SELECT 
@@ -935,14 +935,14 @@ def get_messages(conversation_id):
         messages = []
         for r in rows:
             messages.append({
-                'id': r[0],
-                'conversationId': r[1],
-                'senderId': r[2],
-                'message': r[3],
-                'createdAt': r[4],
-                'senderName': r[5],
-                'senderEmail': r[6],
-                'senderPicture': r[7]
+                'id': r['id'],
+                'conversationId': r['conversationid'],
+                'senderId': r['senderid'],
+                'message': r['message'],
+                'createdAt': r['createdat'],
+                'senderName': r['sendername'],
+                'senderEmail': r['senderemail'],
+                'senderPicture': r['profilepicture']
             })
         
         db.close()
@@ -967,7 +967,7 @@ def send_message():
             return jsonify({'error': 'conversationId, senderId, and message required'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Verify user is part of this conversation
         cursor.execute('''
@@ -984,7 +984,7 @@ def send_message():
             INSERT INTO messages (conversationId, senderId, message, isRead)
             VALUES (%s, %s, %s, 0) RETURNING id
         ''', (conversation_id, sender_id, message))
-        message_id = cursor.fetchone()[0]
+        message_id = cursor.fetchone()['id']
         db.commit()
         db.close()
         
@@ -1001,18 +1001,18 @@ def get_unread_count(user_id):
     """Get count of unread messages for a user"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Count unread messages where user is the recipient (not the sender)
         cursor.execute('''
-            SELECT COUNT(*) FROM messages m
+            SELECT COUNT(*) as count FROM messages m
             JOIN conversations c ON m.conversationId = c.id
             WHERE m.isRead = 0 
             AND m.senderId != %s
             AND (c.buyerId = %s OR c.sellerId = %s)
         ''', (user_id, user_id, user_id))
         
-        count = cursor.fetchone()[0]
+        count = cursor.fetchone()['count']
         db.close()
         
         return jsonify({'unreadCount': count})
@@ -1034,7 +1034,7 @@ def mark_messages_read(conversation_id):
             return jsonify({'error': 'userId required'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Mark messages as read where user is the recipient
         cursor.execute('''
@@ -1090,24 +1090,24 @@ def get_wishlist(user_id):
                 tags = []
             
             results.append({
-                'wishlistId': r['wishlistId'],
-                'addedAt': r['addedAt'],
+                'wishlistId': r['wishlistid'],
+                'addedAt': r['addedat'],
                 'id': r['id'],
                 'title': r['title'],
                 'description': r['description'],
-                'userId': r['userId'],
-                'createdAt': r['createdAt'],
+                'userId': r['userid'],
+                'createdAt': r['createdat'],
                 'author': r['author'] if 'author' in row_keys else None,
-                'storeName': r['storeName'] if 'storeName' in row_keys else None,
+                'storeName': r['storename'] if 'storename' in row_keys else None,
                 'role': r['role'] if 'role' in row_keys else None,
-                'profilePicture': r['profilePicture'] if 'profilePicture' in row_keys else None,
+                'profilePicture': r['profilepicture'] if 'profilepicture' in row_keys else None,
                 'category': r['category'] if 'category' in row_keys else None,
                 'tags': tags,
                 'price': r['price'] if 'price' in row_keys and r['price'] is not None else None,
                 'unit': r['unit'] if 'unit' in row_keys else None,
-                'minOrder': r['minOrder'] if 'minOrder' in row_keys and r['minOrder'] is not None else 1,
+                'minOrder': r['minorder'] if 'minorder' in row_keys and r['minorder'] is not None else 1,
                 'stock': r['stock'] if 'stock' in row_keys else None,
-                'imageUrl': r['imageUrl'] if 'imageUrl' in row_keys else None
+                'imageUrl': r['imageurl'] if 'imageurl' in row_keys else None
             })
         
         db.close()
@@ -1131,7 +1131,7 @@ def add_to_wishlist():
             return jsonify({'error': 'userId and adId required'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Check if already in wishlist
         cursor.execute('SELECT id FROM wishlist WHERE userId = %s AND adId = %s', (user_id, ad_id))
@@ -1143,7 +1143,7 @@ def add_to_wishlist():
         
         # Add to wishlist
         cursor.execute('INSERT INTO wishlist (userId, adId) VALUES (%s, %s) RETURNING id', (user_id, ad_id))
-        wishlist_id = cursor.fetchone()[0]
+        wishlist_id = cursor.fetchone()['id']
         db.commit()
         db.close()
         
@@ -1160,7 +1160,7 @@ def remove_from_wishlist(wishlist_id):
     """Remove item from wishlist"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('DELETE FROM wishlist WHERE id = %s', (wishlist_id,))
         db.commit()
         
@@ -1189,12 +1189,12 @@ def check_wishlist():
             return jsonify({'error': 'userId and adId required'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('SELECT id FROM wishlist WHERE userId = %s AND adId = %s', (user_id, ad_id))
         result = cursor.fetchone()
         db.close()
         
-        return jsonify({'inWishlist': result is not None, 'wishlistId': result[0] if result else None})
+        return jsonify({'inWishlist': result is not None, 'wishlistId': result['id'] if result else None})
     except Exception as e:
         print('check_wishlist error:', e)
         import traceback
@@ -1208,7 +1208,7 @@ def get_reviews(ad_id):
     """Get all reviews for a product"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('''
             SELECT r.id, r.adId, r.userId, r.rating, r.reviewText, r.createdAt,
                    u.name as userName, u.profilePicture
@@ -1221,14 +1221,14 @@ def get_reviews(ad_id):
         reviews = []
         for row in cursor.fetchall():
             reviews.append({
-                'id': row[0],
-                'adId': row[1],
-                'userId': row[2],
-                'rating': row[3],
-                'reviewText': row[4],
-                'createdAt': row[5],
-                'userName': row[6],
-                'profilePicture': row[7]
+                'id': row['id'],
+                'adId': row['adid'],
+                'userId': row['userid'],
+                'rating': row['rating'],
+                'reviewText': row['reviewtext'],
+                'createdAt': row['createdat'],
+                'userName': row['username'],
+                'profilePicture': row['profilepicture']
             })
         
         db.close()
@@ -1257,12 +1257,12 @@ def add_review():
             return jsonify({'success': False, 'message': 'Rating must be between 1 and 5'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Check if user owns this product
         cursor.execute('SELECT userId FROM ads WHERE id = %s', (ad_id,))
         ad_row = cursor.fetchone()
-        if ad_row and ad_row[0] == user_id:
+        if ad_row and ad_row['userid'] == user_id:
             db.close()
             return jsonify({'success': False, 'message': 'You cannot review your own product'}), 400
         
@@ -1277,7 +1277,7 @@ def add_review():
             VALUES (%s, %s, %s, %s) RETURNING id
         ''', (ad_id, user_id, rating, review_text))
         
-        review_id = cursor.fetchone()[0]
+        review_id = cursor.fetchone()['id']
         db.commit()
         db.close()
         
@@ -1294,7 +1294,7 @@ def delete_review(review_id):
     """Delete a review"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('DELETE FROM reviews WHERE id = %s', (review_id,))
         db.commit()
         db.close()
@@ -1312,7 +1312,7 @@ def get_review_stats(ad_id):
     """Get review statistics for a product"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('''
             SELECT 
                 COUNT(*) as totalReviews,
@@ -1330,13 +1330,13 @@ def get_review_stats(ad_id):
         db.close()
         
         stats = {
-            'totalReviews': row[0] or 0,
-            'averageRating': round(row[1], 1) if row[1] else 0,
-            'fiveStars': row[2] or 0,
-            'fourStars': row[3] or 0,
-            'threeStars': row[4] or 0,
-            'twoStars': row[5] or 0,
-            'oneStar': row[6] or 0
+            'totalReviews': row['totalreviews'] or 0,
+            'averageRating': round(row['averagerating'], 1) if row['averagerating'] else 0,
+            'fiveStars': row['fivestars'] or 0,
+            'fourStars': row['fourstars'] or 0,
+            'threeStars': row['threestars'] or 0,
+            'twoStars': row['twostars'] or 0,
+            'oneStar': row['onestar'] or 0
         }
         
         return jsonify(stats)
@@ -1358,7 +1358,7 @@ def can_review(ad_id):
             return jsonify({'canReview': False, 'reason': 'User not logged in'}), 400
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         # Check if user owns this product
         cursor.execute('SELECT userId FROM ads WHERE id = %s', (ad_id,))
@@ -1367,7 +1367,7 @@ def can_review(ad_id):
             db.close()
             return jsonify({'canReview': False, 'reason': 'Product not found'}), 404
             
-        if ad_row[0] == user_id:
+        if ad_row['userid'] == user_id:
             db.close()
             return jsonify({'canReview': False, 'reason': 'Cannot review your own product'})
         
