@@ -1,39 +1,47 @@
 import os
-import sqlite3
+import json
 from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 BASE_DIR = Path(__file__).resolve().parent
-import os
-import sqlite3
-from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_cors import CORS
 
+# Load PostgreSQL credentials
+with open(BASE_DIR / 'creds.json', 'r') as f:
+    DB_CONFIG = json.load(f)
 
-BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / 'data'
 DATA_DIR.mkdir(exist_ok=True)
-DB_PATH = str(DATA_DIR / 'db.sqlite')
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        host=DB_CONFIG['host'],
+        port=DB_CONFIG['port'],
+        dbname=DB_CONFIG['dbname'],
+        user=DB_CONFIG['username'],
+        password=DB_CONFIG['password']
+    )
     return conn
 
 
+def dict_cursor(conn):
+    return conn.cursor(cursor_factory=RealDictCursor)
+
+
 def init_db():
-    db = get_db()
-    cur = db.cursor()
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Create users table
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT,
         email TEXT UNIQUE,
         password TEXT,
@@ -47,133 +55,93 @@ def init_db():
         website TEXT,
         shippingLocations TEXT,
         logo_path TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        uniqueId TEXT,
+        location TEXT,
+        profilePicture TEXT,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+    
+    # Create ads table
     cur.execute('''CREATE TABLE IF NOT EXISTS ads (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         title TEXT,
         description TEXT,
         userId INTEGER,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        category TEXT,
+        tags TEXT,
+        price REAL,
+        unit TEXT,
+        minOrder INTEGER,
+        stock INTEGER,
+        imageUrl TEXT,
+        images TEXT,
+        verified INTEGER DEFAULT 0,
+        views INTEGER DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(userId) REFERENCES users(id)
     )''')
-    db.commit()
-    db.close()
-
-    # Ensure any missing columns are added (simple migrations)
-    cur = get_db().cursor()
-    cols = [r['name'] for r in get_db().cursor().execute("PRAGMA table_info(users)").fetchall()]
-    # above line opened new connection; fetch column names robustly
-    db2 = get_db()
-    cur2 = db2.cursor()
-    cur2.execute("PRAGMA table_info(users)")
-    existing = [r[1] for r in cur2.fetchall()]
-    needed = {
-        'phone': 'TEXT', 'role': 'TEXT', 'storeName': 'TEXT', 'businessType': 'TEXT',
-        'categories': 'TEXT', 'taxNumber': 'TEXT', 'address': 'TEXT', 'website': 'TEXT',
-        'shippingLocations': 'TEXT', 'logo_path': 'TEXT', 'createdAt': 'DATETIME',
-        'uniqueId': 'TEXT', 'location': 'TEXT', 'profilePicture': 'TEXT'
-    }
-    for col, typ in needed.items():
-        if col not in existing:
-            try:
-                cur2.execute(f"ALTER TABLE users ADD COLUMN {col} {typ}")
-            except Exception:
-                pass
-    db2.commit()
     
-    # Generate unique IDs for existing users without one
-    cur2.execute("SELECT id FROM users WHERE uniqueId IS NULL OR uniqueId = ''")
-    users_without_id = cur2.fetchall()
-    for row in users_without_id:
-        import uuid
-        unique_id = 'ST' + str(uuid.uuid4())[:8].upper()
-        cur2.execute("UPDATE users SET uniqueId = ? WHERE id = ?", (unique_id, row[0]))
-    db2.commit()
-    db2.close()
-    
-    # Add tags and category columns to ads table
-    db3 = get_db()
-    cur3 = db3.cursor()
-    cur3.execute("PRAGMA table_info(ads)")
-    ads_cols = [r[1] for r in cur3.fetchall()]
-    ads_needed = {
-        'category': 'TEXT', 
-        'tags': 'TEXT',
-        'price': 'REAL',
-        'unit': 'TEXT',
-        'minOrder': 'INTEGER',
-        'stock': 'INTEGER',
-        'imageUrl': 'TEXT',
-        'images': 'TEXT',
-        'verified': 'INTEGER',
-        'views': 'INTEGER'
-    }
-    
-    # Create messages table
-    cur3.execute('''CREATE TABLE IF NOT EXISTS conversations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    # Create conversations table
+    cur.execute('''CREATE TABLE IF NOT EXISTS conversations (
+        id SERIAL PRIMARY KEY,
         buyerId INTEGER,
         sellerId INTEGER,
         listingId INTEGER,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(buyerId) REFERENCES users(id),
         FOREIGN KEY(sellerId) REFERENCES users(id),
         FOREIGN KEY(listingId) REFERENCES ads(id)
     )''')
     
-    cur3.execute('''CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    # Create messages table
+    cur.execute('''CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
         conversationId INTEGER,
         senderId INTEGER,
         message TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        isRead INTEGER DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(conversationId) REFERENCES conversations(id),
         FOREIGN KEY(senderId) REFERENCES users(id)
     )''')
     
-    cur3.execute('''CREATE TABLE IF NOT EXISTS wishlist (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    # Create wishlist table
+    cur.execute('''CREATE TABLE IF NOT EXISTS wishlist (
+        id SERIAL PRIMARY KEY,
         userId INTEGER,
         adId INTEGER,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(userId) REFERENCES users(id),
         FOREIGN KEY(adId) REFERENCES ads(id),
         UNIQUE(userId, adId)
     )''')
     
     # Create reviews table
-    cur3.execute('''CREATE TABLE IF NOT EXISTS reviews (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cur.execute('''CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
         adId INTEGER,
         userId INTEGER,
         rating INTEGER CHECK(rating >= 1 AND rating <= 5),
         reviewText TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(adId) REFERENCES ads(id),
         FOREIGN KEY(userId) REFERENCES users(id),
         UNIQUE(userId, adId)
     )''')
     
-    for col, typ in ads_needed.items():
-        if col not in ads_cols:
-            try:
-                cur3.execute(f"ALTER TABLE ads ADD COLUMN {col} {typ}")
-            except Exception:
-                pass
-    db3.commit()
+    conn.commit()
     
-    # Add isRead column to messages table
-    cur3.execute("PRAGMA table_info(messages)")
-    messages_cols = [r[1] for r in cur3.fetchall()]
-    if 'isRead' not in messages_cols:
-        try:
-            cur3.execute("ALTER TABLE messages ADD COLUMN isRead INTEGER DEFAULT 0")
-            db3.commit()
-        except Exception:
-            pass
+    # Generate unique IDs for existing users without one
+    import uuid
+    cur.execute("SELECT id FROM users WHERE uniqueId IS NULL OR uniqueId = ''")
+    users_without_id = cur.fetchall()
+    for row in users_without_id:
+        unique_id = 'ST' + str(uuid.uuid4())[:8].upper()
+        cur.execute("UPDATE users SET uniqueId = %s WHERE id = %s", (unique_id, row[0]))
+    conn.commit()
     
-    db3.close()
+    cur.close()
+    conn.close()
 
 
 app = Flask(__name__, static_folder=str(BASE_DIR / 'public'), static_url_path='')
@@ -300,10 +268,10 @@ def signup():
     try:
         db = get_db()
         cur = db.cursor()
-        cur.execute('INSERT INTO users (name, email, password, phone, role, storeName, businessType, categories, taxNumber, address, website, shippingLocations, logo_path, uniqueId, location, profilePicture) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+        cur.execute('INSERT INTO users (name, email, password, phone, role, storeName, businessType, categories, taxNumber, address, website, shippingLocations, logo_path, uniqueId, location, profilePicture) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id',
                     (name, email, hashed, phone, role, storeName, businessType, categories, taxNumber, address, website, shipping, logo_path, unique_id, location, profile_picture))
+        user_id = cur.fetchone()[0]
         db.commit()
-        user_id = cur.lastrowid
         
         # Return complete user data
         user_data = {
@@ -326,7 +294,7 @@ def signup():
         }
         db.close()
         return jsonify(user_data)
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         return jsonify({'error': 'email already used'}), 409
     except Exception as e:
         print('signup error', e)
@@ -342,8 +310,8 @@ def login():
         return jsonify({'error': 'email and password required'}), 400
     try:
         db = get_db()
-        cur = db.cursor()
-        cur.execute('SELECT id, name, email, password, phone, role, storeName, businessType, categories, address, website, logo_path, uniqueId, location, profilePicture FROM users WHERE email = ?', (email,))
+        cur = dict_cursor(db)
+        cur.execute('SELECT id, name, email, password, phone, role, storeName, businessType, categories, address, website, logo_path, uniqueId, location, profilePicture FROM users WHERE email = %s', (email,))
         row = cur.fetchone()
         db.close()
         if not row:
@@ -379,8 +347,8 @@ def login():
 def get_stores():
     try:
         db = get_db()
-        cur = db.cursor()
-        cur.execute('SELECT id, name, email, storeName, businessType, categories, address, website, logo_path, createdAt FROM users WHERE role = ? ORDER BY createdAt DESC LIMIT 20', ('seller',))
+        cur = dict_cursor(db)
+        cur.execute('SELECT id, name, email, storeName, businessType, categories, address, website, logo_path, createdAt FROM users WHERE role = %s ORDER BY createdAt DESC LIMIT 20', ('seller',))
         rows = cur.fetchall()
         db.close()
         results = []
@@ -408,7 +376,7 @@ def get_ads():
     try:
         import json
         db = get_db()
-        cur = db.cursor()
+        cur = dict_cursor(db)
         cur.execute('SELECT ads.*, users.name AS author, users.storeName, users.role, users.profilePicture FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY createdAt DESC')
         rows = cur.fetchall()
         
@@ -432,11 +400,11 @@ def get_ads():
                     COUNT(*) as totalReviews,
                     AVG(rating) as averageRating
                 FROM reviews
-                WHERE adId = ?
+                WHERE adId = %s
             ''', (ad_id,))
             review_row = cur.fetchone()
-            total_reviews = review_row[0] if review_row else 0
-            avg_rating = round(review_row[1], 1) if review_row and review_row[1] else 0
+            total_reviews = review_row['totalreviews'] if review_row else 0
+            avg_rating = round(review_row['averagerating'], 1) if review_row and review_row['averagerating'] else 0
             
             # Safely get values with defaults
             results.append({
@@ -492,14 +460,14 @@ def post_ad():
     try:
         import json
         db = get_db()
-        cur = db.cursor()
+        cur = dict_cursor(db)
         tags_json = json.dumps(tags) if tags else None
         cur.execute('''INSERT INTO ads (title, description, userId, category, tags, price, unit, minOrder, stock, imageUrl, images) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id''', 
                     (title, description, userId, category, tags_json, price, unit, minOrder, stock, imageUrl, images))
+        last = cur.fetchone()['id']
         db.commit()
-        last = cur.lastrowid
-        cur.execute('SELECT ads.*, users.name AS author, users.role FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = ?', (last,))
+        cur.execute('SELECT ads.*, users.name AS author, users.role FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = %s', (last,))
         row = cur.fetchone()
         db.close()
         if row:
@@ -537,35 +505,35 @@ def update_ad(ad_id):
         values = []
         
         if 'title' in data:
-            update_fields.append('title = ?')
+            update_fields.append('title = %s')
             values.append(data['title'])
         if 'description' in data:
-            update_fields.append('description = ?')
+            update_fields.append('description = %s')
             values.append(data['description'])
         if 'price' in data:
-            update_fields.append('price = ?')
+            update_fields.append('price = %s')
             values.append(data['price'])
         if 'unit' in data:
-            update_fields.append('unit = ?')
+            update_fields.append('unit = %s')
             values.append(data['unit'])
         if 'minOrder' in data:
-            update_fields.append('minOrder = ?')
+            update_fields.append('minOrder = %s')
             values.append(data['minOrder'])
         if 'category' in data:
-            update_fields.append('category = ?')
+            update_fields.append('category = %s')
             values.append(data['category'])
         if 'tags' in data:
             import json
-            update_fields.append('tags = ?')
+            update_fields.append('tags = %s')
             values.append(json.dumps(data['tags']))
         if 'imageUrl' in data:
-            update_fields.append('imageUrl = ?')
+            update_fields.append('imageUrl = %s')
             values.append(data['imageUrl'])
         if 'images' in data:
-            update_fields.append('images = ?')
+            update_fields.append('images = %s')
             values.append(data['images'])
         if 'stock' in data:
-            update_fields.append('stock = ?')
+            update_fields.append('stock = %s')
             values.append(data['stock'])
         
         if not update_fields:
@@ -575,7 +543,7 @@ def update_ad(ad_id):
         
         db = get_db()
         cursor = db.cursor()
-        query = f"UPDATE ads SET {', '.join(update_fields)} WHERE id = ?"
+        query = f"UPDATE ads SET {', '.join(update_fields)} WHERE id = %s"
         cursor.execute(query, values)
         db.commit()
         
@@ -597,7 +565,7 @@ def delete_ad(ad_id):
     try:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM ads WHERE id = ?', (ad_id,))
+        cursor.execute('DELETE FROM ads WHERE id = %s', (ad_id,))
         conn.commit()
         
         if cursor.rowcount == 0:
@@ -644,40 +612,40 @@ def update_profile():
         params = []
         
         if 'name' in data:
-            updates.append('name = ?')
+            updates.append('name = %s')
             params.append(data['name'])
         if 'phone' in data:
-            updates.append('phone = ?')
+            updates.append('phone = %s')
             params.append(data['phone'])
         if 'location' in data:
-            updates.append('location = ?')
+            updates.append('location = %s')
             params.append(data['location'])
         if 'storeName' in data:
-            updates.append('storeName = ?')
+            updates.append('storeName = %s')
             params.append(data['storeName'])
         if 'businessType' in data:
-            updates.append('businessType = ?')
+            updates.append('businessType = %s')
             params.append(data['businessType'])
         if 'address' in data:
-            updates.append('address = ?')
+            updates.append('address = %s')
             params.append(data['address'])
         if profile_picture:
-            updates.append('profilePicture = ?')
+            updates.append('profilePicture = %s')
             params.append(profile_picture)
         
         if not updates:
             return jsonify({'error': 'No fields to update'}), 400
         
         params.append(user_id)
-        query = f"UPDATE users SET {', '.join(updates)} WHERE id = ?"
+        query = f"UPDATE users SET {', '.join(updates)} WHERE id = %s"
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute(query, params)
         db.commit()
         
         # Fetch updated user data
-        cursor.execute('SELECT id, name, email, phone, role, storeName, businessType, categories, address, website, logo_path, uniqueId, location, profilePicture FROM users WHERE id = ?', (user_id,))
+        cursor.execute('SELECT id, name, email, phone, role, storeName, businessType, categories, address, website, logo_path, uniqueId, location, profilePicture FROM users WHERE id = %s', (user_id,))
         row = cursor.fetchone()
         db.close()
         
@@ -714,7 +682,7 @@ def update_profile():
 def admin_get_users():
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         cursor.execute('SELECT id, name, email, phone, role, storeName, businessType, categories, address, website, logo_path, uniqueId, location, profilePicture, createdAt FROM users ORDER BY createdAt DESC')
         rows = cursor.fetchall()
         db.close()
@@ -757,32 +725,32 @@ def admin_update_user(user_id):
         params = []
         
         if 'name' in data:
-            updates.append('name = ?')
+            updates.append('name = %s')
             params.append(data['name'])
         if 'email' in data:
-            updates.append('email = ?')
+            updates.append('email = %s')
             params.append(data['email'])
         if 'phone' in data:
-            updates.append('phone = ?')
+            updates.append('phone = %s')
             params.append(data['phone'])
         if 'location' in data:
-            updates.append('location = ?')
+            updates.append('location = %s')
             params.append(data['location'])
         if 'storeName' in data:
-            updates.append('storeName = ?')
+            updates.append('storeName = %s')
             params.append(data['storeName'])
         if 'businessType' in data:
-            updates.append('businessType = ?')
+            updates.append('businessType = %s')
             params.append(data['businessType'])
         if 'address' in data:
-            updates.append('address = ?')
+            updates.append('address = %s')
             params.append(data['address'])
         
         if not updates:
             return jsonify({'error': 'No fields to update'}), 400
         
         params.append(user_id)
-        query = f"UPDATE users SET {', '.join(updates)} WHERE id = ?"
+        query = f"UPDATE users SET {', '.join(updates)} WHERE id = %s"
         
         db = get_db()
         cursor = db.cursor()
@@ -811,7 +779,7 @@ def admin_reset_password(user_id):
         
         db = get_db()
         cursor = db.cursor()
-        cursor.execute('UPDATE users SET password = ? WHERE id = ?', (hashed, user_id))
+        cursor.execute('UPDATE users SET password = %s WHERE id = %s', (hashed, user_id))
         db.commit()
         db.close()
         
@@ -830,10 +798,10 @@ def admin_delete_user(user_id):
         cursor = db.cursor()
         
         # Delete user's ads first
-        cursor.execute('DELETE FROM ads WHERE userId = ?', (user_id,))
+        cursor.execute('DELETE FROM ads WHERE userId = %s', (user_id,))
         
         # Delete user
-        cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
         db.commit()
         
         if cursor.rowcount == 0:
@@ -867,7 +835,7 @@ def start_conversation():
         # Check if conversation already exists
         cursor.execute('''
             SELECT id FROM conversations 
-            WHERE buyerId = ? AND sellerId = ?
+            WHERE buyerId = %s AND sellerId = %s
         ''', (buyer_id, seller_id))
         existing = cursor.fetchone()
         
@@ -878,10 +846,10 @@ def start_conversation():
         # Create new conversation
         cursor.execute('''
             INSERT INTO conversations (buyerId, sellerId, listingId)
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s) RETURNING id
         ''', (buyer_id, seller_id, listing_id))
+        conversation_id = cursor.fetchone()[0]
         db.commit()
-        conversation_id = cursor.lastrowid
         db.close()
         
         return jsonify({'success': True, 'conversationId': conversation_id})
@@ -908,11 +876,11 @@ def get_user_conversations(user_id):
                 seller.storeName,
                 (SELECT message FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessage,
                 (SELECT createdAt FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessageTime,
-                (SELECT COUNT(*) FROM messages WHERE conversationId = c.id AND senderId != ? AND isRead = 0) as unreadCount
+                (SELECT COUNT(*) FROM messages WHERE conversationId = c.id AND senderId != %s AND isRead = 0) as unreadCount
             FROM conversations c
             JOIN users buyer ON c.buyerId = buyer.id
             JOIN users seller ON c.sellerId = seller.id
-            WHERE c.buyerId = ? OR c.sellerId = ?
+            WHERE c.buyerId = %s OR c.sellerId = %s
             ORDER BY lastMessageTime DESC, c.createdAt DESC
         ''', (user_id, user_id, user_id))
         
@@ -959,7 +927,7 @@ def get_messages(conversation_id):
                 u.name as senderName, u.email as senderEmail, u.profilePicture
             FROM messages m
             JOIN users u ON m.senderId = u.id
-            WHERE m.conversationId = ?
+            WHERE m.conversationId = %s
             ORDER BY m.createdAt ASC
         ''', (conversation_id,))
         
@@ -1003,7 +971,7 @@ def send_message():
         
         # Verify user is part of this conversation
         cursor.execute('''
-            SELECT buyerId, sellerId FROM conversations WHERE id = ?
+            SELECT buyerId, sellerId FROM conversations WHERE id = %s
         ''', (conversation_id,))
         conv = cursor.fetchone()
         
@@ -1014,10 +982,10 @@ def send_message():
         # Insert message
         cursor.execute('''
             INSERT INTO messages (conversationId, senderId, message, isRead)
-            VALUES (?, ?, ?, 0)
+            VALUES (%s, %s, %s, 0) RETURNING id
         ''', (conversation_id, sender_id, message))
+        message_id = cursor.fetchone()[0]
         db.commit()
-        message_id = cursor.lastrowid
         db.close()
         
         return jsonify({'success': True, 'messageId': message_id})
@@ -1040,8 +1008,8 @@ def get_unread_count(user_id):
             SELECT COUNT(*) FROM messages m
             JOIN conversations c ON m.conversationId = c.id
             WHERE m.isRead = 0 
-            AND m.senderId != ?
-            AND (c.buyerId = ? OR c.sellerId = ?)
+            AND m.senderId != %s
+            AND (c.buyerId = %s OR c.sellerId = %s)
         ''', (user_id, user_id, user_id))
         
         count = cursor.fetchone()[0]
@@ -1072,8 +1040,8 @@ def mark_messages_read(conversation_id):
         cursor.execute('''
             UPDATE messages 
             SET isRead = 1 
-            WHERE conversationId = ? 
-            AND senderId != ?
+            WHERE conversationId = %s 
+            AND senderId != %s
             AND isRead = 0
         ''', (conversation_id, user_id))
         
@@ -1093,7 +1061,7 @@ def get_wishlist(user_id):
     """Get all wishlist items for a user"""
     try:
         db = get_db()
-        cursor = db.cursor()
+        cursor = dict_cursor(db)
         
         cursor.execute('''
             SELECT 
@@ -1106,7 +1074,7 @@ def get_wishlist(user_id):
             FROM wishlist w
             JOIN ads ON w.adId = ads.id
             LEFT JOIN users ON ads.userId = users.id
-            WHERE w.userId = ?
+            WHERE w.userId = %s
             ORDER BY w.createdAt DESC
         ''', (user_id,))
         
@@ -1166,7 +1134,7 @@ def add_to_wishlist():
         cursor = db.cursor()
         
         # Check if already in wishlist
-        cursor.execute('SELECT id FROM wishlist WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        cursor.execute('SELECT id FROM wishlist WHERE userId = %s AND adId = %s', (user_id, ad_id))
         existing = cursor.fetchone()
         
         if existing:
@@ -1174,9 +1142,9 @@ def add_to_wishlist():
             return jsonify({'success': True, 'message': 'Already in wishlist'})
         
         # Add to wishlist
-        cursor.execute('INSERT INTO wishlist (userId, adId) VALUES (?, ?)', (user_id, ad_id))
+        cursor.execute('INSERT INTO wishlist (userId, adId) VALUES (%s, %s) RETURNING id', (user_id, ad_id))
+        wishlist_id = cursor.fetchone()[0]
         db.commit()
-        wishlist_id = cursor.lastrowid
         db.close()
         
         return jsonify({'success': True, 'wishlistId': wishlist_id})
@@ -1193,7 +1161,7 @@ def remove_from_wishlist(wishlist_id):
     try:
         db = get_db()
         cursor = db.cursor()
-        cursor.execute('DELETE FROM wishlist WHERE id = ?', (wishlist_id,))
+        cursor.execute('DELETE FROM wishlist WHERE id = %s', (wishlist_id,))
         db.commit()
         
         if cursor.rowcount == 0:
@@ -1222,7 +1190,7 @@ def check_wishlist():
         
         db = get_db()
         cursor = db.cursor()
-        cursor.execute('SELECT id FROM wishlist WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        cursor.execute('SELECT id FROM wishlist WHERE userId = %s AND adId = %s', (user_id, ad_id))
         result = cursor.fetchone()
         db.close()
         
@@ -1246,7 +1214,7 @@ def get_reviews(ad_id):
                    u.name as userName, u.profilePicture
             FROM reviews r
             LEFT JOIN users u ON r.userId = u.id
-            WHERE r.adId = ?
+            WHERE r.adId = %s
             ORDER BY r.createdAt DESC
         ''', (ad_id,))
         
@@ -1292,25 +1260,25 @@ def add_review():
         cursor = db.cursor()
         
         # Check if user owns this product
-        cursor.execute('SELECT userId FROM ads WHERE id = ?', (ad_id,))
+        cursor.execute('SELECT userId FROM ads WHERE id = %s', (ad_id,))
         ad_row = cursor.fetchone()
         if ad_row and ad_row[0] == user_id:
             db.close()
             return jsonify({'success': False, 'message': 'You cannot review your own product'}), 400
         
         # Check if user already reviewed this product
-        cursor.execute('SELECT id FROM reviews WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        cursor.execute('SELECT id FROM reviews WHERE userId = %s AND adId = %s', (user_id, ad_id))
         if cursor.fetchone():
             db.close()
             return jsonify({'success': False, 'message': 'You have already reviewed this product'}), 400
         
         cursor.execute('''
             INSERT INTO reviews (adId, userId, rating, reviewText)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s) RETURNING id
         ''', (ad_id, user_id, rating, review_text))
         
+        review_id = cursor.fetchone()[0]
         db.commit()
-        review_id = cursor.lastrowid
         db.close()
         
         return jsonify({'success': True, 'reviewId': review_id})
@@ -1327,7 +1295,7 @@ def delete_review(review_id):
     try:
         db = get_db()
         cursor = db.cursor()
-        cursor.execute('DELETE FROM reviews WHERE id = ?', (review_id,))
+        cursor.execute('DELETE FROM reviews WHERE id = %s', (review_id,))
         db.commit()
         db.close()
         
@@ -1355,7 +1323,7 @@ def get_review_stats(ad_id):
                 SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as twoStars,
                 SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as oneStar
             FROM reviews
-            WHERE adId = ?
+            WHERE adId = %s
         ''', (ad_id,))
         
         row = cursor.fetchone()
@@ -1393,7 +1361,7 @@ def can_review(ad_id):
         cursor = db.cursor()
         
         # Check if user owns this product
-        cursor.execute('SELECT userId FROM ads WHERE id = ?', (ad_id,))
+        cursor.execute('SELECT userId FROM ads WHERE id = %s', (ad_id,))
         ad_row = cursor.fetchone()
         if not ad_row:
             db.close()
@@ -1404,7 +1372,7 @@ def can_review(ad_id):
             return jsonify({'canReview': False, 'reason': 'Cannot review your own product'})
         
         # Check if user already reviewed this product
-        cursor.execute('SELECT id FROM reviews WHERE userId = ? AND adId = ?', (user_id, ad_id))
+        cursor.execute('SELECT id FROM reviews WHERE userId = %s AND adId = %s', (user_id, ad_id))
         if cursor.fetchone():
             db.close()
             return jsonify({'canReview': False, 'reason': 'You have already reviewed this product'})
