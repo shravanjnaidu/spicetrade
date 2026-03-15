@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -25,10 +25,30 @@
             autocomplete="off"
           />
           <!-- Autocomplete Dropdown -->
-          <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
-          
-          <button type="button" id="clearSearch" class="clear-btn" aria-label="Clear search" style="display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div
+            id="searchSuggestions"
+            class="search-suggestions"
+            style="display: none"
+          ></div>
+
+          <button
+            type="button"
+            id="clearSearch"
+            class="clear-btn"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -114,7 +134,11 @@
 
     <main class="market-hero">
       <!-- Search Results Layout (Amazon-style) - Hidden by default, shown when searching -->
-      <div id="searchResultsContainer" class="search-results-container" style="display: none;">
+      <div
+        id="searchResultsContainer"
+        class="search-results-container"
+        style="display: none"
+      >
         <div class="container">
           <!-- Breadcrumb -->
           <div class="breadcrumb">
@@ -143,7 +167,7 @@
             <!-- Left Sidebar Filters -->
             <aside class="filters-sidebar">
               <h3>Filters</h3>
-              
+
               <!-- Category Filter -->
               <div class="filter-group">
                 <h4>Category</h4>
@@ -167,7 +191,9 @@
                   <input type="number" id="minPrice" placeholder="Min" />
                   <span>to</span>
                   <input type="number" id="maxPrice" placeholder="Max" />
-                  <button id="applyPriceFilter" class="apply-filter-btn">Go</button>
+                  <button id="applyPriceFilter" class="apply-filter-btn">
+                    Go
+                  </button>
                 </div>
               </div>
 
@@ -179,7 +205,9 @@
                 </div>
               </div>
 
-              <button id="clearFilters" class="clear-filters-btn">Clear all filters</button>
+              <button id="clearFilters" class="clear-filters-btn">
+                Clear all filters
+              </button>
             </aside>
 
             <!-- Results Grid -->
@@ -196,125 +224,125 @@
       <div id="homeContent">
         <!-- Hero Banner Carousel -->
         <div class="hero-carousel">
-        <div class="carousel-slides">
-          <div class="carousel-slide active">
-            <img
-              src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&h=500&fit=crop"
-              alt="Industrial Equipment"
-            />
-            <div class="carousel-caption">
-              <h1>Premium Industrial Equipment</h1>
-              <p>Connect with verified suppliers worldwide</p>
+          <div class="carousel-slides">
+            <div class="carousel-slide active">
+              <img
+                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&h=500&fit=crop"
+                alt="Industrial Equipment"
+              />
+              <div class="carousel-caption">
+                <h1>Premium Industrial Equipment</h1>
+                <p>Connect with verified suppliers worldwide</p>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <img
+                src="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=1600&h=500&fit=crop"
+                alt="Office Solutions"
+              />
+              <div class="carousel-caption">
+                <h1>Office Automation Solutions</h1>
+                <p>Transform your workspace with cutting-edge technology</p>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <img
+                src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&h=500&fit=crop"
+                alt="Agricultural Products"
+              />
+              <div class="carousel-caption">
+                <h1>Agricultural Excellence</h1>
+                <p>Quality equipment for modern farming</p>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <img
+                src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=500&fit=crop"
+                alt="Solar Energy"
+              />
+              <div class="carousel-caption">
+                <h1>Solar & Renewable Energy</h1>
+                <p>Sustainable solutions for a greener future</p>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <img
+                src="https://images.unsplash.com/photo-1581092918484-8313e1f7e8c6?w=1600&h=500&fit=crop"
+                alt="Medical Equipment"
+              />
+              <div class="carousel-caption">
+                <h1>Medical Laboratory Instruments</h1>
+                <p>Precision tools for healthcare professionals</p>
+              </div>
             </div>
           </div>
-          <div class="carousel-slide">
-            <img
-              src="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=1600&h=500&fit=crop"
-              alt="Office Solutions"
-            />
-            <div class="carousel-caption">
-              <h1>Office Automation Solutions</h1>
-              <p>Transform your workspace with cutting-edge technology</p>
-            </div>
-          </div>
-          <div class="carousel-slide">
-            <img
-              src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&h=500&fit=crop"
-              alt="Agricultural Products"
-            />
-            <div class="carousel-caption">
-              <h1>Agricultural Excellence</h1>
-              <p>Quality equipment for modern farming</p>
-            </div>
-          </div>
-          <div class="carousel-slide">
-            <img
-              src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=500&fit=crop"
-              alt="Solar Energy"
-            />
-            <div class="carousel-caption">
-              <h1>Solar & Renewable Energy</h1>
-              <p>Sustainable solutions for a greener future</p>
-            </div>
-          </div>
-          <div class="carousel-slide">
-            <img
-              src="https://images.unsplash.com/photo-1581092918484-8313e1f7e8c6?w=1600&h=500&fit=crop"
-              alt="Medical Equipment"
-            />
-            <div class="carousel-caption">
-              <h1>Medical Laboratory Instruments</h1>
-              <p>Precision tools for healthcare professionals</p>
-            </div>
+
+          <!-- Carousel Navigation -->
+          <button class="carousel-btn prev" aria-label="Previous slide">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button class="carousel-btn next" aria-label="Next slide">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+
+          <!-- Carousel Indicators -->
+          <div class="carousel-indicators">
+            <button class="indicator active" data-slide="0"></button>
+            <button class="indicator" data-slide="1"></button>
+            <button class="indicator" data-slide="2"></button>
+            <button class="indicator" data-slide="3"></button>
+            <button class="indicator" data-slide="4"></button>
           </div>
         </div>
 
-        <!-- Carousel Navigation -->
-        <button class="carousel-btn prev" aria-label="Previous slide">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <button class="carousel-btn next" aria-label="Next slide">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
+        <!-- Featured Products Section (Amazon-style) -->
+        <section class="featured container">
+          <div class="section-header">
+            <h2>Featured Products</h2>
+            <a href="/seller-dashboard.html" class="view-all"
+              >View all products →</a
+            >
+          </div>
+          <div id="featuredProductsGrid" class="products-grid">
+            Loading products...
+          </div>
+        </section>
 
-        <!-- Carousel Indicators -->
-        <div class="carousel-indicators">
-          <button class="indicator active" data-slide="0"></button>
-          <button class="indicator" data-slide="1"></button>
-          <button class="indicator" data-slide="2"></button>
-          <button class="indicator" data-slide="3"></button>
-          <button class="indicator" data-slide="4"></button>
-        </div>
-      </div>
+        <section class="featured container">
+          <div class="section-header">
+            <h2>Featured Stores</h2>
+            <a href="/all-stores.html" class="view-all">View all stores →</a>
+          </div>
+          <div id="storesList" class="stores-grid">Loading stores...</div>
+        </section>
 
-      <!-- Featured Products Section (Amazon-style) -->
-      <section class="featured container">
-        <div class="section-header">
-          <h2>Featured Products</h2>
-          <a href="/seller-dashboard.html" class="view-all"
-            >View all products →</a
-          >
-        </div>
-        <div id="featuredProductsGrid" class="products-grid">
-          Loading products...
-        </div>
-      </section>
-
-      <section class="featured container">
-        <div class="section-header">
-          <h2>Featured Stores</h2>
-          <a href="/all-stores.html" class="view-all">View all stores →</a>
-        </div>
-        <div id="storesList" class="stores-grid">Loading stores...</div>
-      </section>
-
-      <section class="featured container">
-        <div class="section-header">
-          <h2 id="listingsTitle">Latest Buyer Requirements</h2>
-          <a href="/all-listings.html" class="view-all"
-            >View all requirements →</a
-          >
-        </div>
-        <div id="adsList" class="ads-grid">Loading requirements...</div>
-      </section>
+        <section class="featured container">
+          <div class="section-header">
+            <h2 id="listingsTitle">Latest Buyer Requirements</h2>
+            <a href="/all-listings.html" class="view-all"
+              >View all requirements →</a
+            >
+          </div>
+          <div id="adsList" class="ads-grid">Loading requirements...</div>
+        </section>
       </div>
       <!-- End of homeContent -->
     </main>
@@ -352,7 +380,7 @@
       let currentSlide = 0;
       const slides = document.querySelectorAll(".carousel-slide");
       const indicators = document.querySelectorAll(
-        ".carousel-indicators .indicator"
+        ".carousel-indicators .indicator",
       );
       const totalSlides = slides.length;
       let autoSlideInterval;
@@ -487,12 +515,12 @@
               card.className = "store-card";
               card.style.cursor = "pointer";
               card.addEventListener("click", () => {
-                window.location.href = `/store.html?id=${store.id}`;
+                window.location.href = `/store-profile.html?id=${store.id}`;
               });
 
               const logoHtml = store.logo
                 ? `<img src="${escapeHtml(store.logo)}" alt="${escapeHtml(
-                    store.storeName || store.name
+                    store.storeName || store.name,
                   )}" class="store-logo" />`
                 : `<div class="store-logo-placeholder">${(
                     store.storeName ||
@@ -507,18 +535,18 @@
               <div class="store-info">
                 <h3>${escapeHtml(store.storeName || store.name || "Store")}</h3>
                 <p class="store-category">${escapeHtml(
-                  store.categories || store.businessType || "General"
+                  store.categories || store.businessType || "General",
                 )}</p>
                 ${
                   store.address
                     ? `<p class="store-location"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(
-                        store.address.substring(0, 40)
+                        store.address.substring(0, 40),
                       )}${store.address.length > 40 ? "..." : ""}</p>`
                     : ""
                 }
                 <div class="store-meta">
                   <span class="badge">${escapeHtml(
-                    store.businessType || "Seller"
+                    store.businessType || "Seller",
                   )}</span>
                 </div>
               </div>
@@ -551,7 +579,7 @@
             console.log(
               `Ad ${ad.id}: role=${ad.role}, price=${ad.price}, passes=${
                 isSeller && hasPrice
-              }`
+              }`,
             );
             return isSeller && hasPrice;
           });
@@ -609,7 +637,7 @@
             // Rating & Reviews (use real data)
             const rating = document.createElement("div");
             rating.className = "product-rating";
-            
+
             // Show rating only if there are reviews
             if (product.reviewCount > 0) {
               const numStars = Math.round(product.averageRating);
@@ -631,7 +659,7 @@
             const priceAmount = document.createElement("span");
             priceAmount.className = "price-amount";
             priceAmount.textContent = `$${parseFloat(product.price).toFixed(
-              2
+              2,
             )}`;
             priceDiv.appendChild(priceAmount);
 
@@ -659,7 +687,7 @@
               supplier.className = "product-supplier";
               supplier.innerHTML = `
                 <span class="supplier-name">🏪 ${escapeHtml(
-                  product.storeName
+                  product.storeName,
                 )}</span>
                 ${
                   product.verified ? '<span class="verified-mini">✓</span>' : ""

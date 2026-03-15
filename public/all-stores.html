@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -49,12 +49,12 @@
             card.className = "store-card";
             card.style.cursor = "pointer";
             card.addEventListener("click", () => {
-              window.location.href = `/store.html?id=${store.id}`;
+              window.location.href = `/store-profile.html?id=${store.id}`;
             });
 
             const logoHtml = store.logo
               ? `<img src="${escapeHtml(store.logo)}" alt="${escapeHtml(
-                  store.storeName || store.name
+                  store.storeName || store.name,
                 )}" class="store-logo" />`
               : `<div class="store-logo-placeholder">${(
                   store.storeName ||
@@ -69,18 +69,18 @@
               <div class="store-info">
                 <h3>${escapeHtml(store.storeName || store.name || "Store")}</h3>
                 <p class="store-category">${escapeHtml(
-                  store.categories || store.businessType || "General"
+                  store.categories || store.businessType || "General",
                 )}</p>
                 ${
                   store.address
                     ? `<p class="store-location"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(
-                        store.address.substring(0, 40)
+                        store.address.substring(0, 40),
                       )}${store.address.length > 40 ? "..." : ""}</p>`
                     : ""
                 }
                 <div class="store-meta">
                   <span class="badge">${escapeHtml(
-                    store.businessType || "Seller"
+                    store.businessType || "Seller",
                   )}</span>
                 </div>
               </div>

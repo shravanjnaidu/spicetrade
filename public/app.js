@@ -968,8 +968,10 @@ function updateHeader() {
     // Build dropdown menu items based on role
     let dropdownItems = "";
     if (isSeller) {
+      const _uid = user ? user.id : "";
       dropdownItems = `
         <a href="/seller-dashboard.html" class="dropdown-item">Manage Store</a>
+        <a href="/store-profile.html?id=${_uid}" target="_blank" class="dropdown-item">Store Profile</a>
         <a href="/messages.html" class="dropdown-item">Messages <span id="messagesBadge" class="notification-badge"></span></a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>

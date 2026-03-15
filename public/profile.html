@@ -108,6 +108,27 @@
           grid-template-columns: 1fr;
         }
       }
+      /* ── Edit page section ── */
+      #editSection { background: var(--gray-100, #f4f4f5); min-height: calc(100vh - 56px); padding-bottom: 48px; }
+      .edit-page-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 28px;
+        padding-bottom: 18px;
+        border-bottom: 2px solid var(--accent);
+      }
+      .edit-page-header h2 { margin: 0; font-size: 22px; color: #222; border: none; padding: 0; display: block; }
+      .edit-section-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--accent);
+        margin: 28px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e4e4e7;
+      }
     </style>
   </head>
   <body>
@@ -116,7 +137,7 @@
       <div class="header-right"></div>
     </header>
 
-    <main class="profile-container">
+    <div id="viewSection"><main class="profile-container">
       <div class="profile-header">
         <div class="profile-avatar" id="profileAvatar">U</div>
         <div class="profile-info">
@@ -195,18 +216,18 @@
           </button>
         </div>
       </div>
-    </main>
+    </main></div><!-- /#viewSection -->
 
-    <!-- Edit Profile Modal -->
-    <div id="editModal" class="modal">
-      <div class="modal-content" style="max-width: 600px">
-        <div class="modal-header">
-          <h3>Edit Profile</h3>
-          <button class="close-modal" onclick="closeEditModal()">
-            &times;
-          </button>
+    <!-- Edit Profile Page -->
+    <section id="editSection" style="display:none">
+    <div class="profile-container">
+      <div class="profile-section">
+        <div class="edit-page-header">
+          <button type="button" class="btn secondary" onclick="cancelEdit()" style="padding:8px 18px;font-size:14px;flex-shrink:0;">← Back</button>
+          <h2>Edit Profile</h2>
         </div>
         <form id="editProfileForm">
+          <div class="edit-section-title">Personal Information</div>
           <div class="form-group" style="margin-bottom: 16px">
             <label>Profile Picture</label>
             <input type="file" id="profilePictureInput" accept="image/*" />
@@ -245,6 +266,7 @@
             </div>
           </div>
           <div id="sellerFields" style="display: none">
+            <div class="edit-section-title">Store Information</div>
             <div class="form-group" style="margin-bottom: 16px">
               <label>Store Name</label>
               <input
@@ -272,20 +294,116 @@
                 class="form-control"
               />
             </div>
+            <div class="edit-section-title">Store Profile Page</div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Tagline <small style="color:#888">(short slogan for your store)</small></label>
+              <input
+                type="text"
+                id="editTagline"
+                name="tagline"
+                class="form-control"
+                placeholder='e.g. "India\'s Finest Spice Exporter"'
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>About the Store <small style="color:#888">(shown on Store Profile page)</small></label>
+              <textarea
+                id="editStoreDescription"
+                name="storeDescription"
+                class="form-control"
+                rows="4"
+                placeholder="Describe your business, what you offer, your strengths…"
+              ></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Owner / CEO Message</label>
+              <textarea
+                id="editOwnerMessage"
+                name="ownerMessage"
+                class="form-control"
+                rows="4"
+                placeholder="A personal message from the owner to buyers…"
+              ></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Year Established</label>
+              <input
+                type="text"
+                id="editYearEstablished"
+                name="yearEstablished"
+                class="form-control"
+                placeholder="e.g. 2010"
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Number of Employees</label>
+              <input
+                type="text"
+                id="editEmployeeCount"
+                name="employeeCount"
+                class="form-control"
+                placeholder="e.g. 50–100"
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Annual Turnover (approx.)</label>
+              <input
+                type="text"
+                id="editAnnualTurnover"
+                name="annualTurnover"
+                class="form-control"
+                placeholder="e.g. ₹1 Cr – ₹5 Cr"
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Certifications <small style="color:#888">(comma-separated)</small></label>
+              <input
+                type="text"
+                id="editCertifications"
+                name="certifications"
+                class="form-control"
+                placeholder="e.g. FSSAI, ISO 22000, Organic India"
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Payment Modes <small style="color:#888">(comma-separated)</small></label>
+              <input
+                type="text"
+                id="editPaymentModes"
+                name="paymentModes"
+                class="form-control"
+                placeholder="e.g. Bank Transfer, LC, PayPal"
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Export Markets <small style="color:#888">(comma-separated)</small></label>
+              <input
+                type="text"
+                id="editExportMarkets"
+                name="exportMarkets"
+                class="form-control"
+                placeholder="e.g. USA, UAE, Germany"
+              />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label>Why Choose Us</label>
+              <textarea
+                id="editWhyUs"
+                name="whyUs"
+                class="form-control"
+                rows="3"
+                placeholder="Key USPs that differentiate you from competitors…"
+              ></textarea>
+            </div>
           </div>
-          <div class="action-buttons" style="margin-top: 20px">
+          <div class="action-buttons" style="margin-top: 28px; display:flex; gap:12px;">
             <button type="submit" class="btn primary">Save Changes</button>
-            <button
-              type="button"
-              class="btn secondary"
-              onclick="closeEditModal()"
-            >
-              Cancel
-            </button>
+            <button type="button" class="btn secondary" onclick="cancelEdit()">Cancel</button>
           </div>
         </form>
       </div>
     </div>
+    </section><!-- /#editSection -->
 
     <footer class="footer">
       &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
@@ -636,6 +754,16 @@
           document.getElementById("editBusinessType").value =
             user.businessType || "";
           document.getElementById("editAddress").value = user.address || "";
+          document.getElementById("editTagline").value = user.tagline || "";
+          document.getElementById("editStoreDescription").value = user.storeDescription || "";
+          document.getElementById("editOwnerMessage").value = user.ownerMessage || "";
+          document.getElementById("editYearEstablished").value = user.yearEstablished || "";
+          document.getElementById("editEmployeeCount").value = user.employeeCount || "";
+          document.getElementById("editAnnualTurnover").value = user.annualTurnover || "";
+          document.getElementById("editCertifications").value = user.certifications || "";
+          document.getElementById("editPaymentModes").value = user.paymentModes || "";
+          document.getElementById("editExportMarkets").value = user.exportMarkets || "";
+          document.getElementById("editWhyUs").value = user.whyUs || "";
         }
 
         // Show current profile picture
@@ -644,12 +772,17 @@
             `<img src="${user.profilePicture}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;" />`;
         }
 
-        document.getElementById("editModal").classList.add("open");
+        document.getElementById("viewSection").style.display = "none";
+        document.getElementById("editSection").style.display = "block";
+        window.scrollTo(0, 0);
       }
 
-      function closeEditModal() {
-        document.getElementById("editModal").classList.remove("open");
+      function cancelEdit() {
+        document.getElementById("editSection").style.display = "none";
+        document.getElementById("viewSection").style.display = "block";
+        window.scrollTo(0, 0);
       }
+      function closeEditModal() { cancelEdit(); }
 
       // Handle edit form submission
       document
@@ -681,6 +814,16 @@
               "address",
               document.getElementById("editAddress").value,
             );
+            formData.append("tagline", document.getElementById("editTagline").value);
+            formData.append("storeDescription", document.getElementById("editStoreDescription").value);
+            formData.append("ownerMessage", document.getElementById("editOwnerMessage").value);
+            formData.append("yearEstablished", document.getElementById("editYearEstablished").value);
+            formData.append("employeeCount", document.getElementById("editEmployeeCount").value);
+            formData.append("annualTurnover", document.getElementById("editAnnualTurnover").value);
+            formData.append("certifications", document.getElementById("editCertifications").value);
+            formData.append("paymentModes", document.getElementById("editPaymentModes").value);
+            formData.append("exportMarkets", document.getElementById("editExportMarkets").value);
+            formData.append("whyUs", document.getElementById("editWhyUs").value);
           }
 
           const picFile = document.getElementById("profilePictureInput")

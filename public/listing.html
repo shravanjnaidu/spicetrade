@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -695,7 +695,7 @@
 
           // Get current user
           const user = JSON.parse(
-            localStorage.getItem("spicetrade_user") || "null"
+            localStorage.getItem("spicetrade_user") || "null",
           );
           const isOwner = user && user.id === listing.userId;
 
@@ -721,12 +721,10 @@
 
           // Populate unit
           if (listing.unit) {
-            document.getElementById(
-              "priceUnit"
-            ).textContent = `/${listing.unit}`;
-            document.getElementById(
-              "priceUnitMobile"
-            ).textContent = `/${listing.unit}`;
+            document.getElementById("priceUnit").textContent =
+              `/${listing.unit}`;
+            document.getElementById("priceUnitMobile").textContent =
+              `/${listing.unit}`;
             document.getElementById("productUnit").textContent = listing.unit;
             document.getElementById("unitRow").style.display = "flex";
           }
@@ -750,9 +748,8 @@
             document.getElementById("stockStatus").textContent = stockStatus;
             document.getElementById("stockStatus").style.color =
               listing.stock > 0 ? "#007600" : "#B12704";
-            document.getElementById(
-              "productStock"
-            ).textContent = `${listing.stock} units`;
+            document.getElementById("productStock").textContent =
+              `${listing.stock} units`;
             document.getElementById("stockRow").style.display = "flex";
           }
 
@@ -763,7 +760,7 @@
 
           // Make seller name clickable if it's a seller listing
           if (listing.role === "seller" && listing.userId) {
-            sellerNameEl.href = `/store.html?userId=${listing.userId}`;
+            sellerNameEl.href = `/store-profile.html?id=${listing.userId}`;
           } else {
             sellerNameEl.style.cursor = "default";
             sellerNameEl.style.textDecoration = "none";
@@ -926,7 +923,7 @@
       // Check if user can review
       async function checkCanReview() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null"
+          localStorage.getItem("spicetrade_user") || "null",
         );
         if (!user || !user.id) return;
 
@@ -945,7 +942,8 @@
             initStarRating();
           } else if (data.reason) {
             // Optionally show the reason in the review section
-            const reviewFormSection = document.getElementById("reviewFormSection");
+            const reviewFormSection =
+              document.getElementById("reviewFormSection");
             reviewFormSection.style.display = "block";
             reviewFormSection.innerHTML = `
               <p style="color: #565959; padding: 12px; background: #F7F7F7; border-radius: 8px;">
@@ -982,11 +980,11 @@
               "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
             const date = new Date(review.createdAt).toLocaleDateString(
               "en-US",
-              { year: "numeric", month: "long", day: "numeric" }
+              { year: "numeric", month: "long", day: "numeric" },
             );
 
             const user = JSON.parse(
-              localStorage.getItem("spicetrade_user") || "null"
+              localStorage.getItem("spicetrade_user") || "null",
             );
             const deleteBtn =
               user && user.id === review.userId
@@ -1035,9 +1033,8 @@
           document.getElementById("avgStars").textContent = starsHtml;
 
           // Update rating count in header
-          document.getElementById(
-            "ratingCount"
-          ).textContent = `${stats.totalReviews} ratings`;
+          document.getElementById("ratingCount").textContent =
+            `${stats.totalReviews} ratings`;
 
           // Update rating bars
           const total = stats.totalReviews || 1;
@@ -1070,7 +1067,7 @@
       // Submit review
       async function submitReview() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null"
+          localStorage.getItem("spicetrade_user") || "null",
         );
         if (!user || !user.id) {
           alert("Please sign in to write a review");
@@ -1158,7 +1155,7 @@
       async function contactSeller(listing) {
         // Buyer contacting seller
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null"
+          localStorage.getItem("spicetrade_user") || "null",
         );
 
         if (!user || !user.id) {
@@ -1196,7 +1193,7 @@
       async function contactBuyer(listing) {
         // Seller contacting buyer (only if conversation already exists)
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null"
+          localStorage.getItem("spicetrade_user") || "null",
         );
 
         if (!user || !user.id) {
@@ -1211,7 +1208,7 @@
           const conversations = await res.json();
 
           const existingConv = conversations.find(
-            (c) => c.buyerId === listing.userId && c.sellerId === user.id
+            (c) => c.buyerId === listing.userId && c.sellerId === user.id,
           );
 
           if (existingConv) {
@@ -1220,7 +1217,7 @@
           } else {
             // No existing conversation - seller cannot initiate
             alert(
-              "You can only respond to messages from buyers. Wait for the buyer to contact you first."
+              "You can only respond to messages from buyers. Wait for the buyer to contact you first.",
             );
           }
         } catch (err) {
@@ -1288,7 +1285,7 @@
 
       async function toggleWishlist() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null"
+          localStorage.getItem("spicetrade_user") || "null",
         );
         if (!user || !user.id) {
           alert("Please sign in to use wishlist");

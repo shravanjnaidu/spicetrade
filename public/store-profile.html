@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store Profile — SpiceTrade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --brand: #e65c00;
+        --brand-dk: #c44d00;
+        --brand-lt: #fff4ee;
+        --gray-50: #fafafa;
+        --gray-100: #f4f4f5;
+        --gray-200: #e4e4e7;
+        --gray-400: #a1a1aa;
+        --gray-600: #52525b;
+        --gray-800: #27272a;
+        --text: #1e1e22;
+        --radius: 10px;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--gray-100);
+        color: var(--text);
+      }
+
+      /* ── SiteBar ── */
+      .sitebar {
+        background: #fff;
+        border-bottom: 1px solid var(--gray-200);
+        padding: 0 24px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .sitebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+      }
+      .sitebar-brand img {
+        height: 32px;
+        border-radius: 6px;
+      }
+      .sitebar-brand-name {
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--brand);
+      }
+      .sitebar-nav {
+        display: flex;
+        gap: 4px;
+      }
+      .sitebar-nav a {
+        padding: 7px 14px;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-600);
+        text-decoration: none;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .sitebar-nav a:hover,
+      .sitebar-nav a.active {
+        background: var(--brand-lt);
+        color: var(--brand);
+      }
+      .sitebar-back {
+        font-size: 13px;
+        color: var(--gray-400);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.15s;
+      }
+      .sitebar-back:hover {
+        color: var(--brand);
+      }
+
+      /* ── Hero ── */
+      .hero {
+        background: linear-gradient(135deg, #e65c00 0%, #f9a825 100%);
+        padding: 52px 24px 36px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+      .hero-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        position: relative;
+      }
+      .hero-logo {
+        width: 110px;
+        height: 110px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 44px;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 3px solid rgba(255, 255, 255, 0.35);
+      }
+      .hero-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .hero-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .hero-name {
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1.15;
+        margin-bottom: 6px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+      .hero-tagline {
+        font-size: 16px;
+        opacity: 0.9;
+        font-style: italic;
+        margin-bottom: 16px;
+      }
+      .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .hero-actions {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        flex-shrink: 0;
+      }
+      .btn-contact {
+        background: #fff;
+        color: var(--brand);
+        font-weight: 700;
+        font-size: 14px;
+        padding: 10px 22px;
+        border-radius: 8px;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: box-shadow 0.15s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      .btn-contact:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      }
+
+      /* ── Main layout ── */
+      .main-wrap {
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 16px 60px;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+      }
+      @media (max-width: 768px) {
+        .main-wrap {
+          grid-template-columns: 1fr;
+        }
+        .hero-inner {
+          flex-direction: column;
+          text-align: center;
+        }
+        .hero-badges,
+        .hero-actions {
+          justify-content: center;
+        }
+        .sitebar-nav {
+          display: none;
+        }
+      }
+
+      /* ── Sidebar ── */
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .card {
+        background: #fff;
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+      }
+      .card-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--brand);
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--brand-lt);
+      }
+      .factsheet {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .factrow {
+        display: flex;
+        gap: 10px;
+        font-size: 13.5px;
+        align-items: flex-start;
+      }
+      .factrow-label {
+        color: var(--gray-600);
+        min-width: 110px;
+        flex-shrink: 0;
+        font-size: 12.5px;
+      }
+      .factrow-value {
+        font-weight: 500;
+        color: var(--text);
+        word-break: break-word;
+      }
+      .factrow-value a {
+        color: var(--brand);
+        text-decoration: none;
+      }
+      .factrow-value a:hover {
+        text-decoration: underline;
+      }
+
+      /* Cert pills */
+      .cert-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .cert-pill {
+        background: var(--brand-lt);
+        color: var(--brand-dk);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      /* Tag pills */
+      .tag-pill {
+        background: var(--gray-100);
+        color: var(--gray-600);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      /* ── Side nav ── */
+      .side-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .side-nav a {
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-600);
+        text-decoration: none;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .side-nav a:hover {
+        background: var(--gray-100);
+        color: var(--text);
+      }
+      .side-nav a.active {
+        background: var(--brand-lt);
+        color: var(--brand);
+      }
+
+      /* ── Main content ── */
+      .content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .section-heading {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-heading::after {
+        content: "";
+        flex: 1;
+        height: 2px;
+        background: var(--gray-200);
+        border-radius: 2px;
+      }
+      .prose {
+        font-size: 15px;
+        line-height: 1.75;
+        color: var(--gray-600);
+        white-space: pre-wrap;
+      }
+
+      /* Owner message */
+      .owner-msg-wrap {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+      }
+      .owner-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brand), #f9a825);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .owner-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .owner-quote {
+        flex: 1;
+        background: var(--gray-50);
+        border-left: 4px solid var(--brand);
+        border-radius: 0 8px 8px 0;
+        padding: 16px 20px;
+      }
+      .owner-quote blockquote {
+        font-size: 15px;
+        line-height: 1.75;
+        color: var(--gray-600);
+        font-style: italic;
+        white-space: pre-wrap;
+      }
+      .owner-quote cite {
+        display: block;
+        margin-top: 12px;
+        font-size: 13px;
+        font-style: normal;
+        font-weight: 600;
+        color: var(--brand);
+      }
+
+      /* Product grid */
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+      }
+      .product-card {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition:
+          box-shadow 0.15s,
+          transform 0.15s;
+        text-decoration: none;
+        color: inherit;
+      }
+      .product-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+      .product-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        background: var(--gray-200);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+      }
+      .product-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .product-body {
+        padding: 14px;
+      }
+      .product-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .product-sub {
+        font-size: 12.5px;
+        color: var(--gray-400);
+      }
+      .product-price {
+        margin-top: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--brand);
+      }
+
+      /* No data placeholder */
+      .empty-state {
+        text-align: center;
+        padding: 36px 20px;
+        color: var(--gray-400);
+        font-size: 14px;
+      }
+      .empty-state svg {
+        margin-bottom: 10px;
+        opacity: 0.4;
+      }
+
+      /* Contact grid */
+      .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      .contact-item {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 14px 16px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .contact-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--brand-lt);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 17px;
+      }
+      .contact-label {
+        font-size: 11px;
+        color: var(--gray-400);
+        margin-bottom: 2px;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+      .contact-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        word-break: break-all;
+      }
+      .contact-value a {
+        color: var(--brand);
+        text-decoration: none;
+      }
+      .contact-value a:hover {
+        text-decoration: underline;
+      }
+
+      /* USP bullets */
+      .usp-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .usp-list li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 14.5px;
+        line-height: 1.6;
+        color: var(--gray-600);
+      }
+      .usp-list li::before {
+        content: "✓";
+        color: var(--brand);
+        font-weight: 700;
+        font-size: 15px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      /* Loading skeleton */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 50%,
+          #f0f0f0 75%
+        );
+        background-size: 400% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 6px;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      /* Footer */
+      .page-footer {
+        text-align: center;
+        padding: 24px;
+        font-size: 13px;
+        color: var(--gray-400);
+        border-top: 1px solid var(--gray-200);
+        background: #fff;
+        margin-top: 24px;
+      }
+      .page-footer a {
+        color: var(--brand);
+        text-decoration: none;
+      }
+
+      /* Edit own profile CTA */
+      .own-cta-banner {
+        background: linear-gradient(135deg, var(--brand), #f9a825);
+        color: #fff;
+        border-radius: var(--radius);
+        padding: 18px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        box-shadow: var(--shadow);
+      }
+      .own-cta-banner a {
+        background: #fff;
+        color: var(--brand);
+        font-weight: 700;
+        font-size: 13px;
+        padding: 8px 18px;
+        border-radius: 7px;
+        text-decoration: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── Site bar ── -->
+    <header class="sitebar" id="siteBar">
+      <a href="/index.html" class="sitebar-brand">
+        <span class="sitebar-brand-name">SpiceTrade</span>
+      </a>
+      <nav class="sitebar-nav" id="siteNav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#products">Products</a>
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <a href="javascript:window.close()||history.back()" class="sitebar-back">
+        ← Back to marketplace
+      </a>
+    </header>
+
+    <!-- ── Hero (populated by JS) ── -->
+    <section class="hero" id="heroSection">
+      <div class="hero-inner">
+        <div class="hero-logo" id="heroLogo">…</div>
+        <div class="hero-info">
+          <div
+            class="hero-name skeleton"
+            style="width: 260px; height: 36px; border-radius: 8px"
+          ></div>
+          <div
+            class="hero-tagline skeleton"
+            style="
+              width: 180px;
+              height: 18px;
+              border-radius: 6px;
+              margin-top: 10px;
+            "
+          ></div>
+          <div class="hero-badges" id="heroBadges"></div>
+        </div>
+        <div class="hero-actions">
+          <a href="#contact" class="btn-contact" id="heroContactBtn"
+            >Contact Seller</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Main ── -->
+    <div class="main-wrap">
+      <!-- Left Sidebar -->
+      <aside class="sidebar">
+        <!-- Quick nav -->
+        <nav class="card">
+          <div class="card-title">Navigation</div>
+          <div class="side-nav">
+            <a href="#overview" class="active">📋 Company Overview</a>
+            <a href="#products">📦 Products</a>
+            <a href="#services">🛠 Services</a>
+            <a href="#usp">⭐ Why Choose Us</a>
+            <a href="#certifications">🛡 Certifications</a>
+            <a href="#contact">📞 Contact Us</a>
+          </div>
+        </nav>
+
+        <!-- Quick Facts -->
+        <div class="card" id="factsheetCard">
+          <div class="card-title">Quick Facts</div>
+          <div class="factsheet" id="factList">
+            <!-- populated by JS -->
+            <div class="factrow">
+              <div class="skeleton" style="height: 14px; width: 100%"></div>
+            </div>
+            <div class="factrow">
+              <div class="skeleton" style="height: 14px; width: 80%"></div>
+            </div>
+            <div class="factrow">
+              <div class="skeleton" style="height: 14px; width: 90%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="card" id="categoriesCard" style="display: none">
+          <div class="card-title">Categories</div>
+          <div class="cert-pills" id="categoriesList"></div>
+        </div>
+
+        <!-- Payment Modes -->
+        <div class="card" id="paymentCard" style="display: none">
+          <div class="card-title">Payment Modes</div>
+          <div class="cert-pills" id="paymentList"></div>
+        </div>
+
+        <!-- Export Markets -->
+        <div class="card" id="exportCard" style="display: none">
+          <div class="card-title">Export Markets</div>
+          <div class="cert-pills" id="exportList"></div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content" id="mainContent">
+        <!-- Own-profile CTA -->
+        <div class="own-cta-banner" id="ownCtaBanner" style="display: none">
+          <div>
+            <strong style="font-size: 15px">This is your Store Profile</strong
+            ><br />
+            <span style="font-size: 13px; opacity: 0.9"
+              >Keep it up to date to attract more buyers.</span
+            >
+          </div>
+          <a href="/profile.html">Edit Profile</a>
+        </div>
+
+        <!-- Overview / About -->
+        <section class="card" id="overview">
+          <div class="section-heading">Company Overview</div>
+          <div id="aboutContent">
+            <div
+              class="skeleton"
+              style="height: 14px; width: 100%; margin-bottom: 8px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 14px; width: 90%; margin-bottom: 8px"
+            ></div>
+            <div class="skeleton" style="height: 14px; width: 80%"></div>
+          </div>
+        </section>
+
+        <!-- Owner Message -->
+        <section class="card" id="ownerMessageSection" style="display: none">
+          <div class="section-heading">Owner's Message</div>
+          <div class="owner-msg-wrap">
+            <div class="owner-avatar" id="ownerAvatar">?</div>
+            <div class="owner-quote">
+              <blockquote id="ownerMessageText"></blockquote>
+              <cite id="ownerName"></cite>
+            </div>
+          </div>
+        </section>
+
+        <!-- Products -->
+        <section class="card" id="products">
+          <div class="section-heading">Products</div>
+          <div class="product-grid" id="productsGrid">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </section>
+
+        <!-- Services -->
+        <section class="card" id="services">
+          <div class="section-heading">Services</div>
+          <div class="product-grid" id="servicesGrid">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </section>
+
+        <!-- Why Choose Us -->
+        <section class="card" id="usp" style="display: none">
+          <div class="section-heading">Why Choose Us</div>
+          <ul class="usp-list" id="uspList"></ul>
+        </section>
+
+        <!-- Certifications -->
+        <section class="card" id="certifications" style="display: none">
+          <div class="section-heading">Certifications &amp; Compliance</div>
+          <div class="cert-pills" id="certList"></div>
+        </section>
+
+        <!-- Contact -->
+        <section class="card" id="contact">
+          <div class="section-heading">Contact Us</div>
+          <div class="contact-grid" id="contactGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="page-footer" id="pageFooter">
+      <strong id="footerStoreName">SpiceTrade</strong> &bull; Powered by
+      <a href="/index.html">SpiceTrade Marketplace</a>
+    </footer>
+
+    <script>
+      (async function () {
+        const params = new URLSearchParams(location.search);
+        let userId = params.get("id");
+
+        // If no id in URL, try localStorage (own profile)
+        const localUser = (() => {
+          try {
+            return JSON.parse(localStorage.getItem("spicetrade_user"));
+          } catch {
+            return null;
+          }
+        })();
+        if (!userId) {
+          if (localUser && localUser.id) {
+            userId = localUser.id;
+          } else {
+            document.body.innerHTML =
+              '<div style="text-align:center;padding:80px 20px;font-size:18px;color:#aaa">No store found. <a href="/index.html">Go home</a></div>';
+            return;
+          }
+        }
+
+        // Show "edit" banner if viewing own profile
+        if (localUser && String(localUser.id) === String(userId)) {
+          document.getElementById("ownCtaBanner").style.display = "flex";
+        }
+
+        // ── Fetch profile ──
+        let profile = null;
+        try {
+          const res = await fetch(`/api/user/public/${userId}`);
+          if (!res.ok) throw new Error("not found");
+          profile = await res.json();
+        } catch {
+          document.body.innerHTML =
+            '<div style="text-align:center;padding:80px 20px;font-size:18px;color:#aaa">Store not found. <a href="/index.html">Go home</a></div>';
+          return;
+        }
+
+        const products = (profile.products || []).filter(
+          (p) => p.unit !== "service",
+        );
+        const services = (profile.products || []).filter(
+          (p) => p.unit === "service",
+        );
+
+        // ── Document title ──
+        document.title = (profile.storeName || profile.name) + " — SpiceTrade";
+
+        // ── Hero ──
+        const heroName = profile.storeName || profile.name || "Store";
+        const heroTagline = profile.tagline || "";
+        const heroLogo = document.getElementById("heroLogo");
+        if (profile.logo) {
+          heroLogo.innerHTML = `<img src="${profile.logo}" alt="${heroName}" />`;
+        } else {
+          heroLogo.textContent = (heroName[0] || "S").toUpperCase();
+        }
+        // Replace hero name skeleton
+        const heroInfo = document.querySelector(".hero-info");
+        heroInfo.innerHTML = `
+    <div class="hero-name">${escHtml(heroName)}</div>
+    ${heroTagline ? `<div class="hero-tagline">"${escHtml(heroTagline)}"</div>` : ""}
+    <div class="hero-badges" id="heroBadges"></div>
+  `;
+        const badgesEl = document.getElementById("heroBadges");
+        if (profile.businessType)
+          badgesEl.innerHTML += badge("🏢", profile.businessType);
+        if (profile.location)
+          badgesEl.innerHTML += badge("📍", profile.location);
+        if (profile.yearEstablished)
+          badgesEl.innerHTML += badge("📅", "Est. " + profile.yearEstablished);
+        if (profile.employeeCount)
+          badgesEl.innerHTML += badge(
+            "👥",
+            profile.employeeCount + " employees",
+          );
+
+        // ── Factsheet ──
+        const facts = [
+          ["Nature of Business", profile.businessType],
+          ["Owner / CEO", profile.name],
+          ["Year Established", profile.yearEstablished],
+          ["No. of Employees", profile.employeeCount],
+          ["Annual Turnover", profile.annualTurnover],
+          ["GST / Tax No.", profile.taxNumber],
+          [
+            "Phone",
+            profile.phone
+              ? `<a href="tel:${profile.phone}">${escHtml(profile.phone)}</a>`
+              : null,
+          ],
+          [
+            "Email",
+            profile.email
+              ? `<a href="mailto:${profile.email}">${escHtml(profile.email)}</a>`
+              : null,
+          ],
+          [
+            "Website",
+            profile.website
+              ? `<a href="${escHtml(profile.website)}" target="_blank" rel="noopener">${escHtml(profile.website)}</a>`
+              : null,
+          ],
+          ["Location", profile.location],
+          [
+            "Member Since",
+            profile.createdAt
+              ? new Date(profile.createdAt).getFullYear()
+              : null,
+          ],
+          ["Seller ID", profile.uniqueId],
+        ];
+        const factList = document.getElementById("factList");
+        factList.innerHTML = "";
+        facts.forEach(([label, val]) => {
+          if (!val) return;
+          factList.innerHTML += `<div class="factrow">
+      <span class="factrow-label">${escHtml(label)}</span>
+      <span class="factrow-value">${val}</span>
+    </div>`;
+        });
+
+        // ── Categories ──
+        if (profile.categories) {
+          const catArr = profile.categories
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (catArr.length) {
+            document.getElementById("categoriesCard").style.display = "";
+            document.getElementById("categoriesList").innerHTML = catArr
+              .map((c) => `<span class="cert-pill">${escHtml(c)}</span>`)
+              .join("");
+          }
+        }
+
+        // ── Payment Modes ──
+        if (profile.paymentModes) {
+          const pm = profile.paymentModes
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (pm.length) {
+            document.getElementById("paymentCard").style.display = "";
+            document.getElementById("paymentList").innerHTML = pm
+              .map((m) => `<span class="tag-pill">${escHtml(m)}</span>`)
+              .join("");
+          }
+        }
+
+        // ── Export Markets ──
+        if (profile.exportMarkets) {
+          const em = profile.exportMarkets
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (em.length) {
+            document.getElementById("exportCard").style.display = "";
+            document.getElementById("exportList").innerHTML = em
+              .map((m) => `<span class="tag-pill">🌍 ${escHtml(m)}</span>`)
+              .join("");
+          }
+        }
+
+        // ── About ──
+        const aboutEl = document.getElementById("aboutContent");
+        if (profile.storeDescription) {
+          aboutEl.innerHTML = `<p class="prose">${escHtml(profile.storeDescription)}</p>`;
+        } else {
+          aboutEl.innerHTML = `<p class="prose" style="color:#aaa;font-style:italic">No description provided yet.${String(localUser && localUser.id) === String(userId) ? ' <a href="/profile.html" style="color:var(--brand)">Add one →</a>' : ""}</p>`;
+        }
+
+        // ── Owner message ──
+        if (profile.ownerMessage) {
+          const sec = document.getElementById("ownerMessageSection");
+          sec.style.display = "";
+          document.getElementById("ownerMessageText").textContent =
+            profile.ownerMessage;
+          document.getElementById("ownerName").textContent =
+            "— " +
+            (profile.name || "Owner") +
+            ", " +
+            (profile.storeName || "Store");
+          const avatarEl = document.getElementById("ownerAvatar");
+          if (profile.profilePicture) {
+            avatarEl.innerHTML = `<img src="${profile.profilePicture}" alt="${escHtml(profile.name || "")}" />`;
+          } else {
+            avatarEl.textContent = (profile.name || "O")[0].toUpperCase();
+          }
+        }
+
+        // ── Products ──
+        renderListings("productsGrid", products, false);
+        // ── Services ──
+        renderListings("servicesGrid", services, true);
+
+        // ── Why Choose Us ──
+        if (profile.whyUs) {
+          const bullets = profile.whyUs
+            .split(/\n|•/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (bullets.length) {
+            const sec = document.getElementById("usp");
+            sec.style.display = "";
+            document.getElementById("uspList").innerHTML = bullets
+              .map((b) => `<li>${escHtml(b)}</li>`)
+              .join("");
+          }
+        }
+
+        // ── Certifications ──
+        if (profile.certifications) {
+          const certs = profile.certifications
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (certs.length) {
+            document.getElementById("certifications").style.display = "";
+            document.getElementById("certList").innerHTML = certs
+              .map((c) => `<span class="cert-pill">✓ ${escHtml(c)}</span>`)
+              .join("");
+          }
+        }
+
+        // ── Contact ──
+        const contactGrid = document.getElementById("contactGrid");
+        const contactItems = [
+          { icon: "📍", label: "Address", val: profile.address },
+          {
+            icon: "📞",
+            label: "Phone",
+            val: profile.phone,
+            href: `tel:${profile.phone}`,
+          },
+          {
+            icon: "✉️",
+            label: "Email",
+            val: profile.email,
+            href: `mailto:${profile.email}`,
+          },
+          {
+            icon: "🌐",
+            label: "Website",
+            val: profile.website,
+            href: profile.website,
+            target: "_blank",
+          },
+          { icon: "📌", label: "Location", val: profile.location },
+        ];
+        contactGrid.innerHTML = contactItems
+          .filter((c) => c.val)
+          .map(
+            (c) => `<div class="contact-item">
+      <div class="contact-icon">${c.icon}</div>
+      <div>
+        <div class="contact-label">${c.label}</div>
+        <div class="contact-value">${c.href ? `<a href="${escHtml(c.href)}"${c.target ? ' target="_blank" rel="noopener"' : ""}>${escHtml(c.val)}</a>` : escHtml(c.val)}</div>
+      </div>
+    </div>`,
+          )
+          .join("");
+
+        // ── Footer ──
+        document.getElementById("footerStoreName").textContent =
+          profile.storeName || profile.name || "Store";
+
+        // ── Smooth scroll active state ──
+        const navLinks = document.querySelectorAll(
+          ".side-nav a, .sitebar-nav a",
+        );
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                navLinks.forEach((a) => {
+                  a.classList.toggle(
+                    "active",
+                    a.getAttribute("href") === "#" + e.target.id,
+                  );
+                });
+              }
+            });
+          },
+          { threshold: 0.3 },
+        );
+        [
+          "overview",
+          "products",
+          "services",
+          "usp",
+          "certifications",
+          "contact",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) observer.observe(el);
+        });
+
+        // ── helpers ──
+        function renderListings(containerId, list, isService) {
+          const el = document.getElementById(containerId);
+          if (!list.length) {
+            el.innerHTML = `<div class="empty-state">${isService ? "No services listed yet." : "No products listed yet."}</div>`;
+            return;
+          }
+          el.innerHTML = list
+            .map((p) => {
+              const imgHtml = p.imageUrl
+                ? `<div class="product-img"><img src="${escHtml(p.imageUrl)}" alt="${escHtml(p.title || "")}" /></div>`
+                : `<div class="product-img" style="font-size:42px;color:#ccc">${isService ? "🛠" : "📦"}</div>`;
+              const price = p.price
+                ? `<div class="product-price">₹${Number(p.price).toLocaleString("en-IN")} <small style="font-weight:400;font-size:12px;color:#aaa">/ ${escHtml(p.unit || "unit")}</small></div>`
+                : "";
+              return `<a class="product-card" href="/listing.html?id=${p.id}">
+        ${imgHtml}
+        <div class="product-body">
+          <div class="product-title">${escHtml(p.title || "—")}</div>
+          <div class="product-sub">${escHtml(p.category || "")}</div>
+          ${price}
+        </div>
+      </a>`;
+            })
+            .join("");
+        }
+
+        function badge(icon, text) {
+          return `<span class="badge">${icon} ${escHtml(text)}</span>`;
+        }
+
+        function escHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+      })();
+    </script>
+  </body>
+</html>

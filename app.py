@@ -131,6 +131,26 @@ def init_db():
     
     conn.commit()
     
+    # Add extra store-profile columns if they don't already exist
+    extra_cols = [
+        ('tagline',           'TEXT'),
+        ('storedescription',  'TEXT'),
+        ('ownermessage',      'TEXT'),
+        ('yearestablished',   'TEXT'),
+        ('employeecount',     'TEXT'),
+        ('annualturnover',    'TEXT'),
+        ('paymentmodes',      'TEXT'),
+        ('exportmarkets',     'TEXT'),
+        ('certifications',    'TEXT'),
+        ('whyus',             'TEXT'),
+    ]
+    for col, col_type in extra_cols:
+        try:
+            cur.execute(f'ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}')
+        except Exception:
+            pass
+    conn.commit()
+
     # Generate unique IDs for existing users without one
     import uuid
     cur.execute("SELECT id FROM users WHERE uniqueId IS NULL OR uniqueId = ''")
@@ -629,6 +649,13 @@ def update_profile():
         if 'address' in data:
             updates.append('address = %s')
             params.append(data['address'])
+        for field in ['tagline', 'storeDescription', 'ownerMessage', 'yearEstablished',
+                      'employeeCount', 'annualTurnover', 'paymentModes', 'exportMarkets',
+                      'certifications', 'whyUs']:
+            if field in data:
+                db_col = field.lower()  # map camelCase form field to lowercase DB column
+                updates.append(f'{db_col} = %s')
+                params.append(data[field])
         if profile_picture:
             updates.append('profilePicture = %s')
             params.append(profile_picture)
@@ -645,7 +672,13 @@ def update_profile():
         db.commit()
         
         # Fetch updated user data
-        cursor.execute('SELECT id, name, email, phone, role, storeName, businessType, categories, address, website, logo_path, uniqueId, location, profilePicture FROM users WHERE id = %s', (user_id,))
+        cursor.execute('''
+            SELECT id, name, email, phone, role, storeName, businessType, categories,
+                   taxNumber, address, website, logo_path, uniqueId, location, profilePicture,
+                   tagline, storeDescription, ownerMessage, yearEstablished, employeeCount,
+                   annualTurnover, paymentModes, exportMarkets, certifications, whyUs
+            FROM users WHERE id = %s
+        ''', (user_id,))
         row = cursor.fetchone()
         db.close()
         
@@ -662,18 +695,109 @@ def update_profile():
             'storeName': row['storename'],
             'businessType': row['businesstype'],
             'categories': row['categories'],
+            'taxNumber': row['taxnumber'],
             'address': row['address'],
             'website': row['website'],
             'logo': row['logo_path'],
             'uniqueId': row['uniqueid'],
             'location': row['location'],
-            'profilePicture': row['profilepicture']
+            'profilePicture': row['profilepicture'],
+            'tagline': row['tagline'],
+            'storeDescription': row['storedescription'],
+            'ownerMessage': row['ownermessage'],
+            'yearEstablished': row['yearestablished'],
+            'employeeCount': row['employeecount'],
+            'annualTurnover': row['annualturnover'],
+            'paymentModes': row['paymentmodes'],
+            'exportMarkets': row['exportmarkets'],
+            'certifications': row['certifications'],
+            'whyUs': row['whyus'],
         }
         return jsonify(user_data)
     except Exception as e:
         print('update_profile error:', e)
         import traceback
         traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+# Public store profile endpoint
+@app.route('/api/user/public/<int:user_id>', methods=['GET'])
+def get_public_profile(user_id):
+    try:
+        import json
+        db = get_db()
+        cur = dict_cursor(db)
+        cur.execute('''
+            SELECT id, name, email, phone, role, storeName, businessType, categories,
+                   taxNumber, address, website, logo_path, uniqueId, location, profilePicture,
+                   tagline, storeDescription, ownerMessage, yearEstablished, employeeCount,
+                   annualTurnover, paymentModes, exportMarkets, certifications, whyUs,
+                   createdAt
+            FROM users WHERE id = %s
+        ''', (user_id,))
+        row = cur.fetchone()
+        # Fetch products/services for this seller
+        cur.execute('''
+            SELECT id, title, description, price, unit, category, tags, imageUrl, images, createdAt
+            FROM ads WHERE userId = %s ORDER BY createdAt DESC
+        ''', (user_id,))
+        ads = cur.fetchall()
+        db.close()
+        if not row:
+            return jsonify({'error': 'User not found'}), 404
+        profile = {
+            'id': row['id'],
+            'name': row['name'],
+            'email': row['email'],
+            'phone': row['phone'],
+            'role': row['role'],
+            'storeName': row['storename'],
+            'businessType': row['businesstype'],
+            'categories': row['categories'],
+            'taxNumber': row['taxnumber'],
+            'address': row['address'],
+            'website': row['website'],
+            'logo': row['logo_path'],
+            'uniqueId': row['uniqueid'],
+            'location': row['location'],
+            'profilePicture': row['profilepicture'],
+            'tagline': row['tagline'],
+            'storeDescription': row['storedescription'],
+            'ownerMessage': row['ownermessage'],
+            'yearEstablished': row['yearestablished'],
+            'employeeCount': row['employeecount'],
+            'annualTurnover': row['annualturnover'],
+            'paymentModes': row['paymentmodes'],
+            'exportMarkets': row['exportmarkets'],
+            'certifications': row['certifications'],
+            'whyUs': row['whyus'],
+            'createdAt': str(row['createdat']) if row['createdat'] else None,
+        }
+        products = []
+        for a in ads:
+            tags = a['tags']
+            try:
+                tags = json.loads(tags) if isinstance(tags, str) else tags
+            except Exception:
+                tags = []
+            products.append({
+                'id': a['id'],
+                'title': a['title'],
+                'description': a['description'],
+                'price': a['price'],
+                'unit': a['unit'],
+                'category': a['category'],
+                'tags': tags or [],
+                'imageUrl': a['imageurl'],
+                'images': a['images'],
+                'createdAt': str(a['createdat']) if a['createdat'] else None,
+            })
+        profile['products'] = products
+        return jsonify(profile)
+    except Exception as e:
+        print('get_public_profile error:', e)
+        import traceback; traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
 
 
