@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -131,7 +131,12 @@
         <div class="info-grid" id="accountInfo">
           <div class="info-item">
             <span class="info-label">Unique ID</span>
-            <span class="info-value" id="infoUniqueId" style="font-weight: 600; color: var(--accent);">—</span>
+            <span
+              class="info-value"
+              id="infoUniqueId"
+              style="font-weight: 600; color: var(--accent)"
+              >—</span
+            >
           </div>
           <div class="info-item">
             <span class="info-label">Full Name</span>
@@ -194,46 +199,89 @@
 
     <!-- Edit Profile Modal -->
     <div id="editModal" class="modal">
-      <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-content" style="max-width: 600px">
         <div class="modal-header">
           <h3>Edit Profile</h3>
-          <button class="close-modal" onclick="closeEditModal()">&times;</button>
+          <button class="close-modal" onclick="closeEditModal()">
+            &times;
+          </button>
         </div>
         <form id="editProfileForm">
-          <div class="form-group" style="margin-bottom: 16px;">
+          <div class="form-group" style="margin-bottom: 16px">
             <label>Profile Picture</label>
             <input type="file" id="profilePictureInput" accept="image/*" />
-            <div id="currentPicPreview" style="margin-top: 8px;"></div>
+            <div id="currentPicPreview" style="margin-top: 8px"></div>
           </div>
-          <div class="form-group" style="margin-bottom: 16px;">
+          <div class="form-group" style="margin-bottom: 16px">
             <label>Full Name</label>
             <input type="text" id="editName" name="name" class="form-control" />
           </div>
-          <div class="form-group" style="margin-bottom: 16px;">
+          <div class="form-group" style="margin-bottom: 16px">
             <label>Phone</label>
-            <input type="tel" id="editPhone" name="phone" class="form-control" />
+            <input
+              type="tel"
+              id="editPhone"
+              name="phone"
+              class="form-control"
+            />
           </div>
-          <div class="form-group" style="margin-bottom: 16px;">
+          <div class="form-group" style="margin-bottom: 16px">
             <label>Location</label>
-            <input type="text" id="editLocation" name="location" class="form-control" placeholder="e.g., Mumbai, India" />
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <div class="select-wrap" style="flex: 1 1 160px">
+                <select
+                  id="editState"
+                  class="form-control"
+                  style="min-width: 0"
+                >
+                  <option value="" selected>All States</option>
+                </select>
+              </div>
+              <div class="select-wrap" style="flex: 1 1 160px">
+                <select id="editCity" class="form-control" style="min-width: 0">
+                  <option value="" selected>All Cities</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div id="sellerFields" style="display: none;">
-            <div class="form-group" style="margin-bottom: 16px;">
+          <div id="sellerFields" style="display: none">
+            <div class="form-group" style="margin-bottom: 16px">
               <label>Store Name</label>
-              <input type="text" id="editStoreName" name="storeName" class="form-control" />
+              <input
+                type="text"
+                id="editStoreName"
+                name="storeName"
+                class="form-control"
+              />
             </div>
-            <div class="form-group" style="margin-bottom: 16px;">
+            <div class="form-group" style="margin-bottom: 16px">
               <label>Business Type</label>
-              <input type="text" id="editBusinessType" name="businessType" class="form-control" />
+              <input
+                type="text"
+                id="editBusinessType"
+                name="businessType"
+                class="form-control"
+              />
             </div>
-            <div class="form-group" style="margin-bottom: 16px;">
+            <div class="form-group" style="margin-bottom: 16px">
               <label>Address</label>
-              <input type="text" id="editAddress" name="address" class="form-control" />
+              <input
+                type="text"
+                id="editAddress"
+                name="address"
+                class="form-control"
+              />
             </div>
           </div>
-          <div class="action-buttons" style="margin-top: 20px;">
+          <div class="action-buttons" style="margin-top: 20px">
             <button type="submit" class="btn primary">Save Changes</button>
-            <button type="button" class="btn secondary" onclick="closeEditModal()">Cancel</button>
+            <button
+              type="button"
+              class="btn secondary"
+              onclick="closeEditModal()"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
@@ -243,10 +291,283 @@
       &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
     </footer>
 
+    <script>
+      // India states and major cities data
+      const INDIA_LOCATIONS = {
+        "Andhra Pradesh": [
+          "Visakhapatnam",
+          "Vijayawada",
+          "Guntur",
+          "Nellore",
+          "Kurnool",
+          "Kakinada",
+          "Tirupati",
+          "Anantapur",
+          "Rajahmundry",
+          "Eluru",
+        ],
+        "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat", "Tezpur"],
+        Assam: [
+          "Guwahati",
+          "Silchar",
+          "Dibrugarh",
+          "Jorhat",
+          "Nagaon",
+          "Tinsukia",
+          "Tezpur",
+          "Bongaigaon",
+        ],
+        Bihar: [
+          "Patna",
+          "Gaya",
+          "Muzaffarpur",
+          "Bhagalpur",
+          "Darbhanga",
+          "Purnia",
+          "Arrah",
+          "Bihar Sharif",
+        ],
+        Chhattisgarh: [
+          "Raipur",
+          "Bhilai",
+          "Korba",
+          "Bilaspur",
+          "Durg",
+          "Rajnandgaon",
+          "Raigarh",
+        ],
+        Goa: ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"],
+        Gujarat: [
+          "Ahmedabad",
+          "Surat",
+          "Vadodara",
+          "Rajkot",
+          "Bhavnagar",
+          "Jamnagar",
+          "Gandhinagar",
+          "Junagadh",
+          "Anand",
+          "Navsari",
+        ],
+        Haryana: [
+          "Faridabad",
+          "Gurugram",
+          "Panipat",
+          "Ambala",
+          "Yamunanagar",
+          "Rohtak",
+          "Hisar",
+          "Karnal",
+          "Sonipat",
+          "Panchkula",
+        ],
+        "Himachal Pradesh": [
+          "Shimla",
+          "Dharamsala",
+          "Solan",
+          "Mandi",
+          "Palampur",
+          "Baddi",
+          "Kullu",
+        ],
+        Jharkhand: [
+          "Ranchi",
+          "Jamshedpur",
+          "Dhanbad",
+          "Bokaro",
+          "Hazaribagh",
+          "Deoghar",
+        ],
+        Karnataka: [
+          "Bengaluru",
+          "Mysuru",
+          "Hubli",
+          "Mangaluru",
+          "Belagavi",
+          "Kalaburagi",
+          "Davanagere",
+          "Ballari",
+          "Vijayapura",
+          "Shivamogga",
+        ],
+        Kerala: [
+          "Thiruvananthapuram",
+          "Kochi",
+          "Kozhikode",
+          "Thrissur",
+          "Kollam",
+          "Alappuzha",
+          "Palakkad",
+          "Malappuram",
+          "Kannur",
+          "Kottayam",
+        ],
+        "Madhya Pradesh": [
+          "Bhopal",
+          "Indore",
+          "Jabalpur",
+          "Gwalior",
+          "Ujjain",
+          "Sagar",
+          "Dewas",
+          "Satna",
+          "Ratlam",
+          "Rewa",
+        ],
+        Maharashtra: [
+          "Mumbai",
+          "Pune",
+          "Nagpur",
+          "Nashik",
+          "Aurangabad",
+          "Solapur",
+          "Amravati",
+          "Kolhapur",
+          "Navi Mumbai",
+          "Thane",
+        ],
+        Manipur: ["Imphal", "Thoubal", "Bishnupur", "Ukhrul"],
+        Meghalaya: ["Shillong", "Tura", "Nongstoin"],
+        Mizoram: ["Aizawl", "Lunglei", "Saiha"],
+        Nagaland: ["Kohima", "Dimapur", "Mokokchung"],
+        Odisha: [
+          "Bhubaneswar",
+          "Cuttack",
+          "Rourkela",
+          "Berhampur",
+          "Sambalpur",
+          "Puri",
+          "Balasore",
+        ],
+        Punjab: [
+          "Ludhiana",
+          "Amritsar",
+          "Jalandhar",
+          "Patiala",
+          "Bathinda",
+          "Mohali",
+          "Fatehgarh Sahib",
+        ],
+        Rajasthan: [
+          "Jaipur",
+          "Jodhpur",
+          "Udaipur",
+          "Kota",
+          "Ajmer",
+          "Bikaner",
+          "Alwar",
+          "Bhilwara",
+          "Sikar",
+        ],
+        Sikkim: ["Gangtok", "Namchi", "Mangan"],
+        "Tamil Nadu": [
+          "Chennai",
+          "Coimbatore",
+          "Madurai",
+          "Tiruchirappalli",
+          "Salem",
+          "Tirunelveli",
+          "Vellore",
+          "Erode",
+          "Tiruppur",
+          "Dindigul",
+        ],
+        Telangana: [
+          "Hyderabad",
+          "Warangal",
+          "Nizamabad",
+          "Khammam",
+          "Karimnagar",
+          "Ramagundam",
+          "Mahbubnagar",
+        ],
+        Tripura: ["Agartala", "Dharmanagar", "Udaipur"],
+        "Uttar Pradesh": [
+          "Lucknow",
+          "Kanpur",
+          "Agra",
+          "Varanasi",
+          "Allahabad",
+          "Meerut",
+          "Ghaziabad",
+          "Noida",
+          "Bareilly",
+          "Aligarh",
+        ],
+        Uttarakhand: [
+          "Dehradun",
+          "Haridwar",
+          "Roorkee",
+          "Haldwani",
+          "Rudrapur",
+          "Kashipur",
+        ],
+        "West Bengal": [
+          "Kolkata",
+          "Howrah",
+          "Durgapur",
+          "Asansol",
+          "Siliguri",
+          "Bardhaman",
+          "Malda",
+          "Barackpore",
+        ],
+        "Andaman & Nicobar Islands": ["Port Blair"],
+        Chandigarh: ["Chandigarh"],
+        "Dadra & Nagar Haveli": ["Silvassa"],
+        "Daman & Diu": ["Daman", "Diu"],
+        Delhi: ["New Delhi", "Delhi"],
+        "Jammu & Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+        Ladakh: ["Leh", "Kargil"],
+        Lakshadweep: ["Kavaratti"],
+        Puducherry: ["Puducherry", "Karaikal", "Mahe", "Yanam"],
+      };
+
+      function populateStates(selectedState, selectedCity) {
+        const stateEl = document.getElementById("editState");
+        const cityEl = document.getElementById("editCity");
+        stateEl.innerHTML = '<option value="" selected>All States</option>';
+        cityEl.innerHTML = '<option value="" selected>All Cities</option>';
+        Object.keys(INDIA_LOCATIONS)
+          .sort()
+          .forEach((state) => {
+            const opt = document.createElement("option");
+            opt.value = state;
+            opt.textContent = state;
+            if (state === selectedState) opt.selected = true;
+            stateEl.appendChild(opt);
+          });
+        if (selectedState && INDIA_LOCATIONS[selectedState]) {
+          populateCities(selectedState, selectedCity);
+        }
+      }
+
+      function populateCities(state, selectedCity) {
+        const cityEl = document.getElementById("editCity");
+        cityEl.innerHTML = '<option value="" selected>All Cities</option>';
+        (INDIA_LOCATIONS[state] || []).forEach((city) => {
+          const opt = document.createElement("option");
+          opt.value = city;
+          opt.textContent = city;
+          if (city === selectedCity) opt.selected = true;
+          cityEl.appendChild(opt);
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Wire up state → city cascade
+        const stateEl = document.getElementById("editState");
+        if (stateEl) {
+          stateEl.addEventListener("change", () => {
+            populateCities(stateEl.value, "");
+          });
+        }
+      });
+    </script>
     <script src="/app.js"></script>
     <script>
       const user = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null"
+        localStorage.getItem("spicetrade_user") || "null",
       );
 
       if (!user || !user.id) {
@@ -258,20 +579,25 @@
         if (user.profilePicture) {
           avatarDiv.innerHTML = `<img src="${user.profilePicture}" alt="Profile" />`;
         } else {
-          const initial = (user.name || user.email || "U").charAt(0).toUpperCase();
+          const initial = (user.name || user.email || "U")
+            .charAt(0)
+            .toUpperCase();
           avatarDiv.textContent = initial;
         }
-        
-        document.getElementById("profileName").textContent = user.name || "User";
+
+        document.getElementById("profileName").textContent =
+          user.name || "User";
         document.getElementById("profileEmail").textContent = user.email || "—";
         document.getElementById("profileRole").textContent =
           user.role === "seller" ? "Seller" : "Buyer";
 
-        document.getElementById("infoUniqueId").textContent = user.uniqueId || "—";
+        document.getElementById("infoUniqueId").textContent =
+          user.uniqueId || "—";
         document.getElementById("infoName").textContent = user.name || "—";
         document.getElementById("infoEmail").textContent = user.email || "—";
         document.getElementById("infoPhone").textContent = user.phone || "—";
-        document.getElementById("infoLocation").textContent = user.location || "—";
+        document.getElementById("infoLocation").textContent =
+          user.location || "—";
         document.getElementById("infoRole").textContent =
           user.role === "seller" ? "Seller" : "Buyer";
 
@@ -293,21 +619,31 @@
         // Populate edit form
         document.getElementById("editName").value = user.name || "";
         document.getElementById("editPhone").value = user.phone || "";
-        document.getElementById("editLocation").value = user.location || "";
-        
+        // Parse stored location "City, State, India" and set dropdowns
+        if (typeof populateStates === "function") {
+          const locParts = (user.location || "")
+            .split(",")
+            .map((s) => s.trim());
+          const storedState =
+            locParts.length >= 2 ? locParts[locParts.length - 2] : "";
+          const storedCity = locParts.length >= 3 ? locParts[0] : "";
+          populateStates(storedState, storedCity);
+        }
+
         if (user.role === "seller") {
           document.getElementById("sellerFields").style.display = "block";
           document.getElementById("editStoreName").value = user.storeName || "";
-          document.getElementById("editBusinessType").value = user.businessType || "";
+          document.getElementById("editBusinessType").value =
+            user.businessType || "";
           document.getElementById("editAddress").value = user.address || "";
         }
-        
+
         // Show current profile picture
         if (user.profilePicture) {
-          document.getElementById("currentPicPreview").innerHTML = 
+          document.getElementById("currentPicPreview").innerHTML =
             `<img src="${user.profilePicture}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;" />`;
         }
-        
+
         document.getElementById("editModal").classList.add("open");
       }
 
@@ -316,47 +652,67 @@
       }
 
       // Handle edit form submission
-      document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData();
-        formData.append("userId", user.id);
-        formData.append("name", document.getElementById("editName").value);
-        formData.append("phone", document.getElementById("editPhone").value);
-        formData.append("location", document.getElementById("editLocation").value);
-        
-        if (user.role === "seller") {
-          formData.append("storeName", document.getElementById("editStoreName").value);
-          formData.append("businessType", document.getElementById("editBusinessType").value);
-          formData.append("address", document.getElementById("editAddress").value);
-        }
-        
-        const picFile = document.getElementById("profilePictureInput").files[0];
-        if (picFile) {
-          formData.append("profilePicture", picFile);
-        }
-        
-        try {
-          const res = await fetch("/api/user/profile", {
-            method: "PUT",
-            body: formData,
-          });
-          const data = await res.json();
-          
-          if (data.success) {
-            // Update localStorage
-            const updatedUser = { ...user, ...data };
-            localStorage.setItem("spicetrade_user", JSON.stringify(updatedUser));
-            alert("Profile updated successfully!");
-            location.reload();
-          } else {
-            alert(data.error || "Failed to update profile");
+      document
+        .getElementById("editProfileForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData();
+          formData.append("userId", user.id);
+          formData.append("name", document.getElementById("editName").value);
+          formData.append("phone", document.getElementById("editPhone").value);
+          const _locCity = document.getElementById("editCity").value;
+          const _locState = document.getElementById("editState").value;
+          const _locParts = [_locCity, _locState, "India"].filter(
+            (v) => v && v !== "— Select State —" && v !== "— Select City —",
+          );
+          formData.append("location", _locParts.join(", "));
+
+          if (user.role === "seller") {
+            formData.append(
+              "storeName",
+              document.getElementById("editStoreName").value,
+            );
+            formData.append(
+              "businessType",
+              document.getElementById("editBusinessType").value,
+            );
+            formData.append(
+              "address",
+              document.getElementById("editAddress").value,
+            );
           }
-        } catch (err) {
-          console.error(err);
-          alert("Network error");
-        }
-      });
+
+          const picFile = document.getElementById("profilePictureInput")
+            .files[0];
+          if (picFile) {
+            formData.append("profilePicture", picFile);
+          }
+
+          try {
+            const res = await fetch("/api/user/profile", {
+              method: "PUT",
+              body: formData,
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              // Update localStorage
+              const updatedUser = { ...user, ...data };
+              localStorage.setItem(
+                "spicetrade_user",
+                JSON.stringify(updatedUser),
+              );
+              alert("Profile updated successfully!");
+              location.reload();
+            } else {
+              alert(data.error || "Failed to update profile");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Network error");
+          }
+        });
 
       function changePassword() {
         alert("Change password feature coming soon!");
@@ -365,7 +721,7 @@
       function deleteAccount() {
         if (
           confirm(
-            "Are you sure you want to delete your account? This action cannot be undone."
+            "Are you sure you want to delete your account? This action cannot be undone.",
           )
         ) {
           localStorage.removeItem("spicetrade_user");

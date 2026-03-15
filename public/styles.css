@@ -116,7 +116,7 @@ body {
   background: #fff;
   border: 1px solid #d5d9d9;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-height: 400px;
   overflow-y: auto;
   z-index: 1000;
@@ -1965,7 +1965,7 @@ select[multiple] {
 }
 
 .amazon-product-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-color: #ccc;
   transform: translateY(-2px);
 }
@@ -2101,13 +2101,13 @@ select[multiple] {
   .search-layout {
     grid-template-columns: 1fr;
   }
-  
+
   .filters-sidebar {
     position: relative;
     top: 0;
     max-height: none;
   }
-  
+
   .amazon-results-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px;
@@ -2120,12 +2120,12 @@ select[multiple] {
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .amazon-results-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  
+
   .amazon-product-card {
     padding: 12px;
   }
@@ -2135,4 +2135,23 @@ select[multiple] {
   .amazon-results-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Password requirements checklist */
+.pwd-requirements {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+.pwd-requirements li {
+  list-style: disc;
+  color: #c0392b;
+  transition: color 0.2s;
+}
+.pwd-requirements li::marker {
+  color: inherit;
+}
+.pwd-requirements li.req-met {
+  color: #27ae60;
 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -78,6 +78,12 @@
                       required
                       class="form-control"
                     />
+                    <ul class="pwd-requirements">
+                      <li id="req-length">At least 8 characters</li>
+                      <li id="req-upper">One uppercase letter (A–Z)</li>
+                      <li id="req-lower">One lowercase letter (a–z)</li>
+                      <li id="req-special">One special character (!@#$%…)</li>
+                    </ul>
                   </div>
                   <div>
                     <label for="confirmPassword">Confirm password</label>
@@ -91,7 +97,7 @@
                   </div>
                 </div>
 
-                <div class="form-row" id="buyerFields" style="display: none;">
+                <div class="form-row" id="buyerFields" style="display: none">
                   <div>
                     <label for="location">Location *</label>
                     <input
@@ -103,7 +109,10 @@
                     />
                   </div>
                   <div>
-                    <label for="profilePicture">Profile Picture <span class="muted">(optional)</span></label>
+                    <label for="profilePicture"
+                      >Profile Picture
+                      <span class="muted">(optional)</span></label
+                    >
                     <input
                       id="profilePicture"
                       name="profilePicture"
@@ -318,10 +327,10 @@
         const signupForm = document.getElementById("signupForm");
         const logoInput = document.getElementById("logo");
         const storeDetailsSection = document.getElementById(
-          "storeDetailsSection"
+          "storeDetailsSection",
         );
         const businessInfoSection = document.getElementById(
-          "businessInfoSection"
+          "businessInfoSection",
         );
         const storeMediaSection = document.getElementById("storeMediaSection");
         const submitBtn = document.getElementById("submitBtn");
