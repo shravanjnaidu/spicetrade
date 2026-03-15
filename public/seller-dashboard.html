@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -322,15 +322,78 @@
             <label for="productCategory">Category *</label>
             <select id="productCategory" name="category" required>
               <option value="">Select category</option>
-              <option value="Spices">Spices</option>
-              <option value="Grains">Grains</option>
-              <option value="Packaging">Packaging</option>
-              <option value="Machinery">Machinery</option>
-              <option value="Other">Other</option>
+              <optgroup label="Food &amp; Agriculture">
+                <option value="Spices &amp; Herbs">Spices &amp; Herbs</option>
+                <option value="Grains &amp; Cereals">
+                  Grains &amp; Cereals
+                </option>
+                <option value="Pulses &amp; Legumes">
+                  Pulses &amp; Legumes
+                </option>
+                <option value="Nuts &amp; Dry Fruits">
+                  Nuts &amp; Dry Fruits
+                </option>
+                <option value="Oils &amp; Fats">Oils &amp; Fats</option>
+                <option value="Sugar &amp; Sweeteners">
+                  Sugar &amp; Sweeteners
+                </option>
+                <option value="Tea &amp; Coffee">Tea &amp; Coffee</option>
+                <option value="Dairy Products">Dairy Products</option>
+                <option value="Fruits &amp; Vegetables">
+                  Fruits &amp; Vegetables
+                </option>
+                <option value="Seafood">Seafood</option>
+                <option value="Meat &amp; Poultry">Meat &amp; Poultry</option>
+                <option value="Processed &amp; Packaged Foods">
+                  Processed &amp; Packaged Foods
+                </option>
+                <option value="Beverages">Beverages</option>
+                <option value="Seeds &amp; Planting Material">
+                  Seeds &amp; Planting Material
+                </option>
+                <option value="Organic &amp; Natural Products">
+                  Organic &amp; Natural Products
+                </option>
+                <option value="Agro Chemicals &amp; Fertilizers">
+                  Agro Chemicals &amp; Fertilizers
+                </option>
+              </optgroup>
+              <optgroup label="Industrial &amp; Supply Chain">
+                <option value="Packaging Materials">Packaging Materials</option>
+                <option value="Machinery &amp; Equipment">
+                  Machinery &amp; Equipment
+                </option>
+                <option value="Chemicals &amp; Raw Materials">
+                  Chemicals &amp; Raw Materials
+                </option>
+                <option value="Laboratory &amp; Testing Equipment">
+                  Laboratory &amp; Testing Equipment
+                </option>
+                <option value="Safety &amp; Protective Equipment">
+                  Safety &amp; Protective Equipment
+                </option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="Other">Other</option>
+                <option value="__custom__">+ Add Custom Category</option>
+              </optgroup>
             </select>
+            <input
+              type="text"
+              id="productCategoryCustom"
+              placeholder="Enter custom category"
+              style="
+                display: none;
+                margin-top: 8px;
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #e6e6e6;
+                border-radius: 6px;
+              "
+            />
           </div>
           <div class="form-group" id="productTagsGroup" style="display: none">
-            <label>Select Tag *</label>
+            <label>Tags</label>
             <select
               id="productTagsDropdown"
               style="
@@ -343,36 +406,98 @@
               <option value="">Select a tag</option>
             </select>
             <div
+              style="
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+                align-items: center;
+              "
+            >
+              <input
+                type="text"
+                id="productCustomTagInput"
+                placeholder="Or type a custom tag"
+                style="
+                  flex: 1;
+                  padding: 9px;
+                  border: 1px solid #e6e6e6;
+                  border-radius: 6px;
+                  font-size: 14px;
+                "
+              />
+              <button
+                type="button"
+                onclick="addCustomTag('product')"
+                style="
+                  padding: 9px 14px;
+                  background: var(--accent, #e67e22);
+                  color: #fff;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-size: 14px;
+                "
+              >
+                Add
+              </button>
+            </div>
+            <div
               id="productSelectedTagsContainer"
               style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
             ></div>
           </div>
           <div class="form-group">
-            <label for="productImage">Product Images (up to 10)</label>
+            <label>Product Images (up to 10)</label>
             <input
               type="file"
               id="productImage"
-              name="image"
               accept="image/*"
               multiple
+              style="display: block; margin-bottom: 4px"
             />
             <small
               style="
                 color: #666;
                 font-size: 12px;
                 display: block;
-                margin-top: 4px;
+                margin-top: 2px;
               "
+              >Select up to 10 images. Click × to remove.</small
             >
-              Select multiple images for your product (max 10)
-            </small>
             <div
               id="productImagePreviews"
               style="
                 display: flex;
                 flex-wrap: wrap;
                 gap: 10px;
-                margin-top: 12px;
+                margin-top: 10px;
+              "
+            ></div>
+          </div>
+          <div class="form-group">
+            <label>Product Video (optional)</label>
+            <input
+              type="file"
+              id="productVideo"
+              accept="video/*"
+              style="display: block; margin-bottom: 4px"
+            />
+            <small
+              style="
+                color: #666;
+                font-size: 12px;
+                display: block;
+                margin-top: 2px;
+              "
+              >MP4 / MOV / WebM recommended. Click × to remove.</small
+            >
+            <div
+              id="productVideoPreviews"
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 10px;
               "
             ></div>
           </div>
@@ -426,15 +551,73 @@
             <label for="serviceCategory">Category *</label>
             <select id="serviceCategory" name="category" required>
               <option value="">Select category</option>
-              <option value="Consulting">Consulting</option>
-              <option value="Logistics">Logistics</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Installation">Installation</option>
-              <option value="Other">Other</option>
+              <optgroup label="Professional Services">
+                <option value="Consulting">Consulting</option>
+                <option value="Quality Testing &amp; Certification">
+                  Quality Testing &amp; Certification
+                </option>
+                <option value="Market Research">Market Research</option>
+                <option value="Training &amp; Education">
+                  Training &amp; Education
+                </option>
+                <option value="Legal &amp; Compliance">
+                  Legal &amp; Compliance
+                </option>
+                <option value="Financial &amp; Accounting">
+                  Financial &amp; Accounting
+                </option>
+                <option value="Marketing &amp; Branding">
+                  Marketing &amp; Branding
+                </option>
+              </optgroup>
+              <optgroup label="Supply Chain &amp; Operations">
+                <option value="Logistics &amp; Shipping">
+                  Logistics &amp; Shipping
+                </option>
+                <option value="Warehousing &amp; Storage">
+                  Warehousing &amp; Storage
+                </option>
+                <option value="Customs &amp; Import/Export">
+                  Customs &amp; Import/Export
+                </option>
+                <option value="Cold Chain Services">Cold Chain Services</option>
+                <option value="Freight Forwarding">Freight Forwarding</option>
+              </optgroup>
+              <optgroup label="Technical Services">
+                <option value="Machinery Installation">
+                  Machinery Installation
+                </option>
+                <option value="Maintenance &amp; Repair">
+                  Maintenance &amp; Repair
+                </option>
+                <option value="Calibration &amp; Testing">
+                  Calibration &amp; Testing
+                </option>
+                <option value="IT &amp; Software Solutions">
+                  IT &amp; Software Solutions
+                </option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="Other">Other</option>
+                <option value="__custom__">+ Add Custom Category</option>
+              </optgroup>
             </select>
+            <input
+              type="text"
+              id="serviceCategoryCustom"
+              placeholder="Enter custom category"
+              style="
+                display: none;
+                margin-top: 8px;
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #e6e6e6;
+                border-radius: 6px;
+              "
+            />
           </div>
           <div class="form-group" id="serviceTagsGroup" style="display: none">
-            <label>Select Tag *</label>
+            <label>Tags</label>
             <select
               id="serviceTagsDropdown"
               style="
@@ -446,6 +629,42 @@
             >
               <option value="">Select a tag</option>
             </select>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+                align-items: center;
+              "
+            >
+              <input
+                type="text"
+                id="serviceCustomTagInput"
+                placeholder="Or type a custom tag"
+                style="
+                  flex: 1;
+                  padding: 9px;
+                  border: 1px solid #e6e6e6;
+                  border-radius: 6px;
+                  font-size: 14px;
+                "
+              />
+              <button
+                type="button"
+                onclick="addCustomTag('service')"
+                style="
+                  padding: 9px 14px;
+                  background: var(--accent, #e67e22);
+                  color: #fff;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-size: 14px;
+                "
+              >
+                Add
+              </button>
+            </div>
             <div
               id="serviceSelectedTagsContainer"
               style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"
@@ -473,7 +692,7 @@
     <script>
       // Load store details from localStorage
       const user = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null"
+        localStorage.getItem("spicetrade_user") || "null",
       );
 
       if (!user || user.role !== "seller") {
@@ -515,7 +734,7 @@
 
             // Filter ads by current user and separate products from services
             const userAds = allAds.filter(
-              (ad) => ad.userId === user.id && ad.price
+              (ad) => ad.userId === user.id && ad.price,
             );
             products = userAds.filter((ad) => ad.unit !== "service");
             services = userAds.filter((ad) => ad.unit === "service");
@@ -550,8 +769,8 @@
                   .map(
                     (tag) =>
                       `<span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-size: 12px; color: #555; text-transform: lowercase;">${escapeHtml(
-                        tag
-                      )}</span>`
+                        tag,
+                      )}</span>`,
                   )
                   .join("")}</div>`
               : "";
@@ -559,7 +778,7 @@
             ? `<img src="${
                 p.imageUrl
               }" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px;" alt="${escapeHtml(
-                p.title || p.name
+                p.title || p.name,
               )}">`
             : `<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>`;
           item.innerHTML = `
@@ -605,8 +824,8 @@
                   .map(
                     (tag) =>
                       `<span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-size: 12px; color: #555; text-transform: lowercase;">${escapeHtml(
-                        tag
-                      )}</span>`
+                        tag,
+                      )}</span>`,
                   )
                   .join("")}</div>`
               : "";
@@ -614,7 +833,7 @@
             ? `<img src="${
                 s.imageUrl
               }" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px;" alt="${escapeHtml(
-                s.title || s.name
+                s.title || s.name,
               )}">`
             : `<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">💼</div>`;
           item.innerHTML = `
@@ -653,101 +872,854 @@
 
       // Tag options by category
       const categoryTags = {
-        Spices: [
-          "Cloves",
+        // ── Products ──────────────────────────────────────────────────
+        "Spices & Herbs": [
+          "Turmeric",
+          "Black Pepper",
+          "Red Chilli",
+          "Cumin",
+          "Coriander",
           "Cardamom",
-          "Pepper",
-          "Salt",
+          "Cloves",
           "Cinnamon",
-          "Garlic",
           "Ginger",
-          "Bay leaf",
-          "Mustard",
-          "Coriander seeds",
+          "Garlic",
+          "Fenugreek",
+          "Mustard Seeds",
+          "Bay Leaf",
+          "Star Anise",
+          "Nutmeg",
+          "Mace",
+          "Saffron",
+          "Fennel",
+          "Carom Seeds",
+          "Asafoetida",
+          "Curry Leaves",
+          "Mint",
+          "Basil",
+          "Oregano",
+          "Thyme",
+          "Paprika",
+          "Cayenne",
+          "Kokum",
+          "Tamarind",
+          "Dry Mango Powder",
         ],
-        Grains: [
-          "Rice",
+        "Grains & Cereals": [
+          "Basmati Rice",
+          "Non-Basmati Rice",
           "Wheat",
+          "Maize / Corn",
           "Barley",
           "Oats",
-          "Corn",
           "Millet",
+          "Sorghum",
+          "Ragi / Finger Millet",
+          "Jowar",
+          "Bajra",
+          "Buckwheat",
           "Quinoa",
           "Rye",
-          "Sorghum",
-          "Buckwheat",
+          "Semolina",
+          "Poha",
+          "Rice Flour",
+          "Wheat Flour",
+          "Corn Flour",
+          "Multi-grain",
         ],
-        Packaging: [
-          "Boxes",
-          "Bags",
-          "Containers",
-          "Bottles",
-          "Jars",
-          "Pouches",
-          "Wraps",
-          "Crates",
-          "Pallets",
-          "Labels",
+        "Pulses & Legumes": [
+          "Chickpeas",
+          "Lentils",
+          "Black-eyed Peas",
+          "Kidney Beans",
+          "Green Moong",
+          "Yellow Moong",
+          "Urad Dal",
+          "Toor Dal",
+          "Chana Dal",
+          "Soybean",
+          "Peas",
+          "Cowpea",
+          "Lima Beans",
+          "Navy Beans",
+          "Pigeon Peas",
+          "Horse Gram",
+          "Moth Beans",
+          "Masoor Dal",
+          "Split Peas",
+          "White Peas",
         ],
-        Machinery: [
-          "Grinders",
-          "Mixers",
-          "Packaging machines",
-          "Conveyors",
-          "Scales",
-          "Pumps",
-          "Dryers",
-          "Sealers",
-          "Sorters",
-          "Mills",
+        "Nuts & Dry Fruits": [
+          "Almonds",
+          "Cashews",
+          "Walnuts",
+          "Pistachios",
+          "Raisins",
+          "Dates",
+          "Figs",
+          "Apricots",
+          "Prunes",
+          "Peanuts",
+          "Macadamia",
+          "Hazelnuts",
+          "Pine Nuts",
+          "Pecans",
+          "Brazil Nuts",
+          "Dried Cranberries",
+          "Dried Mango",
+          "Dried Coconut",
+          "Chia Seeds",
+          "Sunflower Seeds",
         ],
+        "Oils & Fats": [
+          "Coconut Oil",
+          "Mustard Oil",
+          "Groundnut Oil",
+          "Sesame Oil",
+          "Sunflower Oil",
+          "Rice Bran Oil",
+          "Palm Oil",
+          "Olive Oil",
+          "Soybean Oil",
+          "Castor Oil",
+          "Linseed Oil",
+          "Corn Oil",
+          "Ghee",
+          "Butter",
+          "Vanaspati",
+          "Cold-pressed",
+          "Refined",
+          "Crude",
+          "Edible Grade",
+          "Industrial Grade",
+        ],
+        "Sugar & Sweeteners": [
+          "White Sugar",
+          "Brown Sugar",
+          "Raw Sugar",
+          "Jaggery",
+          "Palm Sugar",
+          "Honey",
+          "Molasses",
+          "Corn Syrup",
+          "Stevia",
+          "Coconut Sugar",
+          "Rock Candy",
+          "Invert Sugar",
+          "Treacle",
+          "Glucose",
+          "Fructose",
+          "Icing Sugar",
+          "Caster Sugar",
+          "Demerara Sugar",
+          "Muscovado",
+          "Organic Sugar",
+        ],
+        "Tea & Coffee": [
+          "Assam Tea",
+          "Darjeeling Tea",
+          "Green Tea",
+          "Black Tea",
+          "White Tea",
+          "Oolong Tea",
+          "Herbal Tea",
+          "Masala Chai",
+          "Instant Tea",
+          "CTC Tea",
+          "Arabica Coffee",
+          "Robusta Coffee",
+          "Instant Coffee",
+          "Green Coffee Beans",
+          "Roasted Coffee",
+          "Cold Brew",
+          "Espresso",
+          "Decaf",
+          "Single Origin",
+          "Blended",
+        ],
+        "Dairy Products": [
+          "Milk Powder",
+          "Cheese",
+          "Butter",
+          "Ghee",
+          "Cream",
+          "Yogurt / Curd",
+          "Paneer",
+          "Condensed Milk",
+          "Evaporated Milk",
+          "Whey Protein",
+          "Casein",
+          "Lactose",
+          "Skimmed Milk",
+          "Full-fat Milk",
+          "UHT Milk",
+          "Ice Cream Mix",
+          "Cultured Butter",
+          "Clarified Butter",
+          "Colostrum",
+          "Dairy Whitener",
+        ],
+        "Fruits & Vegetables": [
+          "Mango",
+          "Banana",
+          "Grapes",
+          "Pomegranate",
+          "Onion",
+          "Potato",
+          "Tomato",
+          "Garlic Bulb",
+          "Ginger Root",
+          "Green Chilli",
+          "Capsicum",
+          "Cabbage",
+          "Cauliflower",
+          "Brinjal",
+          "Okra",
+          "Bitter Gourd",
+          "Pumpkin",
+          "Carrot",
+          "Beetroot",
+          "Spinach",
+        ],
+        Seafood: [
+          "Shrimp / Prawns",
+          "Fish Fillet",
+          "Squid",
+          "Crab",
+          "Lobster",
+          "Tuna",
+          "Sardine",
+          "Mackerel",
+          "Pomfret",
+          "Rohu",
+          "Catla",
+          "Tilapia",
+          "Salmon",
+          "Dried Fish",
+          "Fish Meal",
+          "Fish Oil",
+          "Frozen Seafood",
+          "Fresh Seafood",
+          "Smoked Fish",
+          "Canned Fish",
+        ],
+        "Meat & Poultry": [
+          "Chicken",
+          "Mutton",
+          "Beef",
+          "Pork",
+          "Lamb",
+          "Buffalo Meat",
+          "Turkey",
+          "Duck",
+          "Eggs",
+          "Frozen Chicken",
+          "Processed Meat",
+          "Halal Certified",
+          "Kosher Certified",
+          "Boneless",
+          "Bone-in",
+          "Minced Meat",
+          "Sausages",
+          "Salami",
+          "Liver",
+          "Organ Meat",
+        ],
+        "Processed & Packaged Foods": [
+          "Pickles",
+          "Sauces",
+          "Pastes",
+          "Ready-to-eat",
+          "Snacks",
+          "Noodles",
+          "Pasta",
+          "Canned Goods",
+          "Frozen Foods",
+          "Bakery Products",
+          "Biscuits",
+          "Chips",
+          "Namkeen",
+          "Papad",
+          "Instant Mixes",
+          "Spice Blends",
+          "Curry Powder",
+          "Masala Mixes",
+          "Preserves",
+          "Jams",
+        ],
+        Beverages: [
+          "Fruit Juice",
+          "Soft Drinks",
+          "Energy Drinks",
+          "Mineral Water",
+          "Coconut Water",
+          "Sugarcane Juice",
+          "Aloe Vera Drink",
+          "Mango Drink",
+          "Lemon Squash",
+          "Rose Syrup",
+          "Sherbet",
+          "Soda",
+          "Tonic Water",
+          "Sports Drink",
+          "Protein Shake",
+          "Dairy Drink",
+          "Plant-based Drink",
+          "Kombucha",
+          "Sparkling Water",
+          "Drinking Water",
+        ],
+        "Seeds & Planting Material": [
+          "Vegetable Seeds",
+          "Fruit Seeds",
+          "Spice Seeds",
+          "Grain Seeds",
+          "Hybrid Seeds",
+          "Organic Seeds",
+          "Flower Seeds",
+          "Herb Seeds",
+          "Sapling",
+          "Cutting",
+          "Grafted Plants",
+          "Tissue Culture",
+          "Paddy Seeds",
+          "Wheat Seeds",
+          "Cotton Seeds",
+          "Sunflower Seeds",
+          "Oil Seeds",
+          "Fodder Seeds",
+          "Medicinal Plant Seeds",
+          "Certified Seeds",
+        ],
+        "Organic & Natural Products": [
+          "Organic Spices",
+          "Organic Grains",
+          "Organic Pulses",
+          "Natural Honey",
+          "Wild Herbs",
+          "Ayurvedic Ingredients",
+          "Superfoods",
+          "Raw Unprocessed",
+          "Chemical-free",
+          "No Preservatives",
+          "Non-GMO",
+          "Vegan",
+          "Gluten-free",
+          "FSSAI Certified",
+          "USDA Organic",
+          "EU Organic",
+          "Fair Trade",
+          "Biodynamic",
+          "Forest Products",
+          "Naturally Dried",
+        ],
+        "Agro Chemicals & Fertilizers": [
+          "Urea",
+          "DAP",
+          "NPK Fertilizer",
+          "Potash",
+          "Organic Fertilizer",
+          "Bio-fertilizer",
+          "Pesticides",
+          "Herbicides",
+          "Fungicides",
+          "Insecticides",
+          "Growth Regulators",
+          "Micronutrients",
+          "Soil Conditioner",
+          "Compost",
+          "Vermicompost",
+          "Foliar Spray",
+          "Drip Nutrients",
+          "Neem-based",
+          "Seaweed Extract",
+          "Humic Acid",
+        ],
+        "Packaging Materials": [
+          "HDPE Bags",
+          "PP Woven Bags",
+          "Jute Bags",
+          "Kraft Paper Bags",
+          "Corrugated Boxes",
+          "Wooden Crates",
+          "Plastic Containers",
+          "Glass Jars",
+          "PET Bottles",
+          "Tin Cans",
+          "Aluminium Foil Pouches",
+          "Stand-up Pouches",
+          "Vacuum Bags",
+          "Zipper Bags",
+          "Stretch Film",
+          "Shrink Wrap",
+          "Bubble Wrap",
+          "Pallet Wrap",
+          "Labels & Stickers",
+          "Tamper-evident Seals",
+        ],
+        "Machinery & Equipment": [
+          "Spice Grinder",
+          "Turmeric Polisher",
+          "Chilli Dryer",
+          "Seed Cleaner",
+          "Grain Dryer",
+          "Rice Huller",
+          "Flour Mill",
+          "Oil Expeller",
+          "Pulverizer",
+          "Vibrating Sieve",
+          "Packaging Machine",
+          "Weighing Scale",
+          "Conveyor Belt",
+          "Cold Storage Unit",
+          "Food Mixer",
+          "Blender",
+          "Extruder",
+          "Hydraulic Press",
+          "Boiler",
+          "Fumigation Equipment",
+        ],
+        "Chemicals & Raw Materials": [
+          "Food-grade Preservatives",
+          "Emulsifiers",
+          "Stabilizers",
+          "Thickeners",
+          "Coloring Agents",
+          "Flavor Enhancers",
+          "Antioxidants",
+          "Acidity Regulators",
+          "Enzymes",
+          "Starch",
+          "Modified Starch",
+          "Citric Acid",
+          "Glycerin",
+          "Lecithin",
+          "Sorbitol",
+          "Xanthan Gum",
+          "Carrageenan",
+          "Pectin",
+          "Agar Agar",
+          "Sodium Alginate",
+        ],
+        "Laboratory & Testing Equipment": [
+          "Moisture Analyzer",
+          "pH Meter",
+          "Spectrophotometer",
+          "Chromatography",
+          "Microbiology Kit",
+          "Food Safety Kit",
+          "Mycotoxin Test Kit",
+          "Heavy Metal Test",
+          "Allergen Test",
+          "Pesticide Residue Test",
+          "NIR Analyzer",
+          "Colorimeter",
+          "Viscometer",
+          "Refractometer",
+          "Hygrometer",
+          "Water Activity Meter",
+          "Hardness Tester",
+          "Density Meter",
+          "HPLC",
+          "Gas Analyzer",
+        ],
+        "Safety & Protective Equipment": [
+          "Gloves",
+          "Hairnets",
+          "Face Masks",
+          "Safety Goggles",
+          "Aprons",
+          "Boots",
+          "Hard Hats",
+          "Ear Plugs",
+          "Safety Vests",
+          "First Aid Kit",
+          "Fire Extinguisher",
+          "Eye Wash Station",
+          "Spill Kit",
+          "Safety Signs",
+          "Non-slip Mats",
+          "Protective Suits",
+          "Knee Pads",
+          "Safety Harness",
+          "Fall Arrestor",
+          "Chemical Resistant Gear",
+        ],
+        // ── Services ──────────────────────────────────────────────────
         Consulting: [
-          "Business strategy",
-          "Quality control",
-          "Market research",
-          "Export consulting",
-          "Compliance",
-          "Product development",
-          "Training",
-          "Auditing",
-          "Certification",
-          "Supply chain",
+          "Business Strategy",
+          "Export Consulting",
+          "Import Consulting",
+          "Supply Chain Optimization",
+          "Product Development",
+          "Market Entry",
+          "Feasibility Study",
+          "Risk Assessment",
+          "Due Diligence",
+          "Merger & Acquisition",
+          "Cost Reduction",
+          "Process Improvement",
+          "Sustainability",
+          "ESG Advisory",
+          "Trade Finance",
+          "Pricing Strategy",
+          "Competitor Analysis",
+          "Go-to-Market",
+          "Distribution Strategy",
+          "Business Valuation",
         ],
-        Logistics: [
-          "Shipping",
-          "Warehousing",
-          "Distribution",
-          "Freight forwarding",
-          "Customs clearance",
-          "Cold storage",
-          "Express delivery",
-          "Cargo handling",
-          "Import/Export",
-          "Last mile",
+        "Quality Testing & Certification": [
+          "FSSAI Certification",
+          "ISO 22000",
+          "HACCP",
+          "GMP Audit",
+          "Organic Certification",
+          "Halal Certification",
+          "Kosher Certification",
+          "BRC Certification",
+          "SQF Certification",
+          "FDA Compliance",
+          "EU Standards",
+          "Pesticide Residue Testing",
+          "Aflatoxin Testing",
+          "Microbiology Testing",
+          "Nutritional Analysis",
+          "Allergen Testing",
+          "Heavy Metal Testing",
+          "Authenticity Testing",
+          "Shelf Life Study",
+          "Packaging Compliance",
         ],
-        Maintenance: [
-          "Equipment servicing",
-          "Preventive maintenance",
-          "Repairs",
-          "Calibration",
-          "Upgrades",
-          "Troubleshooting",
-          "Installation support",
-          "Parts replacement",
-          "Testing",
-          "Inspection",
+        "Market Research": [
+          "Demand Analysis",
+          "Price Benchmarking",
+          "Trade Data Analysis",
+          "Consumer Research",
+          "Competitor Mapping",
+          "Export Market Identification",
+          "Import Trend Analysis",
+          "Commodity Forecasting",
+          "Supplier Scouting",
+          "Buyer Identification",
+          "Retail Audit",
+          "Sensory Evaluation",
+          "Focus Groups",
+          "Surveys",
+          "Industry Reports",
+          "Crop Forecast",
+          "Trade Fair Research",
+          "Tariff & Duty Research",
+          "Regulatory Research",
+          "eCommerce Analytics",
         ],
-        Installation: [
-          "Setup",
-          "Configuration",
-          "Testing",
-          "Training",
-          "Integration",
+        "Training & Education": [
+          "Food Safety Training",
+          "GMP Training",
+          "Export Procedures",
+          "Import Procedures",
+          "Spice Processing",
+          "Quality Control",
+          "Packaging Skills",
+          "HACCP Training",
+          "Warehouse Management",
+          "Cold Chain Training",
+          "Lab Techniques",
+          "Regulatory Compliance",
+          "Digital Marketing",
+          "Trade Finance",
+          "Business English",
+          "ERP Training",
+          "Leadership",
+          "Negotiation Skills",
+          "Agri-tech Training",
+          "E-Commerce Training",
+        ],
+        "Legal & Compliance": [
+          "Trade License",
+          "FSSAI License",
+          "Import License",
+          "Export License",
+          "company Registration",
+          "GST Registration",
+          "Contract Drafting",
+          "IP Protection",
+          "Trademark Registration",
+          "Regulatory Filing",
+          "Customs Documentation",
+          "APEDA Registration",
+          "SPICE Board",
+          "EIC Registration",
+          "MPEDA Registration",
+          "BIS Certification",
+          "Legal Due Diligence",
+          "Dispute Resolution",
+          "Arbitration",
+          "Compliance Audit",
+        ],
+        "Financial & Accounting": [
+          "Trade Finance",
+          "Letter of Credit",
+          "Bank Guarantee",
+          "Invoice Discounting",
+          "Working Capital",
+          "Export Credit",
+          "Currency Hedging",
+          "Accounting Services",
+          "Tax Filing",
+          "GST Returns",
+          "Audit Services",
+          "Insurance",
+          "Cargo Insurance",
+          "Credit Rating",
+          "Financial Modelling",
+          "Budget Planning",
+          "Cash Flow Management",
+          "Investment Advisory",
+          "EXIM Bank Loans",
+          "SIDBI Schemes",
+        ],
+        "Marketing & Branding": [
+          "Brand Development",
+          "Packaging Design",
+          "Label Design",
+          "Digital Marketing",
+          "SEO",
+          "Social Media",
+          "Trade Fair Participation",
+          "Catalogue Design",
+          "Product Photography",
+          "Video Production",
+          "eCommerce Listing",
+          "B2B Lead Generation",
+          "Email Marketing",
+          "Influencer Marketing",
+          "PR & Communications",
+          "Website Development",
+          "Ad Campaigns",
+          "Export Promotion",
+          "Buyer-Seller Meet",
+          "Corporate Gifting",
+        ],
+        "Logistics & Shipping": [
+          "Air Freight",
+          "Sea Freight",
+          "Road Transport",
+          "Rail Transport",
+          "Multimodal",
+          "FCL",
+          "LCL",
+          "Express Courier",
+          "Door-to-door",
+          "Port-to-port",
+          "Flexi-bag",
+          "Reefer Container",
+          "Bulk Cargo",
+          "Project Cargo",
+          "Hazmat Shipping",
+          "Last Mile Delivery",
+          "Same-day Delivery",
+          "Cross-border",
+          "Incoterms Advisory",
+          "Tracking & Visibility",
+        ],
+        "Warehousing & Storage": [
+          "Dry Warehouse",
+          "Cold Storage",
+          "Controlled Atmosphere",
+          "Bonded Warehouse",
+          "Public Warehouse",
+          "Private Warehouse",
+          "Fulfillment Center",
+          "Pick & Pack",
+          "Inventory Management",
+          "Stock Auditing",
+          "Container Freight Station",
+          "Silo Storage",
+          "Fumigation",
+          "Humidity Control",
+          "Long-term Storage",
+          "Short-term Storage",
+          "Hazmat Storage",
+          "Pallet Racking",
+          "FIFO Management",
+          "IoT Monitoring",
+        ],
+        "Customs & Import/Export": [
+          "Customs Clearance",
+          "HS Code Classification",
+          "Duty Calculation",
+          "Import Documentation",
+          "Export Documentation",
+          "Bill of Lading",
+          "Certificate of Origin",
+          "Phytosanitary Certificate",
+          "Fumigation Certificate",
+          "DGFT Filings",
+          "AD Code Registration",
+          "SEZ Services",
+          "Drawback Claims",
+          "MEIS / RoDTEP",
+          "Pre-shipment Inspection",
+          "Post-shipment Finance",
+          "Auction Handling",
+          "Demurrage Advisory",
+          "Free Trade Agreement",
+          "Trade Compliance",
+        ],
+        "Cold Chain Services": [
+          "Temperature Monitoring",
+          "Reefer Transport",
+          "Cold Storage",
+          "Blast Freezing",
+          "IQF",
+          "Chilled Distribution",
+          "Frozen Logistics",
+          "Cold Room Installation",
+          "Dry Ice Packaging",
+          "Cryogenic Freezing",
+          "Ambient+Cold Split",
+          "Pharma Cold Chain",
+          "Seafood Cold Chain",
+          "Dairy Cold Chain",
+          "Produce Cold Chain",
+          "HACCP Cold Chain",
+          "IoT Sensors",
+          "Cold Chain Audit",
+          "Reverse Logistics",
+          "Cold Chain Training",
+        ],
+        "Freight Forwarding": [
+          "Air Freight Forwarding",
+          "Ocean Freight Forwarding",
+          "LCL Consolidation",
+          "FCL Services",
+          "Multi-modal Forwarding",
+          "Customs Brokerage",
+          "Port Handling",
+          "Cargo Insurance",
+          "Track & Trace",
+          "Project Logistics",
+          "Dangerous Goods",
+          "Perishable Forwarding",
+          "Temperature-controlled",
+          "Incoterms Consulting",
+          "Agent Network",
+          "Rate Negotiation",
+          "Door Pickup",
+          "Airport Handling",
+          "Transshipment",
+          "Intermodal",
+        ],
+        "Machinery Installation": [
+          "Site Survey",
+          "Foundation Work",
+          "Equipment Erection",
+          "Electrical Wiring",
+          "Pneumatic Setup",
           "Commissioning",
+          "Trial Run",
+          "Staff Training",
+          "Performance Testing",
           "Documentation",
-          "Support",
-          "Optimization",
-          "Warranty",
+          "Handover",
+          "Warranty Service",
+          "Spare Parts Supply",
+          "Remote Monitoring",
+          "Safety Inspection",
+          "Alignment",
+          "Calibration",
+          "Retrofitting",
+          "Upgradation",
+          "Decommissioning",
+        ],
+        "Maintenance & Repair": [
+          "Preventive Maintenance",
+          "Corrective Maintenance",
+          "Breakdown Repair",
+          "Annual Maintenance Contract",
+          "Spare Parts",
+          "Overhauling",
+          "Lubrication",
+          "Cleaning & Sanitation",
+          "Electrical Repairs",
+          "Mechanical Repairs",
+          "Pneumatic Repairs",
+          "Hydraulic Repairs",
+          "Calibration",
+          "Alignment",
+          "Welding",
+          "Fabrication",
+          "Non-destructive Testing",
+          "Performance Audit",
+          "Energy Audit",
+          "Remote Diagnostics",
+        ],
+        "Calibration & Testing": [
+          "Weight Calibration",
+          "Pressure Calibration",
+          "Temperature Calibration",
+          "Flow Calibration",
+          "Dimensional Testing",
+          "Material Testing",
+          "Vibration Analysis",
+          "Electrical Testing",
+          "Safety Testing",
+          "EMI Testing",
+          "NABL Accredited",
+          "ISO 17025",
+          "Field Calibration",
+          "Laboratory Calibration",
+          "On-site Testing",
+          "Third-party Inspection",
+          "NDT Services",
+          "Ultrasonic Testing",
+          "X-ray Inspection",
+          "Magnetic Particle Testing",
+        ],
+        "IT & Software Solutions": [
+          "ERP System",
+          "Inventory Management",
+          "WMS",
+          "TMS",
+          "eCommerce Platform",
+          "Mobile App",
+          "IoT Integration",
+          "Blockchain Traceability",
+          "API Integration",
+          "Data Analytics",
+          "Business Intelligence",
+          "CRM",
+          "Accounting Software",
+          "Quality Management System",
+          "Document Management",
+          "HR Software",
+          "Payroll",
+          "Cybersecurity",
+          "Cloud Services",
+          "IT Support",
+        ],
+        // Generic fallback
+        Other: [
+          "Bulk",
+          "Retail",
+          "Export Quality",
+          "Import",
+          "Wholesale",
+          "OEM",
+          "Private Label",
+          "Premium",
+          "Economy",
+          "Certified",
+          "Organic",
+          "Conventional",
+          "Fresh",
+          "Processed",
+          "Specialty",
+          "Commodity",
+          "Seasonal",
+          "Year-round",
+          "New Product",
+          "Clearance",
         ],
       };
 
@@ -760,29 +1732,42 @@
         tagsGroupId,
         tagsDropdownId,
         selectedTagsContainerId,
-        selectedTagsArray
+        selectedTagsArray,
       ) {
         const categorySelect = document.getElementById(categorySelectId);
         const tagsGroup = document.getElementById(tagsGroupId);
         const tagsDropdown = document.getElementById(tagsDropdownId);
         const selectedTagsContainer = document.getElementById(
-          selectedTagsContainerId
+          selectedTagsContainerId,
         );
 
         categorySelect.addEventListener("change", function () {
           const category = this.value;
+          // Handle custom category input visibility
+          const customInput = document.getElementById(
+            categorySelectId === "productCategory"
+              ? "productCategoryCustom"
+              : "serviceCategoryCustom",
+          );
+          if (customInput)
+            customInput.style.display =
+              category === "__custom__" ? "block" : "none";
+
           selectedTagsArray.length = 0;
           selectedTagsContainer.innerHTML = "";
           tagsDropdown.innerHTML = '<option value="">Select a tag</option>';
 
-          if (category && categoryTags[category]) {
+          const tags = categoryTags[category] || categoryTags["Other"] || [];
+          if (category && category !== "__custom__") {
             tagsGroup.style.display = "block";
-            categoryTags[category].forEach((tag) => {
+            tags.forEach((tag) => {
               const option = document.createElement("option");
               option.value = tag;
               option.textContent = tag;
               tagsDropdown.appendChild(option);
             });
+          } else if (category === "__custom__") {
+            tagsGroup.style.display = "block";
           } else {
             tagsGroup.style.display = "none";
           }
@@ -790,20 +1775,40 @@
 
         tagsDropdown.addEventListener("change", function () {
           const tag = this.value;
-          if (
-            tag &&
-            !selectedTagsArray.includes(tag) &&
-            selectedTagsArray.length < 5
-          ) {
+          if (tag && !selectedTagsArray.includes(tag)) {
             selectedTagsArray.push(tag);
             renderTagsFor(
               selectedTagsContainer,
               selectedTagsArray,
-              tagsDropdownId
+              tagsDropdownId,
             );
             this.value = "";
           }
         });
+      }
+
+      function addCustomTag(type) {
+        const inputId =
+          type === "product"
+            ? "productCustomTagInput"
+            : "serviceCustomTagInput";
+        const containerId =
+          type === "product"
+            ? "productSelectedTagsContainer"
+            : "serviceSelectedTagsContainer";
+        const arr =
+          type === "product" ? productSelectedTags : serviceSelectedTags;
+        const input = document.getElementById(inputId);
+        const tag = (input.value || "").trim();
+        if (tag && !arr.includes(tag)) {
+          arr.push(tag);
+          renderTagsFor(
+            document.getElementById(containerId),
+            arr,
+            type === "product" ? "productTagsDropdown" : "serviceTagsDropdown",
+          );
+        }
+        input.value = "";
       }
 
       function renderTagsFor(container, tagsArray, dropdownId) {
@@ -831,15 +1836,23 @@
         document.getElementById("productModal").classList.remove("active");
         document.getElementById("productForm").reset();
         document.getElementById("productTagsGroup").style.display = "none";
-        productSelectedTags.length = 0; // Clear array without breaking reference
+        document.getElementById("productCategoryCustom").style.display = "none";
+        document.getElementById("productCustomTagInput").value = "";
+        productSelectedTags.length = 0;
         document.getElementById("productSelectedTagsContainer").innerHTML = "";
+        // Reset file selections
+        productImageFiles = [];
+        productVideoFile = null;
+        existingProductVideo = null;
+        document.getElementById("productImagePreviews").innerHTML = "";
+        document.getElementById("productVideoPreviews").innerHTML = "";
         editingProductId = null;
         existingProductImages = null;
         // Reset modal title and button text
         document.querySelector("#productModal .modal-header h3").textContent =
           "Add Product";
         document.querySelector(
-          "#productForm button[type='submit']"
+          "#productForm button[type='submit']",
         ).textContent = "Add Product";
       }
 
@@ -851,6 +1864,8 @@
         document.getElementById("serviceModal").classList.remove("active");
         document.getElementById("serviceForm").reset();
         document.getElementById("serviceTagsGroup").style.display = "none";
+        document.getElementById("serviceCategoryCustom").style.display = "none";
+        document.getElementById("serviceCustomTagInput").value = "";
         serviceSelectedTags.length = 0; // Clear array without breaking reference
         document.getElementById("serviceSelectedTagsContainer").innerHTML = "";
         editingServiceId = null;
@@ -858,7 +1873,7 @@
         document.querySelector("#serviceModal .modal-header h3").textContent =
           "Add Service";
         document.querySelector(
-          "#serviceForm button[type='submit']"
+          "#serviceForm button[type='submit']",
         ).textContent = "Add Service";
       }
 
@@ -911,6 +1926,7 @@
       let editingProductId = null;
       let editingServiceId = null;
       let existingProductImages = null;
+      let existingProductVideo = null;
 
       function editProduct(productId) {
         const product = products.find((p) => p.id === productId);
@@ -918,6 +1934,7 @@
 
         editingProductId = productId;
         existingProductImages = product.images || null;
+        existingProductVideo = product.videoUrl || null;
 
         // Populate form with existing data
         document.getElementById("productName").value = product.title || "";
@@ -944,63 +1961,159 @@
           categorySelect.dispatchEvent(new Event("change"));
         }
 
-        // Show existing images in preview
+        // Show existing images in preview (with delete)
+        productImageFiles = []; // reset – existing images are tracked via existingProductImages
         const previewContainer = document.getElementById(
-          "productImagePreviews"
+          "productImagePreviews",
         );
         previewContainer.innerHTML = "";
         if (product.images) {
           try {
             const images = JSON.parse(product.images);
-            images.forEach((imgUrl) => {
+            images.forEach((imgUrl, idx) => {
+              const wrap = document.createElement("div");
+              wrap.style.cssText = "position:relative; display:inline-block;";
               const img = document.createElement("img");
               img.src = imgUrl;
               img.style.cssText =
-                "width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin-right: 8px; margin-bottom: 8px;";
-              previewContainer.appendChild(img);
+                "width:80px; height:80px; object-fit:cover; border:1px solid #ddd; border-radius:4px; display:block;";
+              const del = document.createElement("button");
+              del.type = "button";
+              del.innerHTML = "&times;";
+              del.style.cssText =
+                "position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#e74c3c; color:#fff; border:none; cursor:pointer; font-size:14px; line-height:1; padding:0;";
+              del.onclick = () => {
+                const cur = JSON.parse(existingProductImages || "[]");
+                cur.splice(idx, 1);
+                existingProductImages = JSON.stringify(cur);
+                wrap.remove();
+              };
+              wrap.appendChild(img);
+              wrap.appendChild(del);
+              previewContainer.appendChild(wrap);
             });
           } catch (e) {
             console.error("Error loading existing images:", e);
           }
         }
 
-        // Change modal title and button text
+        // Show existing video if any
+        productVideoFile = null;
+        const videoPreviewContainer = document.getElementById(
+          "productVideoPreviews",
+        );
+        videoPreviewContainer.innerHTML = "";
+        if (product.videoUrl) {
+          const wrap = document.createElement("div");
+          wrap.style.cssText = "position:relative; display:inline-block;";
+          const video = document.createElement("video");
+          video.src = product.videoUrl;
+          video.controls = true;
+          video.style.cssText =
+            "max-width:240px; max-height:135px; border:1px solid #ddd; border-radius:4px; display:block;";
+          const del = document.createElement("button");
+          del.type = "button";
+          del.innerHTML = "&times;";
+          del.style.cssText =
+            "position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#e74c3c; color:#fff; border:none; cursor:pointer; font-size:14px; line-height:1; padding:0;";
+          del.onclick = () => {
+            existingProductVideo = null;
+            wrap.remove();
+          };
+          wrap.appendChild(video);
+          wrap.appendChild(del);
+          videoPreviewContainer.appendChild(wrap);
+        }
+
+        // Change modal title and button text for product
         document.querySelector("#productModal .modal-header h3").textContent =
           "Edit Product";
         document.querySelector(
-          "#productForm button[type='submit']"
+          "#productForm button[type='submit']",
         ).textContent = "Update Product";
 
         openProductModal();
       }
 
-      // Image preview for products
+      // ── File-selection state ──────────────────────────────────────────────
+      let productImageFiles = []; // File objects chosen by user
+      let productVideoFile = null; // single File object
+
+      function renderImagePreviews() {
+        const container = document.getElementById("productImagePreviews");
+        container.innerHTML = "";
+        productImageFiles.forEach((file, idx) => {
+          const wrap = document.createElement("div");
+          wrap.style.cssText = "position:relative; display:inline-block;";
+          const img = document.createElement("img");
+          img.style.cssText =
+            "width:80px; height:80px; object-fit:cover; border:1px solid #ddd; border-radius:4px; display:block;";
+          img.src = URL.createObjectURL(file);
+          const del = document.createElement("button");
+          del.type = "button";
+          del.innerHTML = "&times;";
+          del.style.cssText =
+            "position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#e74c3c; color:#fff; border:none; cursor:pointer; font-size:14px; line-height:1; padding:0;";
+          del.onclick = () => {
+            productImageFiles.splice(idx, 1);
+            renderImagePreviews();
+          };
+          wrap.appendChild(img);
+          wrap.appendChild(del);
+          container.appendChild(wrap);
+        });
+      }
+
+      function renderVideoPreviews() {
+        const container = document.getElementById("productVideoPreviews");
+        container.innerHTML = "";
+        if (!productVideoFile) return;
+        const wrap = document.createElement("div");
+        wrap.style.cssText = "position:relative; display:inline-block;";
+        const video = document.createElement("video");
+        video.src = URL.createObjectURL(productVideoFile);
+        video.controls = true;
+        video.style.cssText =
+          "max-width:240px; max-height:135px; border:1px solid #ddd; border-radius:4px; display:block;";
+        const del = document.createElement("button");
+        del.type = "button";
+        del.innerHTML = "&times;";
+        del.style.cssText =
+          "position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#e74c3c; color:#fff; border:none; cursor:pointer; font-size:14px; line-height:1; padding:0;";
+        del.onclick = () => {
+          productVideoFile = null;
+          document.getElementById("productVideo").value = "";
+          renderVideoPreviews();
+        };
+        wrap.appendChild(video);
+        wrap.appendChild(del);
+        container.appendChild(wrap);
+      }
+
+      // Image input → add to array (allows mixing with existing)
       document
         .getElementById("productImage")
-        .addEventListener("change", function (e) {
-          const previewContainer = document.getElementById(
-            "productImagePreviews"
-          );
-          previewContainer.innerHTML = "";
-
-          const files = e.target.files;
-          for (let i = 0; i < Math.min(files.length, 10); i++) {
-            const file = files[i];
-            const reader = new FileReader();
-
-            reader.onload = function (event) {
-              const img = document.createElement("img");
-              img.src = event.target.result;
-              img.style.cssText =
-                "width: 80px; height: 80px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin-right: 8px; margin-bottom: 8px;";
-              previewContainer.appendChild(img);
-            };
-
-            reader.readAsDataURL(file);
+        .addEventListener("change", function () {
+          const incoming = Array.from(this.files);
+          const remaining = 10 - productImageFiles.length;
+          if (incoming.length > remaining) {
+            alert(
+              `You can only add ${remaining} more image(s). Maximum 10 total.`,
+            );
           }
+          productImageFiles.push(...incoming.slice(0, remaining));
+          this.value = ""; // reset input so same file can be re-added after delete
+          renderImagePreviews();
+        });
 
-          if (files.length > 10) {
-            alert("Maximum 10 images allowed. Only first 10 will be uploaded.");
+      // Video input
+      document
+        .getElementById("productVideo")
+        .addEventListener("change", function () {
+          if (this.files && this.files[0]) {
+            productVideoFile = this.files[0];
+            this.value = "";
+            renderVideoPreviews();
           }
         });
 
@@ -1036,7 +2149,7 @@
         document.querySelector("#serviceModal .modal-header h3").textContent =
           "Edit Service";
         document.querySelector(
-          "#serviceForm button[type='submit']"
+          "#serviceForm button[type='submit']",
         ).textContent = "Update Service";
 
         openServiceModal();
@@ -1055,19 +2168,14 @@
             return;
           }
 
-          // Handle multiple image uploads
+          // Handle image uploads from managed array
           let imageUrl = null;
           let imageUrls = [];
-          const imageInput = document.getElementById("productImage");
-          const imageFiles = imageInput.files;
-
-          if (imageFiles && imageFiles.length > 0) {
+          if (productImageFiles.length > 0) {
             const imageData = new FormData();
-            // Add up to 10 images
-            for (let i = 0; i < Math.min(imageFiles.length, 10); i++) {
-              imageData.append("file", imageFiles[i]);
-            }
-
+            productImageFiles
+              .slice(0, 10)
+              .forEach((f) => imageData.append("file", f));
             try {
               const uploadRes = await fetch("/api/upload", {
                 method: "POST",
@@ -1077,7 +2185,7 @@
               if (uploadData.success) {
                 if (uploadData.urls) {
                   imageUrls = uploadData.urls;
-                  imageUrl = uploadData.urls[0]; // First image as main
+                  imageUrl = uploadData.urls[0];
                 } else if (uploadData.url) {
                   imageUrl = uploadData.url;
                   imageUrls = [uploadData.url];
@@ -1088,13 +2196,41 @@
             }
           }
 
+          // Handle video upload
+          let videoUrl = null;
+          if (productVideoFile) {
+            const videoData = new FormData();
+            videoData.append("file", productVideoFile);
+            try {
+              const uploadRes = await fetch("/api/upload", {
+                method: "POST",
+                body: videoData,
+              });
+              const uploadData = await uploadRes.json();
+              if (uploadData.success) {
+                videoUrl =
+                  uploadData.url ||
+                  (uploadData.urls && uploadData.urls[0]) ||
+                  null;
+              }
+            } catch (err) {
+              console.error("Video upload failed:", err);
+            }
+          }
+
+          const _rawCat = fd.get("category");
           const payload = {
             title: fd.get("name"),
             description: fd.get("description"),
             price: parseFloat(fd.get("price")),
             unit: fd.get("unit"),
             minOrder: parseInt(fd.get("minOrder")) || 1,
-            category: fd.get("category"),
+            category:
+              _rawCat === "__custom__"
+                ? document
+                    .getElementById("productCategoryCustom")
+                    .value.trim() || "Other"
+                : _rawCat,
             tags: [...productSelectedTags],
             userId: user.id,
           };
@@ -1102,6 +2238,14 @@
           // Add images if they exist
           if (imageUrl) {
             payload.imageUrl = imageUrl;
+          }
+
+          // Add video if uploaded
+          if (videoUrl) {
+            payload.videoUrl = videoUrl;
+          } else if (existingProductVideo) {
+            // keep existing video if user didn't remove or replace it
+            payload.videoUrl = existingProductVideo;
           }
 
           // Merge new images with existing images
@@ -1119,9 +2263,8 @@
 
           if (imageUrls.length > 0) {
             finalImages = [...finalImages, ...imageUrls];
-            // Limit to 10 images total
             finalImages = finalImages.slice(0, 10);
-            payload.imageUrl = finalImages[0]; // First image as main
+            payload.imageUrl = finalImages[0];
           }
 
           if (finalImages.length > 0) {
@@ -1144,14 +2287,14 @@
                 alert(
                   isEditing
                     ? "Product updated successfully!"
-                    : "Product posted successfully!"
+                    : "Product posted successfully!",
                 );
                 document.getElementById("productForm").reset();
                 productSelectedTags.length = 0; // Clear without breaking reference
                 document.getElementById("productTagsGroup").style.display =
                   "none";
                 document.getElementById(
-                  "productSelectedTagsContainer"
+                  "productSelectedTagsContainer",
                 ).innerHTML = "";
                 editingProductId = null;
                 existingProductImages = null;
@@ -1163,7 +2306,7 @@
                   data.error ||
                     (isEditing
                       ? "Failed to update product"
-                      : "Failed to post product")
+                      : "Failed to post product"),
                 );
               }
             })
@@ -1206,13 +2349,19 @@
             }
           }
 
+          const _rawSvcCat = fd.get("category");
           const payload = {
             title: fd.get("name"),
             description: fd.get("description"),
             price: parseFloat(fd.get("price")),
             unit: "service", // default unit for services
             minOrder: 1, // Services default to 1
-            category: fd.get("category"),
+            category:
+              _rawSvcCat === "__custom__"
+                ? document
+                    .getElementById("serviceCategoryCustom")
+                    .value.trim() || "Other"
+                : _rawSvcCat,
             tags: [...serviceSelectedTags],
             userId: user.id,
           };
@@ -1238,14 +2387,14 @@
                 alert(
                   isEditing
                     ? "Service updated successfully!"
-                    : "Service posted successfully!"
+                    : "Service posted successfully!",
                 );
                 document.getElementById("serviceForm").reset();
                 serviceSelectedTags.length = 0; // Clear without breaking reference
                 document.getElementById("serviceTagsGroup").style.display =
                   "none";
                 document.getElementById(
-                  "serviceSelectedTagsContainer"
+                  "serviceSelectedTagsContainer",
                 ).innerHTML = "";
                 closeServiceModal();
                 // Reload services from database
@@ -1255,7 +2404,7 @@
                   data.error ||
                     (isEditing
                       ? "Failed to update service"
-                      : "Failed to post service")
+                      : "Failed to post service"),
                 );
               }
             })
@@ -1274,14 +2423,14 @@
         "productTagsGroup",
         "productTagsDropdown",
         "productSelectedTagsContainer",
-        productSelectedTags
+        productSelectedTags,
       );
       setupTagSelection(
         "serviceCategory",
         "serviceTagsGroup",
         "serviceTagsDropdown",
         "serviceSelectedTagsContainer",
-        serviceSelectedTags
+        serviceSelectedTags,
       );
     </script>
   </body>
