@@ -443,6 +443,196 @@
           overflow-x: auto;
         }
       }
+
+      /* ── Requirement View ────────────────────────────────────────────── */
+      .req-view {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 8px 0 40px;
+      }
+      .req-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #2563eb;
+        font-size: 14px;
+        text-decoration: none;
+        margin-bottom: 20px;
+      }
+      .req-back:hover { text-decoration: underline; }
+      .req-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      }
+      .req-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #eff6ff;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+      .req-title {
+        font-size: 26px;
+        font-weight: 700;
+        color: #111;
+        margin: 0 0 16px;
+        line-height: 1.3;
+      }
+      .req-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .req-category-pill {
+        background: #f3f4f6;
+        color: #374151;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .req-tag-pill {
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      .req-posted-date {
+        font-size: 13px;
+        color: #9ca3af;
+        margin-left: auto;
+      }
+      .req-divider {
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        margin: 0 0 24px;
+      }
+      .req-body {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 28px;
+        align-items: start;
+      }
+      @media (max-width: 700px) {
+        .req-body { grid-template-columns: 1fr; }
+        .req-card { padding: 20px; }
+        .req-title { font-size: 20px; }
+        .req-posted-date { margin-left: 0; }
+      }
+      .req-section-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .8px;
+        text-transform: uppercase;
+        color: #9ca3af;
+        margin-bottom: 10px;
+      }
+      .req-description {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #374151;
+        white-space: pre-wrap;
+      }
+      .req-sidebar-card {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 20px;
+      }
+      .req-poster-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .req-poster-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .req-poster-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #111;
+      }
+      .req-poster-name a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .req-poster-name a:hover { text-decoration: underline; }
+      .req-poster-role {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+      .req-contact-btn {
+        width: 100%;
+        padding: 12px;
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .2s;
+      }
+      .req-contact-btn:hover { background: #1d4ed8; }
+      .req-owner-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .req-btn-edit {
+        width: 100%;
+        padding: 10px;
+        background: none;
+        border: 1px solid #2563eb;
+        color: #2563eb;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .req-btn-edit:hover { background: #eff6ff; }
+      .req-btn-delete {
+        width: 100%;
+        padding: 10px;
+        background: none;
+        border: 1px solid #dc2626;
+        color: #dc2626;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .req-btn-delete:hover { background: #fef2f2; }
+      .req-login-note {
+        font-size: 13px;
+        color: #9ca3af;
+        text-align: center;
+        margin-top: 10px;
+      }
     </style>
   </head>
   <body>
@@ -452,6 +642,9 @@
     </header>
 
     <main class="listing-container">
+      <!-- Requirement View (shown instead of product layout for requirements) -->
+      <div id="requirementView" style="display:none"></div>
+
       <div class="listing-detail">
         <!-- Left Column - Image Gallery -->
         <div class="listing-image-section">
@@ -698,6 +891,17 @@
             localStorage.getItem("bigspice_user") || "null",
           );
           const isOwner = user && user.id === listing.userId;
+
+          // If this is a requirement, render dedicated requirement view
+          const isRequirement =
+            listing.listingType === "requirement" ||
+            (listing.listingType === null &&
+              (listing.role === "buyer" ||
+                (!listing.role && !listing.price)));
+          if (isRequirement) {
+            renderRequirementView(listing, user, isOwner);
+            return;
+          }
 
           // Populate listing details
           document.getElementById("listingTitle").textContent =
@@ -1154,6 +1358,100 @@
         }
       });
 
+      // ── Requirement View Renderer ─────────────────────────────────────────
+      function renderRequirementView(listing, user, isOwner) {
+        document.querySelector(".listing-detail").style.display = "none";
+        document.title = (listing.title || "Requirement") + " \u2014 BigSpice";
+
+        const tags = Array.isArray(listing.tags) ? listing.tags : [];
+        const posterName =
+          listing.storeName || listing.author || "Anonymous";
+        const posterLabel =
+          listing.role === "buyer" ? "Buyer" : "Seller";
+        const postedDate = listing.createdAt
+          ? new Date(listing.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "\u2014";
+
+        let actionsHtml;
+        if (isOwner) {
+          actionsHtml = `
+            <div class="req-owner-btns">
+              <button class="req-btn-edit" onclick="editListing()">Edit Requirement</button>
+              <button class="req-btn-delete" onclick="deleteListing()">Delete Requirement</button>
+            </div>`;
+        } else if (user && user.id) {
+          const btnLabel =
+            listing.role === "buyer" ? "Contact Buyer" : "Contact Seller";
+          actionsHtml = `<button class="req-contact-btn" id="reqContactBtn">${btnLabel}</button>`;
+        } else {
+          actionsHtml = `
+            <button class="req-contact-btn" onclick="window.location.href='/login.html'">Sign in to Contact</button>
+            <p class="req-login-note">You need an account to respond to requirements.</p>`;
+        }
+
+        const storeLink =
+          listing.role === "seller" && listing.userId
+            ? `<a href="/store-profile.html?id=${listing.userId}">${escHtmlRV(posterName)}</a>`
+            : escHtmlRV(posterName);
+
+        const rv = document.getElementById("requirementView");
+        rv.style.display = "block";
+        rv.innerHTML = `
+          <div class="req-view">
+            <a href="javascript:history.back()" class="req-back">← Back</a>
+            <div class="req-card">
+              <div class="req-type-badge">📋 Sourcing Requirement</div>
+              <h1 class="req-title">${escHtmlRV(listing.title)}</h1>
+              <div class="req-meta-row">
+                ${listing.category ? `<span class="req-category-pill">${escHtmlRV(listing.category)}</span>` : ""}
+                ${tags.map((t) => `<span class="req-tag-pill">${escHtmlRV(t)}</span>`).join("")}
+                <span class="req-posted-date">Posted: ${postedDate}</span>
+              </div>
+              <hr class="req-divider" />
+              <div class="req-body">
+                <div class="req-main">
+                  <div class="req-section-label">What they're looking for</div>
+                  <p class="req-description">${escHtmlRV(listing.description || "No description provided.")}</p>
+                </div>
+                <div class="req-sidebar-card">
+                  <div class="req-section-label">Posted by</div>
+                  <div class="req-poster-row">
+                    <div class="req-poster-avatar">${(posterName[0] || "?").toUpperCase()}</div>
+                    <div>
+                      <div class="req-poster-name">${storeLink}</div>
+                      <div class="req-poster-role">${posterLabel}</div>
+                    </div>
+                  </div>
+                  ${actionsHtml}
+                </div>
+              </div>
+            </div>
+          </div>`;
+
+        // Wire contact button
+        if (!isOwner && user && user.id) {
+          const btn = document.getElementById("reqContactBtn");
+          if (btn) {
+            btn.onclick =
+              listing.role === "buyer"
+                ? () => contactBuyer(listing)
+                : () => contactSeller(listing);
+          }
+        }
+      }
+
+      function escHtmlRV(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
       async function contactSeller(listing) {
         // Buyer contacting seller
         const user = JSON.parse(
@@ -1193,7 +1491,6 @@
       }
 
       async function contactBuyer(listing) {
-        // Seller contacting buyer (only if conversation already exists)
         const user = JSON.parse(
           localStorage.getItem("bigspice_user") || "null",
         );
@@ -1205,26 +1502,24 @@
         }
 
         try {
-          // Check if conversation exists (buyer must have initiated)
-          const res = await fetch(`/api/conversations/${user.id}`);
-          const conversations = await res.json();
-
-          const existingConv = conversations.find(
-            (c) => c.buyerId === listing.userId && c.sellerId === user.id,
-          );
-
-          if (existingConv) {
-            // Conversation exists, go to messages
-            window.location.href = `/messages.html?conversation=${existingConv.id}`;
+          // Seller is contacting a buyer — seller goes in sellerId, buyer in buyerId
+          const res = await fetch("/api/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              buyerId: listing.userId,
+              sellerId: user.id,
+            }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            window.location.href = `/messages.html?conversation=${result.conversationId}`;
           } else {
-            // No existing conversation - seller cannot initiate
-            alert(
-              "You can only respond to messages from buyers. Wait for the buyer to contact you first.",
-            );
+            alert("Could not open conversation. Please try again.");
           }
         } catch (err) {
-          console.error("Error checking conversation:", err);
-          alert("Failed to check conversation");
+          console.error("Error starting conversation:", err);
+          alert("Failed to open conversation");
         }
       }
 

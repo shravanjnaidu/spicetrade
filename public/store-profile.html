@@ -830,7 +830,7 @@
           document.getElementById("ownCtaBanner").style.display = "flex";
         }
 
-        // If logged in and not the owner, make "Contact Seller" button open a conversation
+        // If logged in and not the owner, make contact button open a conversation
         const heroContactBtn = document.getElementById("heroContactBtn");
         if (
           localUser &&
@@ -840,13 +840,18 @@
           heroContactBtn.addEventListener("click", async (e) => {
             e.preventDefault();
             try {
+              // Determine buyer/seller sides based on viewer role
+              // A seller visiting a buyer's profile initiates as the seller
+              // A buyer visiting a seller's profile initiates as the buyer
+              const viewerIsSeller = localUser.role === "seller";
+              const payload = viewerIsSeller
+                ? { buyerId: userId,        sellerId: localUser.id }
+                : { buyerId: localUser.id,  sellerId: userId };
+
               const res = await fetch("/api/conversations", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  buyerId: localUser.id,
-                  sellerId: userId,
-                }),
+                body: JSON.stringify(payload),
               });
               const result = await res.json();
               if (result.success) {
@@ -888,6 +893,13 @@
 
         // ── Document title ──
         document.title = (profile.storeName || profile.name) + " — BigSpice";
+
+        // Update contact button label based on profile owner's role
+        if (localUser && String(localUser.id) !== String(userId)) {
+          const heroContactBtn = document.getElementById("heroContactBtn");
+          heroContactBtn.textContent =
+            profile.role === "buyer" ? "Contact Buyer" : "Contact Seller";
+        }
 
         // ── Hero ──
         const heroName = profile.storeName || profile.name || "Store";
@@ -1156,7 +1168,7 @@
           el.innerHTML = list
             .map((r) => {
               const tags = Array.isArray(r.tags) ? r.tags : [];
-              return `<div style="border:1px solid #e8e8e8;border-radius:8px;padding:16px;margin-bottom:12px;background:#fafafa">
+              return `<a href="/listing.html?id=${r.id}" style="display:block;text-decoration:none;color:inherit;border:1px solid #e8e8e8;border-radius:8px;padding:16px;margin-bottom:12px;background:#fafafa;transition:border-color .2s" onmouseover="this.style.borderColor='#bbb'" onmouseout="this.style.borderColor='#e8e8e8'">
               <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escHtml(r.title)}</div>
               <div style="font-size:13px;color:#555;margin-bottom:8px">${escHtml(r.description)}</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -1164,7 +1176,7 @@
                 ${tags.map((t) => `<span style="background:#eef2ff;color:#3b4fc4;padding:2px 8px;border-radius:4px;font-size:12px">${escHtml(t)}</span>`).join("")}
                 <span style="font-size:12px;color:#aaa;margin-left:auto">${new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
               </div>
-            </div>`;
+            </a>`;
             })
             .join("");
         }

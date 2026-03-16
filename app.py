@@ -182,6 +182,18 @@ def init_db():
         pass
     conn.commit()
 
+    # Backfill listingType='requirement' for legacy rows where title signals a requirement
+    try:
+        cur.execute("""
+            UPDATE ads SET listingType = 'requirement'
+            WHERE listingtype IS NULL
+              AND price IS NULL
+              AND LOWER(title) LIKE 'looking for%'
+        """)
+    except Exception:
+        pass
+    conn.commit()
+
     # Add extra columns to banner_ads if they don't already exist
     banner_extra_cols = [
         ('contactName',   'TEXT'),
