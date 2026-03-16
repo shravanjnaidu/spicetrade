@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Messages — SpiceTrade</title>
+    <title>Messages — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .messages-container {
@@ -266,7 +266,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
@@ -309,7 +309,7 @@
     <script src="/app.js"></script>
     <script>
       const currentUser = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null"
+        localStorage.getItem("bigspice_user") || "null",
       );
 
       if (!currentUser || !currentUser.id) {
@@ -319,25 +319,13 @@
       let conversations = [];
       let currentConversationId = null;
       let messages = [];
-      let messagesPollingInterval = null;
-      let conversationsPollingInterval = null;
+      let sseConnection = null;
 
       async function loadConversations() {
         try {
           const res = await fetch(`/api/conversations/${currentUser.id}`);
           conversations = await res.json();
           renderConversations();
-
-          // Check if URL has conversation parameter
-          const urlParams = new URLSearchParams(window.location.search);
-          const conversationParam = urlParams.get("conversation");
-
-          if (conversationParam) {
-            const convId = parseInt(conversationParam);
-            if (conversations.find((c) => c.id === convId)) {
-              selectConversation(convId);
-            }
-          }
         } catch (err) {
           console.error("Error loading conversations:", err);
         }
@@ -427,15 +415,6 @@
         renderConversations();
         await loadMessages(conversationId);
         renderChatPanel();
-
-        // Start polling for new messages
-        if (messagesPollingInterval) {
-          clearInterval(messagesPollingInterval);
-        }
-        messagesPollingInterval = setInterval(
-          () => loadMessages(conversationId),
-          3000
-        );
       }
 
       async function loadMessages(conversationId) {
@@ -450,9 +429,6 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: currentUser.id }),
           });
-
-          // Reload conversations to update unread counts
-          await loadConversations();
         } catch (err) {
           console.error("Error loading messages:", err);
         }
@@ -585,8 +561,7 @@
 
           if (result.success) {
             input.value = "";
-            await loadMessages(currentConversationId);
-            await loadConversations(); // Update conversation list with new message
+            // SSE will trigger loadMessages + loadConversations for both parties
           } else {
             alert("Failed to send message");
           }
@@ -602,23 +577,40 @@
         return div.innerHTML;
       }
 
-      // Clean up polling on page unload
+      function setupSSE() {
+        if (sseConnection) sseConnection.close();
+        sseConnection = new EventSource(`/api/sse/${currentUser.id}`);
+
+        sseConnection.onmessage = (e) => {
+          const event = JSON.parse(e.data);
+          if (event.type === "new_message") {
+            loadConversations();
+            if (currentConversationId === event.data.conversationId) {
+              loadMessages(event.data.conversationId);
+            }
+          }
+        };
+
+        sseConnection.onerror = () => {
+          sseConnection.close();
+          setTimeout(setupSSE, 3000); // reconnect after 3s
+        };
+      }
+
       window.addEventListener("beforeunload", () => {
-        if (messagesPollingInterval) {
-          clearInterval(messagesPollingInterval);
-        }
-        if (conversationsPollingInterval) {
-          clearInterval(conversationsPollingInterval);
-        }
+        if (sseConnection) sseConnection.close();
       });
 
-      // Initial load
-      loadConversations();
-
-      // Poll conversations list every 5 seconds to update unread counts
-      conversationsPollingInterval = setInterval(() => {
-        loadConversations();
-      }, 5000);
+      // Initial load: fetch conversations, then deep-link if URL has ?conversation=X
+      loadConversations().then(() => {
+        const convId = parseInt(
+          new URLSearchParams(window.location.search).get("conversation"),
+        );
+        if (convId && conversations.find((c) => c.id === convId)) {
+          selectConversation(convId);
+        }
+      });
+      setupSSE();
     </script>
   </body>
 </html>

@@ -9,6 +9,6 @@
   <g transform="translate(18,12)">
     <circle cx="28" cy="28" r="24" fill="url(#g)" />
     <path d="M18 22c6-10 22-10 28 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" />
-    <text x="72" y="36" font-family="Inter, Arial, sans-serif" font-size="28" fill="#222">SpiceTrade</text>
+    <text x="72" y="36" font-family="Inter, Arial, sans-serif" font-size="28" fill="#222">BigSpice</text>
   </g>
 </svg>

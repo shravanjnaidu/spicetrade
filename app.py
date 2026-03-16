@@ -1,7 +1,17 @@
+# ── Gevent monkey patching ── must be the very first code executed ───────────
+try:
+    from gevent import monkey; monkey.patch_all()
+except ImportError:
+    pass  # gevent not installed; falls back to standard threaded mode
+# ─────────────────────────────────────────────────────────────────────────────
+
 import os
 import json
+import queue
+import threading
+import uuid
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -128,6 +138,20 @@ def init_db():
         FOREIGN KEY(userId) REFERENCES users(id),
         UNIQUE(userId, adId)
     )''')
+
+    # Create banner_ads table (paid advertisements shown in homepage carousel)
+    cur.execute('''CREATE TABLE IF NOT EXISTS banner_ads (
+        id SERIAL PRIMARY KEY,
+        userId INTEGER,
+        title TEXT NOT NULL,
+        description TEXT,
+        imageUrl TEXT NOT NULL,
+        targetUrl TEXT NOT NULL,
+        status TEXT DEFAULT 'active',
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expiresAt TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id)
+    )''')
     
     conn.commit()
     
@@ -151,6 +175,28 @@ def init_db():
             pass
     conn.commit()
 
+    # Add listingType to ads table if it doesn't already exist
+    try:
+        cur.execute("ALTER TABLE ads ADD COLUMN IF NOT EXISTS listingType TEXT")
+    except Exception:
+        pass
+    conn.commit()
+
+    # Add extra columns to banner_ads if they don't already exist
+    banner_extra_cols = [
+        ('contactName',   'TEXT'),
+        ('contactNumber', 'TEXT'),
+        ('industry',      'TEXT'),
+        ('adAddress',     'TEXT'),
+        ('notes',         'TEXT'),
+    ]
+    for col, col_type in banner_extra_cols:
+        try:
+            cur.execute(f'ALTER TABLE banner_ads ADD COLUMN IF NOT EXISTS {col} {col_type}')
+        except Exception:
+            pass
+    conn.commit()
+
     # Generate unique IDs for existing users without one
     import uuid
     cur.execute("SELECT id FROM users WHERE uniqueId IS NULL OR uniqueId = ''")
@@ -165,10 +211,64 @@ def init_db():
 
 
 app = Flask(__name__, static_folder=str(BASE_DIR / 'public'), static_url_path='')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB upload limit
 CORS(app)
 
 # Initialize DB immediately so we don't rely on server hooks that may differ across environments
 init_db()
+
+# ── Redis (optional — required for multi-worker deployments) ─────────────────
+# Set REDIS_URL env var in production, e.g. redis://localhost:6379/0
+_redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+try:
+    import redis as _redis_lib
+    _redis_client = _redis_lib.from_url(
+        _redis_url, decode_responses=True, socket_connect_timeout=2
+    )
+    _redis_client.ping()
+    USE_REDIS = True
+    print('[SSE] Redis connected — multi-worker pub/sub enabled')
+except Exception as _redis_err:
+    USE_REDIS = False
+    _redis_client = None
+    print(f'[SSE] Redis unavailable ({_redis_err}) — in-memory pub/sub active (single-worker only)')
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── SSE pub/sub (in-memory fallback when Redis is not available) ──────────────
+_sse_subscribers = {}   # {user_id: [queue, ...]}
+_sse_lock = threading.Lock()
+
+def _sse_subscribe(user_id):
+    q = queue.Queue(maxsize=100)
+    with _sse_lock:
+        _sse_subscribers.setdefault(user_id, []).append(q)
+    return q
+
+def _sse_unsubscribe(user_id, q):
+    with _sse_lock:
+        subs = _sse_subscribers.get(user_id, [])
+        if q in subs:
+            subs.remove(q)
+        if not subs:
+            _sse_subscribers.pop(user_id, None)
+
+def _sse_publish(user_id, event_type, data):
+    payload = json.dumps({'type': event_type, 'data': data})
+    if USE_REDIS:
+        try:
+            _redis_client.publish(f'bigspice:user:{user_id}', payload)
+        except Exception as e:
+            print(f'[SSE] Redis publish error: {e}')
+    else:
+        event = json.loads(payload)
+        with _sse_lock:
+            queues = list(_sse_subscribers.get(user_id, []))
+        for q in queues:
+            try:
+                q.put_nowait(event)
+            except queue.Full:
+                pass
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 @app.route('/api/upload', methods=['POST'])
@@ -234,7 +334,7 @@ def signup():
     phone = form.get('phone')
     role = form.get('role') or 'seller'
     location = form.get('location')
-    storeName = form.get('storeName')
+    storeName = form.get('storeName') or form.get('advertiserCompany')  # advertiser uses advertiserCompany
     businessType = form.get('businessType')
     categories = form.get('categories')
     taxNumber = form.get('taxNumber')
@@ -397,7 +497,7 @@ def get_ads():
         import json
         db = get_db()
         cur = dict_cursor(db)
-        cur.execute('SELECT ads.*, users.name AS author, users.storeName, users.role, users.profilePicture FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY createdAt DESC')
+        cur.execute('SELECT ads.*, users.name AS author, users.storeName, users.role, users.profilePicture FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY ads.createdAt DESC')
         rows = cur.fetchall()
         
         results = []
@@ -447,6 +547,7 @@ def get_ads():
                 'images': r['images'] if 'images' in row_keys else None,
                 'verified': r['verified'] if 'verified' in row_keys and r['verified'] is not None else 0,
                 'views': r['views'] if 'views' in row_keys and r['views'] is not None else 0,
+                'listingType': r['listingtype'] if 'listingtype' in row_keys else None,
                 'reviewCount': total_reviews,
                 'averageRating': avg_rating
             })
@@ -474,6 +575,7 @@ def post_ad():
     stock = data.get('stock')
     imageUrl = data.get('imageUrl')
     images = data.get('images')
+    listing_type = data.get('listingType')
     
     if not title or not description:
         return jsonify({'error': 'title and description required'}), 400
@@ -482,9 +584,9 @@ def post_ad():
         db = get_db()
         cur = dict_cursor(db)
         tags_json = json.dumps(tags) if tags else None
-        cur.execute('''INSERT INTO ads (title, description, userId, category, tags, price, unit, minOrder, stock, imageUrl, images) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id''', 
-                    (title, description, userId, category, tags_json, price, unit, minOrder, stock, imageUrl, images))
+        cur.execute('''INSERT INTO ads (title, description, userId, category, tags, price, unit, minOrder, stock, imageUrl, images, listingType) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id''', 
+                    (title, description, userId, category, tags_json, price, unit, minOrder, stock, imageUrl, images, listing_type))
         last = cur.fetchone()['id']
         db.commit()
         cur.execute('SELECT ads.*, users.name AS author, users.role FROM ads LEFT JOIN users ON ads.userId = users.id WHERE ads.id = %s', (last,))
@@ -503,7 +605,8 @@ def post_ad():
                 'stock': row['stock'] if 'stock' in row_keys else None,
                 'imageUrl': row['imageurl'] if 'imageurl' in row_keys else None,
                 'images': row['images'] if 'images' in row_keys else None,
-                'verified': row['verified'] if 'verified' in row_keys else 0
+                'verified': row['verified'] if 'verified' in row_keys else 0,
+                'listingType': row['listingtype'] if 'listingtype' in row_keys else None
             }
             return jsonify({'success': True, **result})
         return jsonify({'error': 'not found'}), 500
@@ -965,7 +1068,7 @@ def start_conversation():
         
         if existing:
             db.close()
-            return jsonify({'success': True, 'conversationId': existing[0]})
+            return jsonify({'success': True, 'conversationId': existing['id']})
         
         # Create new conversation
         cursor.execute('''
@@ -1099,7 +1202,7 @@ def send_message():
         ''', (conversation_id,))
         conv = cursor.fetchone()
         
-        if not conv or (sender_id != conv[0] and sender_id != conv[1]):
+        if not conv or (sender_id != conv['buyerid'] and sender_id != conv['sellerid']):
             db.close()
             return jsonify({'error': 'Unauthorized'}), 403
         
@@ -1112,12 +1215,68 @@ def send_message():
         db.commit()
         db.close()
         
+        # Notify both participants via SSE so the UI updates in real time
+        recipient_id = conv['sellerid'] if sender_id == conv['buyerid'] else conv['buyerid']
+        event_payload = {'conversationId': conversation_id, 'messageId': message_id, 'senderId': sender_id}
+        _sse_publish(recipient_id, 'new_message', event_payload)
+        _sse_publish(sender_id,    'new_message', event_payload)
+
         return jsonify({'success': True, 'messageId': message_id})
     except Exception as e:
         print('send_message error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/sse/<int:user_id>')
+def sse_stream(user_id):
+    """Server-Sent Events stream — uses Redis when available, in-memory otherwise."""
+    def generate():
+        if USE_REDIS:
+            # Each SSE connection gets its own Redis pubsub subscription.
+            # With gevent workers this is a cooperative (non-blocking) wait.
+            r = _redis_lib.from_url(_redis_url, decode_responses=True, socket_timeout=30)
+            pubsub = r.pubsub(ignore_subscribe_messages=True)
+            channel = f'bigspice:user:{user_id}'
+            pubsub.subscribe(channel)
+            try:
+                yield 'data: {"type":"connected"}\n\n'
+                while True:
+                    msg = pubsub.get_message(timeout=25)
+                    if msg and msg.get('type') == 'message':
+                        yield f'data: {msg["data"]}\n\n'
+                    else:
+                        yield ': keepalive\n\n'
+            finally:
+                try:
+                    pubsub.unsubscribe(channel)
+                    pubsub.close()
+                    r.close()
+                except Exception:
+                    pass
+        else:
+            # Single-process in-memory fallback
+            q = _sse_subscribe(user_id)
+            try:
+                yield 'data: {"type":"connected"}\n\n'
+                while True:
+                    try:
+                        event = q.get(timeout=25)
+                        yield f'data: {json.dumps(event)}\n\n'
+                    except queue.Empty:
+                        yield ': keepalive\n\n'
+            finally:
+                _sse_unsubscribe(user_id, q)
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+        }
+    )
 
 
 @app.route('/api/messages/unread/<int:user_id>', methods=['GET'])
@@ -1177,6 +1336,230 @@ def mark_messages_read(conversation_id):
         print('mark_messages_read error:', e)
         import traceback
         traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/banner-ads', methods=['GET'])
+def get_banner_ads():
+    """Get all active, non-expired banner ads for the homepage carousel"""
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('''
+            SELECT id, userId, title, description, imageUrl, targetUrl, status, createdAt, expiresAt
+            FROM banner_ads
+            WHERE status = 'active'
+              AND (expiresAt IS NULL OR expiresAt >= CURRENT_DATE)
+            ORDER BY createdAt DESC
+        ''')
+        rows = cursor.fetchall()
+        db.close()
+        return jsonify([{
+            'id': r['id'],
+            'userId': r['userid'],
+            'title': r['title'],
+            'description': r['description'],
+            'imageUrl': r['imageurl'],
+            'targetUrl': r['targeturl'],
+            'status': r['status'],
+            'createdAt': r['createdat'].isoformat() if r['createdat'] else None,
+            'expiresAt': r['expiresat'].isoformat() if r['expiresat'] else None,
+        } for r in rows])
+    except Exception as e:
+        print('get_banner_ads error:', e)
+        return jsonify([])  # return empty so carousel falls back to defaults
+
+
+@app.route('/api/banner-ads', methods=['POST'])
+def create_banner_ad():
+    """Create a new banner ad (advertiser role)"""
+    try:
+        user_id    = request.form.get('userId')
+        title      = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        target_url = request.form.get('targetUrl', '').strip()
+        expires_at = request.form.get('expiresAt') or None
+        contact_name   = request.form.get('contactName', '').strip()
+        contact_number = request.form.get('contactNumber', '').strip()
+        industry       = request.form.get('industry', '').strip()
+        ad_address     = request.form.get('adAddress', '').strip()
+        notes          = request.form.get('notes', '').strip()
+
+        if not all([user_id, title, target_url]):
+            return jsonify({'error': 'userId, title, and targetUrl are required'}), 400
+
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid userId'}), 400
+
+        # Save banner image
+        if 'image' not in request.files or not request.files['image'].filename:
+            return jsonify({'error': 'Banner image is required'}), 400
+        file = request.files['image']
+        ext = os.path.splitext(secure_filename(file.filename))[1].lower()
+        if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+            return jsonify({'error': 'Image must be JPG, PNG, or WebP'}), 400
+        fname = f'banner_{uuid.uuid4().hex}{ext}'
+        uploads_dir = BASE_DIR / 'public' / 'uploads'
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        file.save(str(uploads_dir / fname))
+        image_url = f'/uploads/{fname}'
+
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('''
+            INSERT INTO banner_ads (userId, title, description, imageUrl, targetUrl, status, expiresAt,
+                                    contactName, contactNumber, industry, adAddress, notes)
+            VALUES (%s, %s, %s, %s, %s, 'active', %s, %s, %s, %s, %s, %s) RETURNING id
+        ''', (user_id, title, description, image_url, target_url, expires_at,
+              contact_name, contact_number, industry, ad_address, notes))
+        ad_id = cursor.fetchone()['id']
+        db.commit()
+        db.close()
+        return jsonify({'success': True, 'id': ad_id})
+    except Exception as e:
+        print('create_banner_ad error:', e)
+        import traceback; traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/banner-ads/my/<int:user_id>', methods=['GET'])
+def get_my_banner_ads(user_id):
+    """Get all banner ads for a specific advertiser"""
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('''
+            SELECT id, userId, title, description, imageUrl, targetUrl, status, createdAt, expiresAt,
+                   contactName, contactNumber, industry, adAddress, notes
+            FROM banner_ads WHERE userId = %s ORDER BY createdAt DESC
+        ''', (user_id,))
+        rows = cursor.fetchall()
+        db.close()
+        return jsonify([{
+            'id': r['id'],
+            'userId': r['userid'],
+            'title': r['title'],
+            'description': r['description'],
+            'imageUrl': r['imageurl'],
+            'targetUrl': r['targeturl'],
+            'status': r['status'],
+            'contactName': r['contactname'],
+            'contactNumber': r['contactnumber'],
+            'industry': r['industry'],
+            'adAddress': r['adaddress'],
+            'notes': r['notes'],
+            'createdAt': r['createdat'].isoformat() if r['createdat'] else None,
+            'expiresAt': r['expiresat'].isoformat() if r['expiresat'] else None,
+        } for r in rows])
+    except Exception as e:
+        print('get_my_banner_ads error:', e)
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/banner-ads/<int:ad_id>', methods=['GET'])
+def get_banner_ad(ad_id):
+    """Get a single banner ad by ID (for the ad detail page)"""
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('''
+            SELECT b.id, b.userId, b.title, b.description, b.imageUrl, b.targetUrl,
+                   b.status, b.createdAt, b.expiresAt,
+                   b.contactName, b.contactNumber, b.industry, b.adAddress, b.notes,
+                   u.name AS advertiserName, u.storeName AS advertiserCompany
+            FROM banner_ads b
+            LEFT JOIN users u ON u.id = b.userId
+            WHERE b.id = %s
+        ''', (ad_id,))
+        r = cursor.fetchone()
+        db.close()
+        if not r:
+            return jsonify({'error': 'Ad not found'}), 404
+        return jsonify({
+            'id': r['id'],
+            'userId': r['userid'],
+            'title': r['title'],
+            'description': r['description'],
+            'imageUrl': r['imageurl'],
+            'targetUrl': r['targeturl'],
+            'status': r['status'],
+            'advertiserName': r['advertisername'],
+            'advertiserCompany': r['advertisercompany'],
+            'contactName': r['contactname'],
+            'contactNumber': r['contactnumber'],
+            'industry': r['industry'],
+            'adAddress': r['adaddress'],
+            'notes': r['notes'],
+            'createdAt': r['createdat'].isoformat() if r['createdat'] else None,
+            'expiresAt': r['expiresat'].isoformat() if r['expiresat'] else None,
+        })
+    except Exception as e:
+        print('get_banner_ad error:', e)
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/banner-ads/<int:ad_id>', methods=['PUT'])
+def update_banner_ad(ad_id):
+    """Update a banner ad (owner only)"""
+    try:
+        user_id = request.form.get('userId') or (request.get_json() or {}).get('userId')
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('SELECT userId FROM banner_ads WHERE id = %s', (ad_id,))
+        row = cursor.fetchone()
+        if not row:
+            db.close(); return jsonify({'error': 'Ad not found'}), 404
+        if str(row['userid']) != str(user_id):
+            db.close(); return jsonify({'error': 'Unauthorized'}), 403
+
+        updates = {}
+        for field in ['title', 'description', 'targetUrl', 'expiresAt', 'status',
+                        'contactName', 'contactNumber', 'industry', 'adAddress', 'notes']:
+            val = request.form.get(field)
+            if val is not None:
+                updates[field] = val or None
+
+        if 'image' in request.files and request.files['image'].filename:
+            file = request.files['image']
+            ext = os.path.splitext(secure_filename(file.filename))[1].lower()
+            fname = f'banner_{uuid.uuid4().hex}{ext}'
+            uploads_dir = BASE_DIR / 'public' / 'uploads'
+            uploads_dir.mkdir(parents=True, exist_ok=True)
+            file.save(str(uploads_dir / fname))
+            updates['imageUrl'] = f'/uploads/{fname}'
+
+        if not updates:
+            db.close(); return jsonify({'error': 'No fields to update'}), 400
+
+        col_map = {'title': 'title', 'description': 'description', 'targetUrl': 'targeturl',
+                   'expiresAt': 'expiresat', 'status': 'status', 'imageUrl': 'imageurl',
+                   'contactName': 'contactname', 'contactNumber': 'contactnumber',
+                   'industry': 'industry', 'adAddress': 'adaddress', 'notes': 'notes'}
+        set_clause = ', '.join(f"{col_map[k]} = %s" for k in updates)
+        values = list(updates.values()) + [ad_id]
+        cursor.execute(f'UPDATE banner_ads SET {set_clause} WHERE id = %s', values)
+        db.commit()
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('update_banner_ad error:', e)
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/banner-ads/<int:ad_id>', methods=['DELETE'])
+def delete_banner_ad(ad_id):
+    """Delete a banner ad"""
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('DELETE FROM banner_ads WHERE id = %s', (ad_id,))
+        db.commit()
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('delete_banner_ad error:', e)
         return jsonify({'error': 'database error'}), 500
 
 
@@ -1510,6 +1893,12 @@ def can_review(ad_id):
         return jsonify({'error': 'database error'}), 500
 
 
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
+    """Serve uploaded files directly — must come before the catch-all route."""
+    return send_from_directory(str(BASE_DIR / 'public' / 'uploads'), filename)
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
@@ -1521,4 +1910,5 @@ def serve(path):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # Dev server only. For production use: gunicorn -c gunicorn.conf.py app:app
+    app.run(host='0.0.0.0', port=port, debug=True, threaded=True)

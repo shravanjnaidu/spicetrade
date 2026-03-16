@@ -73,7 +73,7 @@ if (signupForm) {
     const res = await postJSON("/api/signup", payload);
     if (res && res.success) {
       localStorage.setItem(
-        "spicetrade_user",
+        "bigspice_user",
         JSON.stringify({
           id: res.userId,
           email: payload.email,
@@ -122,7 +122,7 @@ function performSearch(query) {
     if (homeContent) homeContent.style.display = "block";
     renderAds(allAds);
     if (listingsTitle) {
-      listingsTitle.textContent = "Latest Buyer Requirements";
+      listingsTitle.textContent = "Latest Requirements";
     }
     return;
   }
@@ -873,19 +873,22 @@ async function loadAds() {
 
     // Filter ads by current user if on dashboard page
     if (window.location.pathname.includes("/dashboard.html")) {
-      const user = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null",
-      );
+      const user = JSON.parse(localStorage.getItem("bigspice_user") || "null");
       if (user && user.id) {
         ads = ads.filter((ad) => ad.userId === user.id);
       }
     }
-    // On home page, show only buyer requirements (not seller products)
+    // On home page, show only requirements (from buyers or sellers)
     else if (
       window.location.pathname === "/" ||
       window.location.pathname === "/index.html"
     ) {
-      ads = ads.filter((ad) => ad.role === "buyer" || (!ad.role && !ad.price));
+      ads = ads.filter(
+        (ad) =>
+          ad.listingType === "requirement" ||
+          (ad.listingType === null &&
+            (ad.role === "buyer" || (!ad.role && !ad.price))),
+      );
     }
 
     renderAds(ads);
@@ -956,14 +959,21 @@ function updateHeader() {
   const container = right || navFallback;
   if (!container) return;
 
-  const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
+  const user = JSON.parse(localStorage.getItem("bigspice_user") || "null");
   if (user && user.id) {
     // Show different navigation for sellers
     const isSeller = user.role === "seller";
+    const isAdvertiser = user.role === "advertiser";
     const dashboardLink = isSeller
       ? "/seller-dashboard.html"
-      : "/dashboard.html";
-    const dashboardLabel = isSeller ? "Manage Store" : "Post a requirement";
+      : isAdvertiser
+        ? "/advertiser-dashboard.html"
+        : "/dashboard.html";
+    const dashboardLabel = isSeller
+      ? "Manage Store"
+      : isAdvertiser
+        ? "My Ads"
+        : "Post a requirement";
 
     // Build dropdown menu items based on role
     let dropdownItems = "";
@@ -971,7 +981,15 @@ function updateHeader() {
       const _uid = user ? user.id : "";
       dropdownItems = `
         <a href="/seller-dashboard.html" class="dropdown-item">Manage Store</a>
+        <a href="/seller-requirements.html" class="dropdown-item">Post a Requirement</a>
         <a href="/store-profile.html?id=${_uid}" target="_blank" class="dropdown-item">Store Profile</a>
+        <a href="/messages.html" class="dropdown-item">Messages <span id="messagesBadge" class="notification-badge"></span></a>
+        <a href="/profile.html" class="dropdown-item">Profile</a>
+        <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
+      `;
+    } else if (isAdvertiser) {
+      dropdownItems = `
+        <a href="/advertiser-dashboard.html" class="dropdown-item">My Banner Ads</a>
         <a href="/messages.html" class="dropdown-item">Messages <span id="messagesBadge" class="notification-badge"></span></a>
         <a href="/profile.html" class="dropdown-item">Profile</a>
         <a href="#" class="dropdown-item" id="signOutBtn">Sign out</a>
@@ -1008,7 +1026,7 @@ function updateHeader() {
     if (btn)
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        localStorage.removeItem("spicetrade_user");
+        localStorage.removeItem("bigspice_user");
         updateHeader();
         window.location.href = "/";
       });
@@ -1025,42 +1043,53 @@ function updateHeader() {
 
 updateHeader();
 
-// Fetch and update unread message count
-async function updateMessageNotification() {
-  const user = JSON.parse(localStorage.getItem("spicetrade_user") || "null");
-  if (!user) return;
-
-  try {
-    const response = await fetch(`/api/messages/unread/${user.id}`);
-    const data = await response.json();
-
-    if (data.unreadCount > 0) {
-      const badge = document.getElementById("messagesBadge");
-      if (badge) {
-        badge.textContent = data.unreadCount;
-        badge.style.display = "inline-block";
-      }
-
-      // Show notification icon on user welcome text
-      const userIcon = document.getElementById("userNotificationIcon");
-      if (userIcon) {
-        userIcon.style.display = "inline-block";
-      }
-    } else {
-      // Hide notification icon when no unread messages
-      const userIcon = document.getElementById("userNotificationIcon");
-      if (userIcon) {
-        userIcon.style.display = "none";
-      }
+// Update unread badge from a count value
+function applyUnreadCount(count) {
+  const badge = document.getElementById("messagesBadge");
+  const userIcon = document.getElementById("userNotificationIcon");
+  if (count > 0) {
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = "inline-block";
     }
-  } catch (error) {
-    console.error("Failed to fetch unread count:", error);
+    if (userIcon) userIcon.style.display = "inline-block";
+  } else {
+    if (badge) {
+      badge.textContent = "";
+      badge.style.display = "none";
+    }
+    if (userIcon) userIcon.style.display = "none";
   }
 }
 
-// Check for new messages every 10 seconds
-updateMessageNotification();
-setInterval(updateMessageNotification, 10000);
+// Fetch the initial unread count on page load, then use SSE for live updates
+(async function initUnreadBadge() {
+  const user = JSON.parse(localStorage.getItem("bigspice_user") || "null");
+  if (!user || !user.id) return;
+
+  // One-time fetch on load
+  try {
+    const res = await fetch(`/api/messages/unread/${user.id}`);
+    const data = await res.json();
+    applyUnreadCount(data.unreadCount || 0);
+  } catch (e) {
+    /* non-critical */
+  }
+
+  // SSE: increment badge whenever a new message arrives
+  const sse = new EventSource(`/api/sse/${user.id}`);
+  sse.onmessage = (e) => {
+    const event = JSON.parse(e.data);
+    if (event.type === "new_message" && event.data.senderId !== user.id) {
+      // Re-fetch the real count so we stay accurate
+      fetch(`/api/messages/unread/${user.id}`)
+        .then((r) => r.json())
+        .then((d) => applyUnreadCount(d.unreadCount || 0))
+        .catch(() => {});
+    }
+  };
+  sse.onerror = () => sse.close(); // silently close; messages.html has its own SSE reconnect
+})();
 
 function filterByCategory(cat) {
   const qInput = document.getElementById("q");

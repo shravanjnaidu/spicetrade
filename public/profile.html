@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>My Profile — spicetrade</title>
+    <title>My Profile — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .profile-container {
@@ -133,7 +133,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
@@ -201,6 +201,35 @@
             <span class="info-label">Address</span>
             <span class="info-value" id="infoAddress">—</span>
           </div>
+        </div>
+      </div>
+
+      <div class="profile-section" id="advertiserSection" style="display: none">
+        <h2>Advertiser Account</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Company / Brand Name</span>
+            <span class="info-value" id="infoAdvertiserCompany">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Website</span>
+            <span class="info-value" id="infoAdvertiserWebsite">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Contact Number</span>
+            <span class="info-value" id="infoAdvertiserPhone">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Industry</span>
+            <span class="info-value" id="infoAdvertiserIndustry">—</span>
+          </div>
+          <div class="info-item" style="grid-column:1/-1">
+            <span class="info-label">Address</span>
+            <span class="info-value" id="infoAdvertiserAddress">—</span>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <a href="/advertiser-dashboard.html" class="btn" style="display:inline-block">Manage My Banner Ads →</a>
         </div>
       </div>
 
@@ -685,7 +714,7 @@
     <script src="/app.js"></script>
     <script>
       const user = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null",
+        localStorage.getItem("bigspice_user") || "null",
       );
 
       if (!user || !user.id) {
@@ -707,7 +736,7 @@
           user.name || "User";
         document.getElementById("profileEmail").textContent = user.email || "—";
         document.getElementById("profileRole").textContent =
-          user.role === "seller" ? "Seller" : "Buyer";
+          user.role === "seller" ? "Seller" : user.role === "advertiser" ? "Advertiser" : "Buyer";
 
         document.getElementById("infoUniqueId").textContent =
           user.uniqueId || "—";
@@ -717,9 +746,9 @@
         document.getElementById("infoLocation").textContent =
           user.location || "—";
         document.getElementById("infoRole").textContent =
-          user.role === "seller" ? "Seller" : "Buyer";
+          user.role === "seller" ? "Seller" : user.role === "advertiser" ? "Advertiser" : "Buyer";
 
-        // Show store section if seller
+        // Show store section if seller, advertiser section if advertiser
         if (user.role === "seller") {
           document.getElementById("storeSection").style.display = "block";
           document.getElementById("infoStoreName").textContent =
@@ -729,6 +758,18 @@
           document.getElementById("infoCategories").textContent =
             user.categories || "—";
           document.getElementById("infoAddress").textContent =
+            user.address || "—";
+        } else if (user.role === "advertiser") {
+          document.getElementById("advertiserSection").style.display = "block";
+          document.getElementById("infoAdvertiserCompany").textContent =
+            user.storeName || "—";
+          document.getElementById("infoAdvertiserWebsite").textContent =
+            user.website || "—";
+          document.getElementById("infoAdvertiserPhone").textContent =
+            user.phone || "—";
+          document.getElementById("infoAdvertiserIndustry").textContent =
+            user.businessType || "—";
+          document.getElementById("infoAdvertiserAddress").textContent =
             user.address || "—";
         }
       }
@@ -843,7 +884,7 @@
               // Update localStorage
               const updatedUser = { ...user, ...data };
               localStorage.setItem(
-                "spicetrade_user",
+                "bigspice_user",
                 JSON.stringify(updatedUser),
               );
               alert("Profile updated successfully!");
@@ -867,7 +908,7 @@
             "Are you sure you want to delete your account? This action cannot be undone.",
           )
         ) {
-          localStorage.removeItem("spicetrade_user");
+          localStorage.removeItem("bigspice_user");
           alert("Account deleted.");
           location.href = "/";
         }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Store Profile — SpiceTrade</title>
+    <title>Store Profile — BigSpice</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -615,12 +615,13 @@
     <!-- ── Site bar ── -->
     <header class="sitebar" id="siteBar">
       <a href="/index.html" class="sitebar-brand">
-        <span class="sitebar-brand-name">SpiceTrade</span>
+        <span class="sitebar-brand-name">BigSpice</span>
       </a>
       <nav class="sitebar-nav" id="siteNav">
         <a href="#overview" class="active">Overview</a>
         <a href="#products">Products</a>
         <a href="#services">Services</a>
+        <a href="#requirements">Requirements</a>
         <a href="#contact">Contact</a>
       </nav>
       <a href="javascript:window.close()||history.back()" class="sitebar-back">
@@ -667,6 +668,7 @@
             <a href="#overview" class="active">📋 Company Overview</a>
             <a href="#products">📦 Products</a>
             <a href="#services">🛠 Services</a>
+            <a href="#requirements">📝 Requirements</a>
             <a href="#usp">⭐ Why Choose Us</a>
             <a href="#certifications">🛡 Certifications</a>
             <a href="#contact">📞 Contact Us</a>
@@ -767,6 +769,14 @@
           </div>
         </section>
 
+        <!-- Requirements -->
+        <section class="card" id="requirements" style="display: none">
+          <div class="section-heading">Requirements</div>
+          <div id="requirementsGrid">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </section>
+
         <!-- Why Choose Us -->
         <section class="card" id="usp" style="display: none">
           <div class="section-heading">Why Choose Us</div>
@@ -788,8 +798,8 @@
     </div>
 
     <footer class="page-footer" id="pageFooter">
-      <strong id="footerStoreName">SpiceTrade</strong> &bull; Powered by
-      <a href="/index.html">SpiceTrade Marketplace</a>
+      <strong id="footerStoreName">BigSpice</strong> &bull; Powered by
+      <a href="/index.html">BigSpice Marketplace</a>
     </footer>
 
     <script>
@@ -800,7 +810,7 @@
         // If no id in URL, try localStorage (own profile)
         const localUser = (() => {
           try {
-            return JSON.parse(localStorage.getItem("spicetrade_user"));
+            return JSON.parse(localStorage.getItem("bigspice_user"));
           } catch {
             return null;
           }
@@ -820,6 +830,40 @@
           document.getElementById("ownCtaBanner").style.display = "flex";
         }
 
+        // If logged in and not the owner, make "Contact Seller" button open a conversation
+        const heroContactBtn = document.getElementById("heroContactBtn");
+        if (
+          localUser &&
+          localUser.id &&
+          String(localUser.id) !== String(userId)
+        ) {
+          heroContactBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            try {
+              const res = await fetch("/api/conversations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  buyerId: localUser.id,
+                  sellerId: userId,
+                }),
+              });
+              const result = await res.json();
+              if (result.success) {
+                window.location.href = `/messages.html?conversation=${result.conversationId}`;
+              } else {
+                document
+                  .getElementById("contact")
+                  .scrollIntoView({ behavior: "smooth" });
+              }
+            } catch {
+              document
+                .getElementById("contact")
+                .scrollIntoView({ behavior: "smooth" });
+            }
+          });
+        }
+
         // ── Fetch profile ──
         let profile = null;
         try {
@@ -833,14 +877,17 @@
         }
 
         const products = (profile.products || []).filter(
-          (p) => p.unit !== "service",
+          (p) => p.unit !== "service" && p.listingType !== "requirement",
         );
         const services = (profile.products || []).filter(
-          (p) => p.unit === "service",
+          (p) => p.unit === "service" && p.listingType !== "requirement",
+        );
+        const requirements = (profile.products || []).filter(
+          (p) => p.listingType === "requirement",
         );
 
         // ── Document title ──
-        document.title = (profile.storeName || profile.name) + " — SpiceTrade";
+        document.title = (profile.storeName || profile.name) + " — BigSpice";
 
         // ── Hero ──
         const heroName = profile.storeName || profile.name || "Store";
@@ -989,6 +1036,11 @@
         renderListings("productsGrid", products, false);
         // ── Services ──
         renderListings("servicesGrid", services, true);
+        // ── Requirements ──
+        if (requirements.length) {
+          document.getElementById("requirements").style.display = "";
+          renderRequirements(requirements);
+        }
 
         // ── Why Choose Us ──
         if (profile.whyUs) {
@@ -1084,6 +1136,7 @@
           "overview",
           "products",
           "services",
+          "requirements",
           "usp",
           "certifications",
           "contact",
@@ -1093,6 +1146,29 @@
         });
 
         // ── helpers ──
+        function renderRequirements(list) {
+          const el = document.getElementById("requirementsGrid");
+          if (!list.length) {
+            el.innerHTML =
+              '<div class="empty-state">No requirements posted yet.</div>';
+            return;
+          }
+          el.innerHTML = list
+            .map((r) => {
+              const tags = Array.isArray(r.tags) ? r.tags : [];
+              return `<div style="border:1px solid #e8e8e8;border-radius:8px;padding:16px;margin-bottom:12px;background:#fafafa">
+              <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escHtml(r.title)}</div>
+              <div style="font-size:13px;color:#555;margin-bottom:8px">${escHtml(r.description)}</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                ${r.category ? `<span style="background:#f0f0f0;padding:3px 8px;border-radius:4px;font-size:12px">${escHtml(r.category)}</span>` : ""}
+                ${tags.map((t) => `<span style="background:#eef2ff;color:#3b4fc4;padding:2px 8px;border-radius:4px;font-size:12px">${escHtml(t)}</span>`).join("")}
+                <span style="font-size:12px;color:#aaa;margin-left:auto">${new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+              </div>
+            </div>`;
+            })
+            .join("");
+        }
+
         function renderListings(containerId, list, isService) {
           const el = document.getElementById(containerId);
           if (!list.length) {

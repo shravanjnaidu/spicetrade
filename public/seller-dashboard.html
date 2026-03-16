@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Seller Dashboard — spicetrade</title>
+    <title>Seller Dashboard — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .seller-container {
@@ -165,7 +165,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
@@ -685,15 +685,13 @@
     </div>
 
     <footer class="footer">
-      <p>&copy; 2025 SpiceTrade. All rights reserved.</p>
+      <p>&copy; 2025 BigSpice. All rights reserved.</p>
     </footer>
 
     <script src="/app.js"></script>
     <script>
       // Load store details from localStorage
-      const user = JSON.parse(
-        localStorage.getItem("spicetrade_user") || "null",
-      );
+      const user = JSON.parse(localStorage.getItem("bigspice_user") || "null");
 
       if (!user || user.role !== "seller") {
         // redirect if not a seller
@@ -2233,6 +2231,7 @@
                 : _rawCat,
             tags: [...productSelectedTags],
             userId: user.id,
+            listingType: "listing",
           };
 
           // Add images if they exist
@@ -2364,6 +2363,7 @@
                 : _rawSvcCat,
             tags: [...serviceSelectedTags],
             userId: user.id,
+            listingType: "listing",
           };
 
           // Only add imageUrl if it exists

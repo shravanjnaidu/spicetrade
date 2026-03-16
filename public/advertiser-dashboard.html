@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Advertiser Dashboard — BigSpice</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      /* ── Page layout ─────────────────────────────────────────── */
+      body {
+        background: #f5f6f7;
+      }
+
+      .dash-header {
+        background: #fff;
+        border-bottom: 1px solid #e3e8ee;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .dash-header .logo {
+        height: 32px;
+      }
+      .dash-header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .dash-header-right .user-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #333;
+      }
+      .dash-header-right .btn-logout {
+        font-size: 13px;
+        color: #666;
+        background: none;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 5px 12px;
+        cursor: pointer;
+      }
+      .dash-header-right .btn-logout:hover {
+        border-color: #e47911;
+        color: #e47911;
+      }
+
+      .dash-main {
+        max-width: 960px;
+        margin: 32px auto;
+        padding: 0 20px;
+      }
+
+      /* ── Stats bar ───────────────────────────────────────────── */
+      .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .stat-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px 24px;
+        border: 1px solid #e3e8ee;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #e47911;
+      }
+      .stat-label {
+        font-size: 13px;
+        color: #666;
+        margin-top: 4px;
+      }
+
+      /* ── Cards ───────────────────────────────────────────────── */
+      .card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e3e8ee;
+        padding: 28px;
+        margin-bottom: 28px;
+      }
+      .card h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 6px;
+      }
+      .card .card-subtitle {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 24px;
+      }
+
+      /* ── Image spec box ──────────────────────────────────────── */
+      .spec-box {
+        background: #fffbf2;
+        border: 1.5px dashed #e47911;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        line-height: 1.7;
+        color: #555;
+      }
+      .spec-box strong {
+        color: #c85e00;
+      }
+      .spec-box ul {
+        margin: 6px 0 0 18px;
+        padding: 0;
+      }
+
+      /* ── Form ────────────────────────────────────────────────── */
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 6px;
+      }
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        border-color: #e47911;
+        outline: none;
+      }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
+      .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .image-upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        padding: 32px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        position: relative;
+      }
+      .image-upload-area:hover {
+        border-color: #e47911;
+        background: #fffbf2;
+      }
+      .image-upload-area input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .image-upload-area .upload-icon {
+        font-size: 40px;
+        margin-bottom: 8px;
+      }
+      .image-upload-area p {
+        font-size: 13px;
+        color: #666;
+        margin: 4px 0 0;
+      }
+      .image-preview {
+        margin-top: 16px;
+        display: none;
+      }
+      .image-preview img {
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e3e8ee;
+      }
+      .image-dim-warning {
+        font-size: 12px;
+        color: #c0392b;
+        margin-top: 6px;
+        display: none;
+      }
+
+      .btn-primary {
+        background: #e47911;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 28px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-primary:hover {
+        background: #c85e00;
+      }
+      .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* ── Ad cards grid ───────────────────────────────────────── */
+      .ads-grid-adv {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+      }
+      .ad-card {
+        border: 1px solid #e3e8ee;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .ad-card-img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+        display: block;
+        background: #f5f6f7;
+      }
+      .ad-card-body {
+        padding: 14px 16px;
+      }
+      .ad-card-title {
+        font-weight: 600;
+        font-size: 15px;
+        margin: 0 0 6px;
+      }
+      .ad-card-url {
+        font-size: 12px;
+        color: #0077b6;
+        word-break: break-all;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .ad-card-url:hover {
+        text-decoration: underline;
+      }
+      .ad-card-meta {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 10px;
+      }
+      .ad-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+      }
+      .status-active {
+        background: #e8f8e8;
+        color: #27ae60;
+      }
+      .status-pending {
+        background: #fff3e0;
+        color: #e67e22;
+      }
+      .status-inactive {
+        background: #f3f3f3;
+        color: #999;
+      }
+      .status-expired {
+        background: #fee;
+        color: #c0392b;
+      }
+
+      .btn-outline {
+        background: none;
+        border: 1px solid #2563eb;
+        color: #2563eb;
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-outline:hover {
+        background: #2563eb;
+        color: #fff;
+      }
+
+      .btn-danger {
+        background: none;
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-danger:hover {
+        background: #e74c3c;
+        color: #fff;
+      }
+
+      .empty-adv {
+        text-align: center;
+        color: #aaa;
+        padding: 40px 20px;
+        font-size: 15px;
+      }
+
+      /* ── Preview link on card ────────────────────────────────── */
+      .ad-card-img-wrap {
+        position: relative;
+        display: block;
+      }
+      .ad-card-img-wrap .open-link {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 11px;
+        text-decoration: none;
+      }
+      .ad-card-img-wrap .open-link:hover {
+        background: rgba(0, 0, 0, 0.8);
+      }
+
+      @media (max-width: 640px) {
+        .stats-bar {
+          grid-template-columns: 1fr;
+        }
+        .form-row-2 {
+          grid-template-columns: 1fr;
+        }
+        .ads-grid-adv {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="dash-header">
+      <a href="/"><img src="/logo.svg" alt="BigSpice" class="logo" /></a>
+      <div class="dash-header-right">
+        <span class="user-name" id="headerUserName">Loading…</span>
+        <button class="btn-logout" id="logoutBtn">Sign out</button>
+      </div>
+    </header>
+
+    <main class="dash-main">
+      <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 6px">
+        Advertiser Dashboard
+      </h1>
+      <p style="color: #666; margin: 0 0 24px; font-size: 14px">
+        Manage your banner ads shown in the BigSpice homepage carousel.
+      </p>
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-label">Total Ads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statActive">—</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statPending">—</div>
+          <div class="stat-label">Pending / Inactive</div>
+        </div>
+      </div>
+
+      <!-- Create New Banner Ad -->
+      <div class="card">
+        <h2 id="formHeading">Create New Banner Ad</h2>
+        <p class="card-subtitle">
+          Your ad will appear in the homepage carousel for all visitors.
+        </p>
+
+        <!-- Image specs -->
+        <div class="spec-box">
+          <strong>📐 Banner Image Requirements</strong>
+          <ul>
+            <li>
+              <strong>Recommended size:</strong> 1600 × 500 pixels (aspect ratio
+              16:5)
+            </li>
+            <li><strong>Minimum size:</strong> 800 × 250 pixels</li>
+            <li><strong>Formats accepted:</strong> JPG, PNG, WebP</li>
+            <li><strong>Max file size:</strong> 10 MB</li>
+            <li>
+              Images will be cropped / letterboxed to fit if dimensions differ
+            </li>
+            <li>
+              Use high-contrast text in your image — it will overlay on the
+              carousel
+            </li>
+          </ul>
+        </div>
+
+        <form id="createAdForm" enctype="multipart/form-data">
+          <!-- Image upload -->
+          <div class="form-group">
+            <label>Banner Image *</label>
+            <div class="image-upload-area" id="uploadArea">
+              <div class="upload-icon">🖼️</div>
+              <p><strong>Click to upload</strong> or drag and drop</p>
+              <p>JPG, PNG, WebP · max 10 MB · recommended 1600 × 500 px</p>
+              <input
+                type="file"
+                id="bannerImage"
+                name="image"
+                accept=".jpg,.jpeg,.png,.webp"
+                required
+              />
+            </div>
+            <div class="image-preview" id="imagePreview">
+              <img id="previewImg" src="" alt="Preview" />
+              <p
+                id="imageDimLabel"
+                style="font-size: 12px; color: #888; margin: 4px 0 0"
+              ></p>
+            </div>
+            <div class="image-dim-warning" id="dimWarning">
+              ⚠️ Image dimensions are outside the recommended range. It will
+              still work but may appear cropped.
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="adTitle">Ad Title *</label>
+              <input
+                type="text"
+                id="adTitle"
+                name="title"
+                required
+                placeholder="e.g., SpiceExpo 2026 — Register Now"
+                maxlength="80"
+              />
+              <p style="font-size: 11px; color: #999; margin: 4px 0 0">
+                Shown as the heading on the carousel slide
+              </p>
+            </div>
+            <div class="form-group">
+              <label for="adSubtitle">Subtitle / Description</label>
+              <input
+                type="text"
+                id="adSubtitle"
+                name="description"
+                placeholder="e.g., Asia's largest spice trade expo · Oct 12–14, Mumbai"
+                maxlength="120"
+              />
+              <p style="font-size: 11px; color: #999; margin: 4px 0 0">
+                Shown as smaller text below the title
+              </p>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="adTargetUrl">Destination URL *</label>
+              <input
+                type="url"
+                id="adTargetUrl"
+                name="targetUrl"
+                required
+                placeholder="https://yourwebsite.com/event"
+              />
+              <p style="font-size: 11px; color: #999; margin: 4px 0 0">
+                Opens in a new tab when the slide is clicked
+              </p>
+            </div>
+            <div class="form-group">
+              <label for="adExpiresAt"
+                >Expiry Date
+                <span style="font-weight: 400; color: #999"
+                  >(optional)</span
+                ></label
+              >
+              <input type="date" id="adExpiresAt" name="expiresAt" />
+              <p style="font-size: 11px; color: #999; margin: 4px 0 0">
+                Ad stops showing after this date
+              </p>
+            </div>
+          </div>
+
+          <!-- Ad Contact & Details -->
+          <h3 style="margin: 24px 0 12px; font-size: 15px; color: #444">
+            Ad Contact &amp; Details
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="adContactName"
+                >Contact Person Name
+                <span style="font-weight: 400; color: #999"
+                  >(optional)</span
+                ></label
+              >
+              <input
+                type="text"
+                id="adContactName"
+                name="contactName"
+                placeholder="e.g., Ramesh Kumar"
+              />
+            </div>
+            <div class="form-group">
+              <label for="adContactNumber">Contact Number *</label>
+              <input
+                type="tel"
+                id="adContactNumber"
+                name="contactNumber"
+                placeholder="+91 98765 43210"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="adIndustry">Industry / Category *</label>
+              <select id="adIndustry" name="industry" required>
+                <option value="">— Select —</option>
+                <option value="Events &amp; Expos">Events &amp; Expos</option>
+                <option value="Food &amp; Agriculture">
+                  Food &amp; Agriculture
+                </option>
+                <option value="Industrial &amp; Manufacturing">
+                  Industrial &amp; Manufacturing
+                </option>
+                <option value="Technology">Technology</option>
+                <option value="Retail &amp; E-commerce">
+                  Retail &amp; E-commerce
+                </option>
+                <option value="Healthcare &amp; Pharma">
+                  Healthcare &amp; Pharma
+                </option>
+                <option value="Real Estate">Real Estate</option>
+                <option value="Education &amp; Training">
+                  Education &amp; Training
+                </option>
+                <option value="Logistics &amp; Supply Chain">
+                  Logistics &amp; Supply Chain
+                </option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="adAddress"
+                >Event / Ad Location
+                <span style="font-weight: 400; color: #999"
+                  >(optional)</span
+                ></label
+              >
+              <input
+                type="text"
+                id="adAddress"
+                name="adAddress"
+                placeholder="e.g., Bombay Exhibition Centre, Mumbai"
+              />
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1">
+              <label for="adNotes"
+                >Additional Notes
+                <span style="font-weight: 400; color: #999"
+                  >(optional)</span
+                ></label
+              >
+              <textarea
+                id="adNotes"
+                name="notes"
+                rows="3"
+                placeholder="Any extra information about the ad or event…"
+                style="
+                  resize: vertical;
+                  width: 100%;
+                  padding: 8px;
+                  border: 1px solid #ddd;
+                  border-radius: 6px;
+                  font-size: 14px;
+                "
+              ></textarea>
+            </div>
+          </div>
+
+          <div
+            id="createError"
+            style="
+              color: #e74c3c;
+              font-size: 14px;
+              margin-bottom: 12px;
+              display: none;
+            "
+          ></div>
+          <div style="display: flex; gap: 10px; align-items: center">
+            <button type="submit" class="btn-primary" id="createBtn">
+              Publish Banner Ad
+            </button>
+            <button
+              type="button"
+              id="cancelEditBtn"
+              style="
+                display: none;
+                background: none;
+                border: 1px solid #999;
+                color: #555;
+                padding: 10px 18px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+              "
+              onclick="cancelAdEdit()"
+            >
+              Cancel Edit
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- My Ads -->
+      <div class="card">
+        <h2>My Banner Ads</h2>
+        <p class="card-subtitle">
+          All your submitted banner ads and their current status.
+        </p>
+        <div id="myAdsGrid" class="ads-grid-adv">
+          <div class="empty-adv">Loading your ads…</div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ── Auth gate ─────────────────────────────────────────────────────────
+      const currentUser = JSON.parse(
+        localStorage.getItem("bigspice_user") || "null",
+      );
+      if (!currentUser || !currentUser.id) {
+        window.location.href = "/login.html";
+      }
+      // Allow any role to manage banner ads (sellers/buyers can advertise too)
+      document.getElementById("headerUserName").textContent =
+        currentUser.storeName || currentUser.name || currentUser.email;
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("bigspice_user");
+        window.location.href = "/";
+      });
+
+      // ── Load my ads ───────────────────────────────────────────────────────
+      let myAds = [];
+
+      async function loadMyAds() {
+        try {
+          const res = await fetch(`/api/banner-ads/my/${currentUser.id}`);
+          myAds = await res.json();
+        } catch (_) {
+          myAds = [];
+        }
+        renderStats();
+        renderAds();
+      }
+
+      function renderStats() {
+        document.getElementById("statTotal").textContent = myAds.length;
+        document.getElementById("statActive").textContent = myAds.filter(
+          (a) => a.status === "active",
+        ).length;
+        document.getElementById("statPending").textContent = myAds.filter(
+          (a) => a.status !== "active",
+        ).length;
+      }
+
+      function statusBadge(ad) {
+        const now = new Date();
+        if (ad.expiresAt && new Date(ad.expiresAt) < now) {
+          return `<span class="status-badge status-expired">Expired</span>`;
+        }
+        const cls =
+          {
+            active: "status-active",
+            pending: "status-pending",
+            inactive: "status-inactive",
+          }[ad.status] || "status-inactive";
+        return `<span class="status-badge ${cls}">${ad.status}</span>`;
+      }
+
+      function renderAds() {
+        const grid = document.getElementById("myAdsGrid");
+        if (!myAds.length) {
+          grid.innerHTML = `<div class="empty-adv">No banner ads yet. Create your first ad above!</div>`;
+          return;
+        }
+        grid.innerHTML = myAds
+          .map(
+            (ad) => `
+          <div class="ad-card">
+            <div class="ad-card-img-wrap">
+              <img class="ad-card-img" src="${ad.imageUrl}" alt="${escHtml(ad.title)}" />
+              <a class="open-link" href="${escHtml(ad.targetUrl)}" target="_blank" rel="noopener">↗ Visit</a>
+            </div>
+            <div class="ad-card-body">
+              <div class="ad-card-title">${escHtml(ad.title)}</div>
+              ${ad.description ? `<div style="font-size:13px;color:#555;margin-bottom:6px">${escHtml(ad.description)}</div>` : ""}
+              <a class="ad-card-url" href="${escHtml(ad.targetUrl)}" target="_blank" rel="noopener">${escHtml(ad.targetUrl)}</a>
+              ${ad.industry ? `<div style="font-size:12px;color:#777;margin-top:4px">Industry: ${escHtml(ad.industry)}</div>` : ""}
+              ${ad.contactNumber ? `<div style="font-size:12px;color:#777">Contact: ${ad.contactName ? escHtml(ad.contactName) + " · " : ""}${escHtml(ad.contactNumber)}</div>` : ""}
+              ${ad.adAddress ? `<div style="font-size:12px;color:#777">Location: ${escHtml(ad.adAddress)}</div>` : ""}
+              ${ad.notes ? `<div style="font-size:12px;color:#777;font-style:italic">Notes: ${escHtml(ad.notes)}</div>` : ""}
+              <div class="ad-card-meta">
+                Created: ${new Date(ad.createdAt).toLocaleDateString()}
+                ${ad.expiresAt ? ` · Expires: ${new Date(ad.expiresAt).toLocaleDateString()}` : ""}
+              </div>
+              <div class="ad-card-footer">
+                ${statusBadge(ad)}
+                <button class="btn-outline" onclick="startEditAd(${ad.id})">Edit</button>
+                <button class="btn-danger" onclick="deleteAd(${ad.id})">Delete</button>
+              </div>
+            </div>
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      async function deleteAd(id) {
+        if (!confirm("Delete this banner ad? This cannot be undone.")) return;
+        try {
+          await fetch(`/api/banner-ads/${id}`, { method: "DELETE" });
+          await loadMyAds();
+        } catch (_) {
+          alert("Failed to delete ad. Please try again.");
+        }
+      }
+
+      // ── Edit ad ───────────────────────────────────────────────────────────
+      let editingAdId = null;
+
+      function startEditAd(id) {
+        const ad = myAds.find((a) => a.id === id);
+        if (!ad) return;
+        editingAdId = id;
+
+        document.getElementById("formHeading").textContent = "Edit Banner Ad";
+        document.getElementById("createBtn").textContent = "Save Changes";
+        document.getElementById("cancelEditBtn").style.display = "inline-block";
+
+        // Pre-fill fields
+        document.getElementById("adTitle").value = ad.title || "";
+        document.getElementById("adSubtitle").value = ad.description || "";
+        document.getElementById("adTargetUrl").value = ad.targetUrl || "";
+        document.getElementById("adExpiresAt").value = ad.expiresAt
+          ? ad.expiresAt.substring(0, 10)
+          : "";
+        document.getElementById("adContactName").value = ad.contactName || "";
+        document.getElementById("adContactNumber").value =
+          ad.contactNumber || "";
+        document.getElementById("adIndustry").value = ad.industry || "";
+        document.getElementById("adAddress").value = ad.adAddress || "";
+        document.getElementById("adNotes").value = ad.notes || "";
+
+        // Show existing image preview if available
+        if (ad.imageUrl) {
+          document.getElementById("previewImg").src = ad.imageUrl;
+          document.getElementById("imagePreview").style.display = "block";
+          document.getElementById("imageDimLabel").textContent =
+            "Current image";
+        }
+
+        // Image no longer required when editing
+        document.getElementById("bannerImage").removeAttribute("required");
+
+        document
+          .getElementById("formHeading")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+      window.startEditAd = startEditAd;
+
+      function cancelAdEdit() {
+        editingAdId = null;
+        document.getElementById("formHeading").textContent =
+          "Create New Banner Ad";
+        document.getElementById("createBtn").textContent = "Publish Banner Ad";
+        document.getElementById("cancelEditBtn").style.display = "none";
+        document.getElementById("createAdForm").reset();
+        document.getElementById("imagePreview").style.display = "none";
+        document.getElementById("dimWarning").style.display = "none";
+        document.getElementById("bannerImage").setAttribute("required", "");
+      }
+      window.cancelAdEdit = cancelAdEdit;
+
+      // ── Image upload preview + dimension check ────────────────────────────
+      document
+        .getElementById("bannerImage")
+        .addEventListener("change", function () {
+          const file = this.files[0];
+          if (!file) return;
+
+          // File size check (10 MB)
+          if (file.size > 10 * 1024 * 1024) {
+            alert(
+              "File is larger than 10 MB. Please compress your image and try again.",
+            );
+            this.value = "";
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              document.getElementById("previewImg").src = e.target.result;
+              document.getElementById("imagePreview").style.display = "block";
+              document.getElementById("imageDimLabel").textContent =
+                `Uploaded: ${img.width} × ${img.height} px`;
+
+              const inRange = img.width >= 800 && img.height >= 250;
+              document.getElementById("dimWarning").style.display = inRange
+                ? "none"
+                : "block";
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+
+      // ── Create / Edit ad form ──────────────────────────────────────────────
+      document
+        .getElementById("createAdForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const errEl = document.getElementById("createError");
+          const btn = document.getElementById("createBtn");
+          errEl.style.display = "none";
+          btn.disabled = true;
+          btn.textContent = editingAdId ? "Saving…" : "Publishing…";
+
+          try {
+            const fd = new FormData(e.target);
+            fd.append("userId", currentUser.id);
+            if (!fd.get("expiresAt")) fd.delete("expiresAt");
+
+            let url, method;
+            if (editingAdId) {
+              url = `/api/banner-ads/${editingAdId}`;
+              method = "PUT";
+              // If no new image selected, remove file field so backend keeps existing
+              const imgFile = document.getElementById("bannerImage");
+              if (!imgFile.files || !imgFile.files[0]) fd.delete("image");
+            } else {
+              url = "/api/banner-ads";
+              method = "POST";
+            }
+
+            const res = await fetch(url, { method, body: fd });
+            const data = await res.json();
+
+            if (data.success) {
+              cancelAdEdit();
+              await loadMyAds();
+              document
+                .getElementById("myAdsGrid")
+                .scrollIntoView({ behavior: "smooth" });
+            } else {
+              errEl.textContent = data.error || "Failed to save ad.";
+              errEl.style.display = "block";
+            }
+          } catch (err) {
+            errEl.textContent = "Network error. Please try again.";
+            errEl.style.display = "block";
+          } finally {
+            btn.disabled = false;
+            btn.textContent = editingAdId
+              ? "Save Changes"
+              : "Publish Banner Ad";
+          }
+        });
+
+      function escHtml(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // ── Init ──────────────────────────────────────────────────────────────
+      loadMyAds();
+    </script>
+  </body>
+</html>

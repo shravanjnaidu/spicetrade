@@ -293,7 +293,7 @@ struct ProductDetailView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if authViewModel.currentUser?.isBuyer == true && authViewModel.currentUser?.id != product.userId {
+            if authViewModel.currentUser?.id != product.userId {
                 Button(action: { showContactSeller = true }) {
                     Text("Contact Seller")
                         .font(.headline)

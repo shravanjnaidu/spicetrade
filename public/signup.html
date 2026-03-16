@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Sign up — spicetrade</title>
+    <title>Sign up — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
     </header>
 
     <main class="container">
@@ -120,6 +120,37 @@
                       accept="image/*"
                       class="form-control"
                     />
+                  </div>
+                </div>
+
+                <!-- Advertiser-only fields -->
+                <div id="advertiserFields" style="display: none">
+                  <div class="form-row">
+                    <div>
+                      <label for="advertiserCompany"
+                        >Company / Organization Name *</label
+                      >
+                      <input
+                        id="advertiserCompany"
+                        name="advertiserCompany"
+                        type="text"
+                        placeholder="e.g., ABC Events Pvt Ltd"
+                        class="form-control"
+                      />
+                    </div>
+                    <div>
+                      <label for="advertiserWebsite"
+                        >Company Website
+                        <span class="muted">(optional)</span></label
+                      >
+                      <input
+                        id="advertiserWebsite"
+                        name="website"
+                        type="url"
+                        placeholder="https://yourcompany.com"
+                        class="form-control"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -270,10 +301,10 @@
         <div class="footer-brand">
           <img
             src="/logo.svg"
-            alt="SpiceTrade logo"
+            alt="BigSpice logo"
             style="height: 36px; margin-right: 10px; vertical-align: middle"
           />
-          <span class="brand-name">SpiceTrade Marketplace</span>
+          <span class="brand-name">BigSpice Marketplace</span>
         </div>
         <div class="footer-columns">
           <div class="footer-col">
@@ -302,7 +333,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>&copy; 2025 SpiceTrade. All rights reserved.</span>
+        <span>&copy; 2025 BigSpice. All rights reserved.</span>
         <span class="footer-social">
           <a href="#" title="Facebook" class="social-icon"
             ><img src="/icons/facebook.svg" alt="Facebook"
@@ -335,7 +366,10 @@
         const storeMediaSection = document.getElementById("storeMediaSection");
         const submitBtn = document.getElementById("submitBtn");
         const buyerFields = document.getElementById("buyerFields");
+        const advertiserFields = document.getElementById("advertiserFields");
         const locationInput = document.getElementById("location");
+        const advertiserCompanyInput =
+          document.getElementById("advertiserCompany");
 
         function setRole(r) {
           roleInput.value = r;
@@ -349,8 +383,22 @@
               businessInfoSection.style.display = "block";
             if (storeMediaSection) storeMediaSection.style.display = "block";
             if (buyerFields) buyerFields.style.display = "none";
+            if (advertiserFields) advertiserFields.style.display = "none";
+            if (advertiserCompanyInput) advertiserCompanyInput.required = false;
             if (locationInput) locationInput.required = false;
             if (submitBtn) submitBtn.textContent = "Create seller account";
+          } else if (r === "advertiser") {
+            signupTitle.textContent = "Create your advertiser account";
+            signupSubtitle.textContent =
+              "Promote your brand, events and expos on the BigSpice homepage carousel.";
+            if (storeDetailsSection) storeDetailsSection.style.display = "none";
+            if (businessInfoSection) businessInfoSection.style.display = "none";
+            if (storeMediaSection) storeMediaSection.style.display = "none";
+            if (buyerFields) buyerFields.style.display = "none";
+            if (advertiserFields) advertiserFields.style.display = "block";
+            if (advertiserCompanyInput) advertiserCompanyInput.required = true;
+            if (locationInput) locationInput.required = false;
+            if (submitBtn) submitBtn.textContent = "Create advertiser account";
           } else {
             signupTitle.textContent = "Create your buyer account";
             signupSubtitle.textContent =
@@ -359,6 +407,8 @@
             if (businessInfoSection) businessInfoSection.style.display = "none";
             if (storeMediaSection) storeMediaSection.style.display = "none";
             if (buyerFields) buyerFields.style.display = "block";
+            if (advertiserFields) advertiserFields.style.display = "none";
+            if (advertiserCompanyInput) advertiserCompanyInput.required = false;
             if (locationInput) locationInput.required = true;
             if (submitBtn) submitBtn.textContent = "Create buyer account";
           }
@@ -394,9 +444,11 @@
             const data = await res.json();
             if (data.success) {
               // Store complete user info returned from API
-              localStorage.setItem("spicetrade_user", JSON.stringify(data));
-              // redirect sellers to seller dashboard
-              if (data.role === "seller") {
+              localStorage.setItem("bigspice_user", JSON.stringify(data));
+              // Redirect based on role
+              if (data.role === "advertiser") {
+                location.href = "/advertiser-dashboard.html";
+              } else if (data.role === "seller") {
                 location.href = "/seller-dashboard.html";
               } else {
                 location.href = "/dashboard.html";

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ad Details — BigSpice</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      body {
+        background: #f5f6f7;
+      }
+
+      .ad-detail-wrap {
+        max-width: 860px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #555;
+        font-size: 14px;
+        text-decoration: none;
+        margin-bottom: 24px;
+      }
+      .back-link:hover {
+        color: #e47911;
+      }
+
+      .ad-card {
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #e3e8ee;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      }
+
+      .ad-banner-img {
+        width: 100%;
+        max-height: 420px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .ad-body {
+        padding: 32px;
+      }
+
+      .ad-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+      }
+      .status-active {
+        background: #e8f8e8;
+        color: #27ae60;
+      }
+      .status-inactive {
+        background: #f3f3f3;
+        color: #999;
+      }
+      .status-expired {
+        background: #fee;
+        color: #c0392b;
+      }
+
+      .ad-sponsor {
+        font-size: 12px;
+        color: #999;
+      }
+
+      .ad-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111;
+        margin: 0 0 12px;
+        line-height: 1.3;
+      }
+
+      .ad-description {
+        font-size: 16px;
+        color: #444;
+        line-height: 1.7;
+        margin: 0 0 28px;
+      }
+
+      .ad-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .ad-info-item {
+        background: #f9f9f9;
+        border-radius: 8px;
+        padding: 14px 16px;
+      }
+      .ad-info-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #999;
+        margin-bottom: 4px;
+      }
+      .ad-info-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #222;
+        word-break: break-all;
+      }
+      .ad-info-value a {
+        color: #0077b6;
+        text-decoration: none;
+        font-weight: 400;
+      }
+      .ad-info-value a:hover {
+        text-decoration: underline;
+      }
+
+      .ad-cta {
+        background: #e47911;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 14px 32px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+      }
+      .ad-cta:hover {
+        background: #c85e00;
+      }
+
+      .ad-disclaimer {
+        margin-top: 16px;
+        font-size: 12px;
+        color: #aaa;
+      }
+
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 50%,
+          #f0f0f0 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite;
+        border-radius: 6px;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      .error-box {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+      }
+      .error-box h2 {
+        font-size: 20px;
+        color: #444;
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 600px) {
+        .ad-info-grid {
+          grid-template-columns: 1fr;
+        }
+        .ad-title {
+          font-size: 22px;
+        }
+        .ad-body {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-left">
+        <a href="/"><img src="/logo.svg" alt="BigSpice" class="logo" /></a>
+      </div>
+    </header>
+
+    <div class="ad-detail-wrap">
+      <a href="/" class="back-link">← Back to homepage</a>
+
+      <div id="adContent">
+        <!-- Skeleton loader -->
+        <div class="ad-card">
+          <div
+            class="skeleton"
+            style="width: 100%; height: 300px; border-radius: 0"
+          ></div>
+          <div style="padding: 32px">
+            <div
+              class="skeleton"
+              style="height: 20px; width: 60%; margin-bottom: 16px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 36px; width: 85%; margin-bottom: 12px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 16px; width: 100%; margin-bottom: 8px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 16px; width: 90%; margin-bottom: 8px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 16px; width: 75%; margin-bottom: 28px"
+            ></div>
+            <div
+              class="skeleton"
+              style="height: 48px; width: 200px; border-radius: 10px"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const adId = parseInt(params.get("id"), 10);
+
+      if (!adId) {
+        showError("No ad specified.");
+      } else {
+        loadAd(adId);
+      }
+
+      async function loadAd(id) {
+        try {
+          const res = await fetch(`/api/banner-ads/${id}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const ad = await res.json();
+          if (ad.error) throw new Error(ad.error);
+          renderAd(ad);
+        } catch (err) {
+          showError("This ad could not be found or may have expired.");
+          console.error(err);
+        }
+      }
+
+      function renderAd(ad) {
+        document.title = `${ad.title} — BigSpice`;
+
+        const now = new Date();
+        const expired = ad.expiresAt && new Date(ad.expiresAt) < now;
+        const statusCls = expired ? "status-expired" : "status-active";
+        const statusTxt = expired ? "Expired" : ad.status;
+
+        const advertiser =
+          ad.advertiserCompany || ad.advertiserName || "Advertiser";
+
+        document.getElementById("adContent").innerHTML = `
+          <div class="ad-card">
+            <img class="ad-banner-img" src="${esc(ad.imageUrl)}" alt="${esc(ad.title)}" />
+            <div class="ad-body">
+              <div class="ad-meta-row">
+                <span class="status-badge ${statusCls}">${esc(statusTxt)}</span>
+                <span class="ad-sponsor">Sponsored by <strong>${esc(advertiser)}</strong></span>
+              </div>
+
+              <h1 class="ad-title">${esc(ad.title)}</h1>
+
+              ${
+                ad.description
+                  ? `<p class="ad-description">${esc(ad.description)}</p>`
+                  : ""
+              }
+
+              <div class="ad-info-grid">
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Advertiser</div>
+                  <div class="ad-info-value">${esc(advertiser)}</div>
+                </div>
+                ${
+                  ad.industry
+                    ? `
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Industry</div>
+                  <div class="ad-info-value">${esc(ad.industry)}</div>
+                </div>`
+                    : ""
+                }
+                ${
+                  ad.adAddress
+                    ? `
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Location</div>
+                  <div class="ad-info-value">${esc(ad.adAddress)}</div>
+                </div>`
+                    : ""
+                }
+                ${
+                  ad.contactNumber
+                    ? `
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Contact</div>
+                  <div class="ad-info-value">${ad.contactName ? esc(ad.contactName) + " · " : ""}${esc(ad.contactNumber)}</div>
+                </div>`
+                    : ""
+                }
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Destination</div>
+                  <div class="ad-info-value">
+                    <a href="${esc(ad.targetUrl)}" target="_blank" rel="noopener noreferrer">
+                      ${esc(ad.targetUrl)}
+                    </a>
+                  </div>
+                </div>
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Published</div>
+                  <div class="ad-info-value">${ad.createdAt ? new Date(ad.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—"}</div>
+                </div>
+                ${
+                  ad.expiresAt
+                    ? `
+                <div class="ad-info-item">
+                  <div class="ad-info-label">Valid until</div>
+                  <div class="ad-info-value">${new Date(ad.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</div>
+                </div>`
+                    : ""
+                }
+                ${
+                  ad.notes
+                    ? `
+                <div class="ad-info-item" style="grid-column: 1 / -1">
+                  <div class="ad-info-label">Notes</div>
+                  <div class="ad-info-value">${esc(ad.notes)}</div>
+                </div>`
+                    : ""
+                }
+              </div>
+
+              ${
+                !expired
+                  ? `
+                <a href="${esc(ad.targetUrl)}" target="_blank" rel="noopener noreferrer" class="ad-cta">
+                  Visit Website →
+                </a>
+                <p class="ad-disclaimer">You are about to visit an external website. BigSpice is not responsible for third-party content.</p>
+              `
+                  : `<p style="color:#c0392b;font-weight:600">This advertisement has expired.</p>`
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      function showError(msg) {
+        document.getElementById("adContent").innerHTML = `
+          <div class="error-box">
+            <h2>Ad not found</h2>
+            <p>${esc(msg)}</p>
+            <a href="/" class="btn" style="display:inline-block;margin-top:16px">Back to homepage</a>
+          </div>`;
+      }
+
+      function esc(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+    </script>
+  </body>
+</html>

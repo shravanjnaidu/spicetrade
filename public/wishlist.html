@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>My Wishlist — SpiceTrade</title>
+    <title>My Wishlist — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .wishlist-container {
@@ -125,7 +125,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
@@ -148,7 +148,7 @@
 
     <script src="/app.js"></script>
     <script>
-      const currentUser = JSON.parse(localStorage.getItem('spicetrade_user') || 'null');
+      const currentUser = JSON.parse(localStorage.getItem('bigspice_user') || 'null');
       
       if (!currentUser || !currentUser.id) {
         window.location.href = '/login.html';

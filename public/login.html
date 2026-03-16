@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8"" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Sign in — spicetrade</title>
+    <title>Sign in — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <nav>
         <a href="/signup.html" class="btn">Sign up</a>
         <!-- <a href="/dashboard.html" class="btn secondary">View ads</a> -->
@@ -48,7 +48,7 @@
           const j = await res.json();
           if (j && j.success) {
             // Store complete user data returned from API
-            localStorage.setItem("spicetrade_user", JSON.stringify(j));
+            localStorage.setItem("bigspice_user", JSON.stringify(j));
             window.location.href = "/";
           } else {
             alert(j.error || "Login failed");

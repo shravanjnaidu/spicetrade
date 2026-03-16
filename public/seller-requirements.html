@@ -1,0 +1,1270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Requirements — BigSpice</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #f7f8fa;
+      }
+      main {
+        flex: 1;
+        max-width: 900px;
+        margin: 32px auto;
+        padding: 0 16px;
+        width: 100%;
+      }
+      .page-header {
+        margin-bottom: 28px;
+      }
+      .page-header h1 {
+        font-size: 28px;
+        margin: 0 0 6px;
+      }
+      .page-header p {
+        color: #666;
+        margin: 0;
+        font-size: 15px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 10px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      .card h2 {
+        font-size: 18px;
+        margin: 0 0 16px;
+        color: #222;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+      .form-group textarea {
+        resize: vertical;
+      }
+      .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 600px) {
+        .form-row-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tag-chip {
+        background: #f0f0f0;
+        padding: 5px 12px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+      }
+      .tag-chip button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        color: #888;
+        padding: 0;
+        line-height: 1;
+      }
+      .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .req-item {
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        background: #fafafa;
+      }
+      .req-item:hover {
+        border-color: #ccc;
+      }
+      .req-title {
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+      .req-desc {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 8px;
+      }
+      .req-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .req-tag {
+        background: #eef2ff;
+        color: #3b4fc4;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .req-category {
+        background: #f0f0f0;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .req-date {
+        font-size: 12px;
+        color: #999;
+      }
+      .req-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-outline {
+        background: none;
+        border: 1px solid #2563eb;
+        color: #2563eb;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .btn-danger {
+        background: none;
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #2563eb;
+        font-size: 14px;
+        margin-bottom: 20px;
+        text-decoration: none;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .success-msg {
+        color: #22c55e;
+        font-size: 14px;
+        font-weight: 500;
+        margin-top: 8px;
+        display: none;
+      }
+      .error-msg {
+        color: #e74c3c;
+        font-size: 14px;
+        margin-top: 8px;
+        display: none;
+      }
+      #editModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      #editModal.open {
+        display: flex;
+      }
+      .modal-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 28px;
+        max-width: 620px;
+        width: 94%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal-box h3 {
+        margin: 0 0 18px;
+        font-size: 17px;
+      }
+      .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+      .empty-state {
+        color: #aaa;
+        font-size: 14px;
+        text-align: center;
+        padding: 32px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
+      <nav class="header-right"></nav>
+    </header>
+
+    <main>
+      <a href="/seller-dashboard.html" class="back-link"
+        >← Back to Seller Dashboard</a
+      >
+
+      <div class="page-header">
+        <h1>My Requirements</h1>
+        <p>
+          Post sourcing requirements and manage them here. They will be visible
+          on your store profile and the marketplace homepage.
+        </p>
+      </div>
+
+      <!-- Post / Edit form -->
+      <div class="card" id="formCard">
+        <h2 id="formTitle">Post a New Requirement</h2>
+        <form id="requirementForm">
+          <div class="form-group">
+            <label>Title *</label>
+            <input
+              id="reqTitle"
+              type="text"
+              placeholder="e.g., Looking for bulk cardamom supplier"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea
+              id="reqDesc"
+              rows="3"
+              placeholder="Describe what you need — quantity, quality, delivery timeline, etc."
+              required
+            ></textarea>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Category *</label>
+              <select id="reqCategory" required>
+                <option value="">Select category</option>
+                <optgroup label="Food &amp; Agriculture">
+                  <option value="Spices &amp; Herbs">Spices &amp; Herbs</option>
+                  <option value="Grains &amp; Cereals">
+                    Grains &amp; Cereals
+                  </option>
+                  <option value="Pulses &amp; Legumes">
+                    Pulses &amp; Legumes
+                  </option>
+                  <option value="Nuts &amp; Dry Fruits">
+                    Nuts &amp; Dry Fruits
+                  </option>
+                  <option value="Oils &amp; Fats">Oils &amp; Fats</option>
+                  <option value="Sugar &amp; Sweeteners">
+                    Sugar &amp; Sweeteners
+                  </option>
+                  <option value="Tea &amp; Coffee">Tea &amp; Coffee</option>
+                  <option value="Dairy Products">Dairy Products</option>
+                  <option value="Fruits &amp; Vegetables">
+                    Fruits &amp; Vegetables
+                  </option>
+                  <option value="Seafood">Seafood</option>
+                  <option value="Meat &amp; Poultry">Meat &amp; Poultry</option>
+                  <option value="Processed &amp; Packaged Foods">
+                    Processed &amp; Packaged Foods
+                  </option>
+                  <option value="Beverages">Beverages</option>
+                  <option value="Seeds &amp; Planting Material">
+                    Seeds &amp; Planting Material
+                  </option>
+                  <option value="Organic &amp; Natural Products">
+                    Organic &amp; Natural Products
+                  </option>
+                  <option value="Agro Chemicals &amp; Fertilizers">
+                    Agro Chemicals &amp; Fertilizers
+                  </option>
+                </optgroup>
+                <optgroup label="Industrial &amp; Supply Chain">
+                  <option value="Packaging Materials">
+                    Packaging Materials
+                  </option>
+                  <option value="Machinery &amp; Equipment">
+                    Machinery &amp; Equipment
+                  </option>
+                  <option value="Chemicals &amp; Raw Materials">
+                    Chemicals &amp; Raw Materials
+                  </option>
+                  <option value="Laboratory &amp; Testing Equipment">
+                    Laboratory &amp; Testing Equipment
+                  </option>
+                  <option value="Safety &amp; Protective Equipment">
+                    Safety &amp; Protective Equipment
+                  </option>
+                </optgroup>
+                <optgroup label="Services">
+                  <option value="Consulting">Consulting</option>
+                  <option value="Quality Testing &amp; Certification">
+                    Quality Testing &amp; Certification
+                  </option>
+                  <option value="Logistics &amp; Transportation">
+                    Logistics &amp; Transportation
+                  </option>
+                  <option value="Warehousing &amp; Storage">
+                    Warehousing &amp; Storage
+                  </option>
+                  <option value="Customs &amp; Import/Export">
+                    Customs &amp; Import/Export
+                  </option>
+                  <option value="Freight Forwarding">Freight Forwarding</option>
+                  <option value="IT &amp; Software Solutions">
+                    IT &amp; Software Solutions
+                  </option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="Other">Other</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="form-group">
+              <label
+                >Tags
+                <span style="font-weight: 400; color: #999"
+                  >(optional, up to 5)</span
+                ></label
+              >
+              <select id="reqTagsDropdown">
+                <option value="">— Select category first —</option>
+              </select>
+            </div>
+          </div>
+          <div id="reqTagsContainer" class="tags-container"></div>
+
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              margin-top: 8px;
+              align-items: center;
+            "
+          >
+            <button type="submit" class="btn" id="submitBtn">
+              Post Requirement
+            </button>
+            <button
+              type="button"
+              class="btn-outline"
+              id="cancelEditBtn"
+              style="display: none"
+              onclick="cancelEdit()"
+            >
+              Cancel
+            </button>
+          </div>
+          <div class="success-msg" id="successMsg">
+            Requirement saved successfully!
+          </div>
+          <div class="error-msg" id="errorMsg"></div>
+        </form>
+      </div>
+
+      <!-- My Requirements list -->
+      <div class="card">
+        <h2>My Posted Requirements</h2>
+        <div id="requirementsList"><div class="empty-state">Loading…</div></div>
+      </div>
+    </main>
+
+    <script src="/app.js"></script>
+    <script>
+      const user = JSON.parse(localStorage.getItem("bigspice_user") || "null");
+      if (!user || !user.id) {
+        window.location.href = "/login.html";
+      }
+
+      let editingId = null;
+      let selectedTags = [];
+
+      // ── Full category → tags map (same as seller-dashboard products/services) ──
+      const categoryTags = {
+        "Spices & Herbs": [
+          "Turmeric",
+          "Black Pepper",
+          "Red Chilli",
+          "Cumin",
+          "Coriander",
+          "Cardamom",
+          "Cloves",
+          "Cinnamon",
+          "Ginger",
+          "Garlic",
+          "Fenugreek",
+          "Mustard Seeds",
+          "Bay Leaf",
+          "Star Anise",
+          "Nutmeg",
+          "Mace",
+          "Saffron",
+          "Fennel",
+          "Carom Seeds",
+          "Asafoetida",
+          "Curry Leaves",
+          "Mint",
+          "Basil",
+          "Oregano",
+          "Thyme",
+          "Paprika",
+          "Cayenne",
+          "Kokum",
+          "Tamarind",
+          "Dry Mango Powder",
+        ],
+        "Grains & Cereals": [
+          "Basmati Rice",
+          "Non-Basmati Rice",
+          "Wheat",
+          "Maize / Corn",
+          "Barley",
+          "Oats",
+          "Millet",
+          "Sorghum",
+          "Ragi / Finger Millet",
+          "Jowar",
+          "Bajra",
+          "Buckwheat",
+          "Quinoa",
+          "Rye",
+          "Semolina",
+          "Poha",
+          "Rice Flour",
+          "Wheat Flour",
+          "Corn Flour",
+          "Multi-grain",
+        ],
+        "Pulses & Legumes": [
+          "Chickpeas",
+          "Lentils",
+          "Black-eyed Peas",
+          "Kidney Beans",
+          "Green Moong",
+          "Yellow Moong",
+          "Urad Dal",
+          "Toor Dal",
+          "Chana Dal",
+          "Soybean",
+          "Peas",
+          "Cowpea",
+          "Lima Beans",
+          "Navy Beans",
+          "Pigeon Peas",
+          "Horse Gram",
+          "Moth Beans",
+          "Masoor Dal",
+          "Split Peas",
+          "White Peas",
+        ],
+        "Nuts & Dry Fruits": [
+          "Almonds",
+          "Cashews",
+          "Walnuts",
+          "Pistachios",
+          "Raisins",
+          "Dates",
+          "Figs",
+          "Apricots",
+          "Prunes",
+          "Peanuts",
+          "Macadamia",
+          "Hazelnuts",
+          "Pine Nuts",
+          "Pecans",
+          "Brazil Nuts",
+          "Dried Cranberries",
+          "Dried Mango",
+          "Dried Coconut",
+          "Chia Seeds",
+          "Sunflower Seeds",
+        ],
+        "Oils & Fats": [
+          "Coconut Oil",
+          "Mustard Oil",
+          "Groundnut Oil",
+          "Sesame Oil",
+          "Sunflower Oil",
+          "Rice Bran Oil",
+          "Palm Oil",
+          "Olive Oil",
+          "Soybean Oil",
+          "Castor Oil",
+          "Linseed Oil",
+          "Corn Oil",
+          "Ghee",
+          "Butter",
+          "Vanaspati",
+          "Cold-pressed",
+          "Refined",
+          "Crude",
+          "Edible Grade",
+          "Industrial Grade",
+        ],
+        "Sugar & Sweeteners": [
+          "White Sugar",
+          "Brown Sugar",
+          "Raw Sugar",
+          "Jaggery",
+          "Palm Sugar",
+          "Honey",
+          "Molasses",
+          "Corn Syrup",
+          "Stevia",
+          "Coconut Sugar",
+          "Rock Candy",
+          "Invert Sugar",
+          "Treacle",
+          "Glucose",
+          "Fructose",
+          "Icing Sugar",
+          "Caster Sugar",
+          "Demerara Sugar",
+          "Muscovado",
+          "Organic Sugar",
+        ],
+        "Tea & Coffee": [
+          "Assam Tea",
+          "Darjeeling Tea",
+          "Green Tea",
+          "Black Tea",
+          "White Tea",
+          "Oolong Tea",
+          "Herbal Tea",
+          "Masala Chai",
+          "Instant Tea",
+          "CTC Tea",
+          "Arabica Coffee",
+          "Robusta Coffee",
+          "Instant Coffee",
+          "Green Coffee Beans",
+          "Roasted Coffee",
+          "Cold Brew",
+          "Espresso",
+          "Decaf",
+          "Single Origin",
+          "Blended",
+        ],
+        "Dairy Products": [
+          "Milk Powder",
+          "Cheese",
+          "Butter",
+          "Ghee",
+          "Cream",
+          "Yogurt / Curd",
+          "Paneer",
+          "Condensed Milk",
+          "Evaporated Milk",
+          "Whey Protein",
+          "Casein",
+          "Lactose",
+          "Skimmed Milk",
+          "Full-fat Milk",
+          "UHT Milk",
+          "Ice Cream Mix",
+          "Cultured Butter",
+          "Clarified Butter",
+          "Colostrum",
+          "Dairy Whitener",
+        ],
+        "Fruits & Vegetables": [
+          "Mango",
+          "Banana",
+          "Grapes",
+          "Pomegranate",
+          "Onion",
+          "Potato",
+          "Tomato",
+          "Garlic Bulb",
+          "Ginger Root",
+          "Green Chilli",
+          "Capsicum",
+          "Cabbage",
+          "Cauliflower",
+          "Brinjal",
+          "Okra",
+          "Bitter Gourd",
+          "Pumpkin",
+          "Carrot",
+          "Beetroot",
+          "Spinach",
+        ],
+        Seafood: [
+          "Shrimp / Prawns",
+          "Fish Fillet",
+          "Squid",
+          "Crab",
+          "Lobster",
+          "Tuna",
+          "Sardine",
+          "Mackerel",
+          "Pomfret",
+          "Rohu",
+          "Catla",
+          "Tilapia",
+          "Salmon",
+          "Dried Fish",
+          "Fish Meal",
+          "Fish Oil",
+          "Frozen Seafood",
+          "Fresh Seafood",
+          "Smoked Fish",
+          "Canned Fish",
+        ],
+        "Meat & Poultry": [
+          "Chicken",
+          "Mutton",
+          "Beef",
+          "Pork",
+          "Lamb",
+          "Buffalo Meat",
+          "Turkey",
+          "Duck",
+          "Eggs",
+          "Frozen Chicken",
+          "Processed Meat",
+          "Halal Certified",
+          "Kosher Certified",
+          "Boneless",
+          "Bone-in",
+          "Minced Meat",
+          "Sausages",
+          "Salami",
+          "Liver",
+          "Organ Meat",
+        ],
+        "Processed & Packaged Foods": [
+          "Pickles",
+          "Sauces",
+          "Pastes",
+          "Ready-to-eat",
+          "Snacks",
+          "Noodles",
+          "Pasta",
+          "Canned Goods",
+          "Frozen Foods",
+          "Bakery Products",
+          "Biscuits",
+          "Chips",
+          "Namkeen",
+          "Papad",
+          "Instant Mixes",
+          "Spice Blends",
+          "Curry Powder",
+          "Masala Mixes",
+          "Preserves",
+          "Jams",
+        ],
+        Beverages: [
+          "Fruit Juice",
+          "Soft Drinks",
+          "Energy Drinks",
+          "Mineral Water",
+          "Coconut Water",
+          "Sugarcane Juice",
+          "Aloe Vera Drink",
+          "Mango Drink",
+          "Lemon Squash",
+          "Rose Syrup",
+          "Sherbet",
+          "Soda",
+          "Tonic Water",
+          "Sports Drink",
+          "Kombucha",
+          "Lassi",
+          "Buttermilk",
+          "Flavoured Milk",
+          "Whey Drink",
+          "Probiotic Drink",
+        ],
+        "Seeds & Planting Material": [
+          "Vegetable Seeds",
+          "Cereal Seeds",
+          "Oilseed",
+          "Hybrid Seeds",
+          "Open-pollinated",
+          "Treated Seeds",
+          "Untreated Seeds",
+          "Certified Seeds",
+          "Foundation Seeds",
+          "Breeder Seeds",
+          "Tissue Culture",
+          "Grafted Saplings",
+          "Rootstocks",
+          "Bulbs",
+          "Tubers",
+          "Rhizomes",
+          "Cuttings",
+          "Transplants",
+          "Tissue-cultured Banana",
+          "Mushroom Spawn",
+        ],
+        "Organic & Natural Products": [
+          "Organic Spices",
+          "Organic Grains",
+          "Organic Pulses",
+          "Organic Oils",
+          "Organic Honey",
+          "Organic Tea",
+          "Certified Organic",
+          "Natural Extracts",
+          "Herbal Powders",
+          "Essential Oils",
+          "Botanical Extracts",
+          "Cold-pressed Juices",
+          "Raw Foods",
+          "Superfoods",
+          "Nutraceuticals",
+          "Phytochemicals",
+          "Plant-based",
+          "Adaptogenic",
+          "Ayurvedic",
+          "Traditional Medicines",
+        ],
+        "Agro Chemicals & Fertilizers": [
+          "NPK Fertilizer",
+          "Urea",
+          "DAP",
+          "Potash",
+          "Micronutrients",
+          "Bio-fertilizer",
+          "Organic Manure",
+          "Vermicompost",
+          "Compost",
+          "Pesticides",
+          "Herbicides",
+          "Fungicides",
+          "Insecticides",
+          "Biopesticides",
+          "Plant Growth Regulators",
+          "Soil Conditioners",
+          "Chelated Minerals",
+          "Water-soluble Fertilizers",
+          "Foliar Spray",
+          "Drip Fertilizer",
+        ],
+        "Packaging Materials": [
+          "HDPE Bags",
+          "PP Bags",
+          "Jute Bags",
+          "Paper Bags",
+          "Corrugated Boxes",
+          "Cartons",
+          "Flexi Pouches",
+          "Vacuum Pouches",
+          "Stand-up Pouches",
+          "Shrink Wrap",
+          "Stretch Film",
+          "Blister Packs",
+          "Tin Containers",
+          "Glass Jars",
+          "PET Bottles",
+          "HDPE Drums",
+          "IBC Tanks",
+          "Bulk Bags (FIBC)",
+          "Thermal Bags",
+          "Active Packaging",
+        ],
+        "Machinery & Equipment": [
+          "Grinding Machines",
+          "Mixing Machines",
+          "Packaging Machines",
+          "Conveyor Systems",
+          "Weighing Scales",
+          "Sorting Machines",
+          "Drying Equipment",
+          "Sealing Machines",
+          "Filling Machines",
+          "Labelling Machines",
+          "Blending Equipment",
+          "Extraction Machines",
+          "Pressing Equipment",
+          "Distillation Units",
+          "Filtration Systems",
+          "Heat Exchangers",
+          "Boilers",
+          "Refrigeration Units",
+          "Centrifuges",
+          "Homogenizers",
+        ],
+        "Chemicals & Raw Materials": [
+          "Food Additives",
+          "Preservatives",
+          "Emulsifiers",
+          "Stabilizers",
+          "Flavouring Agents",
+          "Colouring Agents",
+          "Acidulants",
+          "Antioxidants",
+          "Enzymes",
+          "Vitamins & Minerals",
+          "Starch",
+          "Modified Starch",
+          "Gums & Hydrocolloids",
+          "Solvents",
+          "Industrial Chemicals",
+          "Cleaning Agents",
+          "Sanitizers",
+          "Laboratory Chemicals",
+          "pH Adjusters",
+          "Anti-caking Agents",
+        ],
+        "Laboratory & Testing Equipment": [
+          "Moisture Analyzer",
+          "Spectrophotometer",
+          "HPLC",
+          "Gas Chromatograph",
+          "Atomic Absorption",
+          "Microbiology Equipment",
+          "PCR Machine",
+          "Centrifuge",
+          "pH Meter",
+          "TDS Meter",
+          "Titration Setup",
+          "Oven",
+          "Autoclave",
+          "Biosafety Cabinet",
+          "Microscope",
+          "Colony Counter",
+          "Pesticide Residue Test",
+          "NIR Analyzer",
+          "Colorimeter",
+          "Viscometer",
+        ],
+        "Safety & Protective Equipment": [
+          "Gloves",
+          "Hairnets",
+          "Face Masks",
+          "Safety Goggles",
+          "Aprons",
+          "Boots",
+          "Hard Hats",
+          "Ear Plugs",
+          "Safety Vests",
+          "First Aid Kit",
+          "Fire Extinguisher",
+          "Eye Wash Station",
+          "Spill Kit",
+          "Safety Signs",
+          "Non-slip Mats",
+          "Protective Suits",
+          "Knee Pads",
+          "Safety Harness",
+          "Fall Arrestor",
+          "Chemical Resistant Gear",
+        ],
+        Consulting: [
+          "Business Strategy",
+          "Export Consulting",
+          "Import Consulting",
+          "Supply Chain Optimization",
+          "Product Development",
+          "Market Entry",
+          "Feasibility Study",
+          "Risk Assessment",
+          "Due Diligence",
+          "Merger & Acquisition",
+          "Cost Reduction",
+          "Process Improvement",
+          "Sustainability",
+          "ESG Advisory",
+          "Trade Finance",
+          "Pricing Strategy",
+          "Competitor Analysis",
+          "Go-to-Market",
+          "Distribution Strategy",
+          "Business Valuation",
+        ],
+        "Quality Testing & Certification": [
+          "FSSAI Certification",
+          "ISO 22000",
+          "HACCP",
+          "GMP Audit",
+          "Organic Certification",
+          "Halal Certification",
+          "Kosher Certification",
+          "BRC Certification",
+          "SQF Certification",
+          "FDA Compliance",
+          "EU Standards",
+          "Pesticide Residue Testing",
+          "Aflatoxin Testing",
+          "Microbiology Testing",
+          "Nutritional Analysis",
+          "Allergen Testing",
+          "Heavy Metal Testing",
+          "Authenticity Testing",
+          "Shelf Life Study",
+          "Packaging Compliance",
+        ],
+        "Logistics & Transportation": [
+          "Road Transport",
+          "Rail Freight",
+          "Air Cargo",
+          "Sea Freight",
+          "Intermodal",
+          "Temperature-controlled",
+          "Bulk Cargo",
+          "Container Shipping",
+          "Express Delivery",
+          "FTL",
+          "LTL",
+          "Milk Run",
+          "Hub & Spoke",
+          "Flexi-bag",
+          "Reefer Container",
+          "Last Mile Delivery",
+          "Same-day Delivery",
+          "Cross-border",
+          "Tracking & Visibility",
+          "Incoterms Advisory",
+        ],
+        "Warehousing & Storage": [
+          "Dry Warehouse",
+          "Cold Storage",
+          "Controlled Atmosphere",
+          "Bonded Warehouse",
+          "Fulfillment Center",
+          "Pick & Pack",
+          "Inventory Management",
+          "Stock Auditing",
+          "Silo Storage",
+          "Fumigation",
+          "Humidity Control",
+          "Long-term Storage",
+          "Hazmat Storage",
+          "Pallet Racking",
+          "FIFO Management",
+          "IoT Monitoring",
+        ],
+        "Customs & Import/Export": [
+          "Customs Clearance",
+          "HS Code Classification",
+          "Duty Calculation",
+          "Import Documentation",
+          "Export Documentation",
+          "Bill of Lading",
+          "Certificate of Origin",
+          "Phytosanitary Certificate",
+          "DGFT Filings",
+          "AD Code Registration",
+          "SEZ Services",
+          "Drawback Claims",
+          "Pre-shipment Inspection",
+          "Post-shipment Finance",
+          "Free Trade Agreement",
+          "Trade Compliance",
+        ],
+        "Freight Forwarding": [
+          "Air Freight Forwarding",
+          "Ocean Freight Forwarding",
+          "LCL Consolidation",
+          "FCL Services",
+          "Multi-modal Forwarding",
+          "Customs Brokerage",
+          "Port Handling",
+          "Cargo Insurance",
+          "Track & Trace",
+          "Project Logistics",
+          "Dangerous Goods",
+          "Perishable Forwarding",
+          "Temperature-controlled",
+          "Rate Negotiation",
+          "Door Pickup",
+          "Intermodal",
+        ],
+        "IT & Software Solutions": [
+          "ERP System",
+          "Inventory Management",
+          "WMS",
+          "TMS",
+          "eCommerce Platform",
+          "Mobile App",
+          "IoT Integration",
+          "Blockchain Traceability",
+          "API Integration",
+          "Data Analytics",
+          "Business Intelligence",
+          "CRM",
+          "Accounting Software",
+          "Quality Management System",
+          "Document Management",
+          "HR Software",
+          "Payroll",
+          "Cybersecurity",
+          "Cloud Services",
+          "IT Support",
+        ],
+        Other: [
+          "Bulk",
+          "Retail",
+          "Export Quality",
+          "Import",
+          "Wholesale",
+          "OEM",
+          "Private Label",
+          "Premium",
+          "Economy",
+          "Certified",
+          "Organic",
+          "Conventional",
+          "Fresh",
+          "Processed",
+          "Specialty",
+          "Commodity",
+          "Seasonal",
+          "Year-round",
+          "New Product",
+          "Clearance",
+        ],
+      };
+
+      // Category select → populate tags dropdown
+      document
+        .getElementById("reqCategory")
+        .addEventListener("change", function () {
+          selectedTags = [];
+          renderTags();
+          const dd = document.getElementById("reqTagsDropdown");
+          dd.innerHTML = '<option value="">— Select a tag —</option>';
+          const tags = categoryTags[this.value] || [];
+          tags.forEach((t) => {
+            const o = document.createElement("option");
+            o.value = t;
+            o.textContent = t;
+            dd.appendChild(o);
+          });
+          if (!tags.length)
+            dd.innerHTML =
+              '<option value="">No tags for this category</option>';
+        });
+
+      document
+        .getElementById("reqTagsDropdown")
+        .addEventListener("change", function () {
+          const t = this.value;
+          if (t && !selectedTags.includes(t) && selectedTags.length < 5) {
+            selectedTags.push(t);
+            renderTags();
+            this.value = "";
+          }
+        });
+
+      function renderTags() {
+        const c = document.getElementById("reqTagsContainer");
+        c.innerHTML = "";
+        selectedTags.forEach((t, i) => {
+          const el = document.createElement("span");
+          el.className = "tag-chip";
+          el.innerHTML = `${esc(t)}<button type="button" onclick="removeTag(${i})">&times;</button>`;
+          c.appendChild(el);
+        });
+      }
+      window.removeTag = (i) => {
+        selectedTags.splice(i, 1);
+        renderTags();
+      };
+
+      // ── Submit ────────────────────────────────────────────────────────────
+      document
+        .getElementById("requirementForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const btn = document.getElementById("submitBtn");
+          const successEl = document.getElementById("successMsg");
+          const errorEl = document.getElementById("errorMsg");
+          successEl.style.display = "none";
+          errorEl.style.display = "none";
+          btn.disabled = true;
+
+          const payload = {
+            title: document.getElementById("reqTitle").value.trim(),
+            description: document.getElementById("reqDesc").value.trim(),
+            category: document.getElementById("reqCategory").value,
+            tags: [...selectedTags],
+            userId: user.id,
+            listingType: "requirement",
+          };
+
+          try {
+            const url = editingId ? `/api/ads/${editingId}` : "/api/ads";
+            const method = editingId ? "PUT" : "POST";
+            const res = await fetch(url, {
+              method,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data.success) {
+              successEl.style.display = "block";
+              setTimeout(() => (successEl.style.display = "none"), 3000);
+              cancelEdit();
+              this.reset();
+              await loadRequirements();
+            } else {
+              errorEl.textContent = data.error || "Failed to save requirement";
+              errorEl.style.display = "block";
+            }
+          } catch (err) {
+            errorEl.textContent = "Network error. Please try again.";
+            errorEl.style.display = "block";
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+      // ── Load ──────────────────────────────────────────────────────────────
+      async function loadRequirements() {
+        const list = document.getElementById("requirementsList");
+        list.innerHTML = '<div class="empty-state">Loading…</div>';
+        try {
+          const res = await fetch("/api/ads");
+          const all = await res.json();
+          const mine = all.filter(
+            (a) => a.userId === user.id && a.listingType === "requirement",
+          );
+          if (!mine.length) {
+            list.innerHTML =
+              '<div class="empty-state">No requirements posted yet. Use the form above to post your first one.</div>';
+            return;
+          }
+          list.innerHTML = mine
+            .map((r) => {
+              const tags = Array.isArray(r.tags)
+                ? r.tags
+                : typeof r.tags === "string"
+                  ? JSON.parse(r.tags || "[]")
+                  : [];
+              return `
+              <div class="req-item" id="req-${r.id}">
+                <div class="req-title">${esc(r.title)}</div>
+                <div class="req-desc">${esc(r.description)}</div>
+                <div class="req-meta">
+                  ${r.category ? `<span class="req-category">${esc(r.category)}</span>` : ""}
+                  ${tags.map((t) => `<span class="req-tag">${esc(t)}</span>`).join("")}
+                  <span class="req-date">${new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  <div class="req-actions">
+                    <button class="btn-outline" onclick="startEdit(${r.id})">Edit</button>
+                    <button class="btn-danger" onclick="deleteRequirement(${r.id})">Delete</button>
+                  </div>
+                </div>
+              </div>`;
+            })
+            .join("");
+        } catch (err) {
+          list.innerHTML =
+            '<div class="empty-state">Error loading requirements.</div>';
+        }
+      }
+
+      // ── Edit ──────────────────────────────────────────────────────────────
+      async function startEdit(id) {
+        const res = await fetch("/api/ads");
+        const all = await res.json();
+        const req = all.find((a) => a.id === id);
+        if (!req) return;
+
+        editingId = id;
+        document.getElementById("formTitle").textContent = "Edit Requirement";
+        document.getElementById("submitBtn").textContent = "Save Changes";
+        document.getElementById("cancelEditBtn").style.display = "inline-flex";
+        document.getElementById("reqTitle").value = req.title || "";
+        document.getElementById("reqDesc").value = req.description || "";
+
+        // Set category and repopulate tags dropdown
+        const catEl = document.getElementById("reqCategory");
+        catEl.value = req.category || "";
+        catEl.dispatchEvent(new Event("change"));
+
+        selectedTags = Array.isArray(req.tags) ? [...req.tags] : [];
+        renderTags();
+
+        document
+          .getElementById("formCard")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+      window.startEdit = startEdit;
+
+      function cancelEdit() {
+        editingId = null;
+        document.getElementById("formTitle").textContent =
+          "Post a New Requirement";
+        document.getElementById("submitBtn").textContent = "Post Requirement";
+        document.getElementById("cancelEditBtn").style.display = "none";
+        document.getElementById("requirementForm").reset();
+        selectedTags = [];
+        renderTags();
+        document.getElementById("reqTagsDropdown").innerHTML =
+          '<option value="">— Select category first —</option>';
+      }
+      window.cancelEdit = cancelEdit;
+
+      // ── Delete ─────────────────────────────────────────────────────────────
+      window.deleteRequirement = async (id) => {
+        if (!confirm("Delete this requirement? This cannot be undone.")) return;
+        try {
+          await fetch(`/api/ads/${id}`, { method: "DELETE" });
+          await loadRequirements();
+        } catch (err) {
+          alert("Failed to delete. Please try again.");
+        }
+      };
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      loadRequirements();
+    </script>
+  </body>
+</html>

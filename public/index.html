@@ -3,16 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SpiceTrade — Buy & Sell Spices</title>
+    <title>BigSpice — Buy & Sell Spices</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="header-left">
-        <a href="/"
-          ><img src="/logo.svg" alt="SpiceTrade logo" class="logo"
-        /></a>
+        <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       </div>
 
       <div class="header-center">
@@ -75,7 +73,7 @@
       <div class="header-right">
         <nav>
           <a href="/login.html" class="btn">Sign in</a>
-          <a href="/signup.html" class="btn">Sign up</a>
+          <button class="btn" id="openSignupModal">Sign up</button>
         </nav>
       </div>
     </header>
@@ -224,57 +222,8 @@
       <div id="homeContent">
         <!-- Hero Banner Carousel -->
         <div class="hero-carousel">
-          <div class="carousel-slides">
-            <div class="carousel-slide active">
-              <img
-                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&h=500&fit=crop"
-                alt="Industrial Equipment"
-              />
-              <div class="carousel-caption">
-                <h1>Premium Industrial Equipment</h1>
-                <p>Connect with verified suppliers worldwide</p>
-              </div>
-            </div>
-            <div class="carousel-slide">
-              <img
-                src="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=1600&h=500&fit=crop"
-                alt="Office Solutions"
-              />
-              <div class="carousel-caption">
-                <h1>Office Automation Solutions</h1>
-                <p>Transform your workspace with cutting-edge technology</p>
-              </div>
-            </div>
-            <div class="carousel-slide">
-              <img
-                src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&h=500&fit=crop"
-                alt="Agricultural Products"
-              />
-              <div class="carousel-caption">
-                <h1>Agricultural Excellence</h1>
-                <p>Quality equipment for modern farming</p>
-              </div>
-            </div>
-            <div class="carousel-slide">
-              <img
-                src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=500&fit=crop"
-                alt="Solar Energy"
-              />
-              <div class="carousel-caption">
-                <h1>Solar & Renewable Energy</h1>
-                <p>Sustainable solutions for a greener future</p>
-              </div>
-            </div>
-            <div class="carousel-slide">
-              <img
-                src="https://images.unsplash.com/photo-1581092918484-8313e1f7e8c6?w=1600&h=500&fit=crop"
-                alt="Medical Equipment"
-              />
-              <div class="carousel-caption">
-                <h1>Medical Laboratory Instruments</h1>
-                <p>Precision tools for healthcare professionals</p>
-              </div>
-            </div>
+          <div class="carousel-slides" id="carouselSlides">
+            <!-- Slides are rendered dynamically by JS below -->
           </div>
 
           <!-- Carousel Navigation -->
@@ -304,13 +253,7 @@
           </button>
 
           <!-- Carousel Indicators -->
-          <div class="carousel-indicators">
-            <button class="indicator active" data-slide="0"></button>
-            <button class="indicator" data-slide="1"></button>
-            <button class="indicator" data-slide="2"></button>
-            <button class="indicator" data-slide="3"></button>
-            <button class="indicator" data-slide="4"></button>
-          </div>
+          <div class="carousel-indicators" id="carouselIndicators"></div>
         </div>
 
         <!-- Featured Products Section (Amazon-style) -->
@@ -336,7 +279,7 @@
 
         <section class="featured container">
           <div class="section-header">
-            <h2 id="listingsTitle">Latest Buyer Requirements</h2>
+            <h2 id="listingsTitle">Latest Requirements</h2>
             <a href="/all-listings.html" class="view-all"
               >View all requirements →</a
             >
@@ -360,7 +303,7 @@
         aria-labelledby="signupModalTitle"
       >
         <button class="close" aria-label="Close">×</button>
-        <h3 id="signupModalTitle">Join SpiceTrade</h3>
+        <h3 id="signupModalTitle">Join BigSpice</h3>
         <p class="muted">Choose how you'd like to use the platform</p>
         <div class="modal-options">
           <button class="opt buyer large" data-signup-role="buyer">
@@ -369,6 +312,17 @@
           <button class="opt seller large" data-signup-role="seller">
             Become a seller
           </button>
+          <button
+            class="opt large"
+            data-signup-role="advertiser"
+            style="
+              background: var(--brand, #e47911);
+              color: #fff;
+              border-color: var(--brand, #e47911);
+            "
+          >
+            📣 Advertise with us
+          </button>
         </div>
         <p class="muted small">You can switch later from your profile.</p>
       </div>
@@ -376,87 +330,171 @@
 
     <script src="/app.js"></script>
     <script>
-      // Hero Carousel
+      // ── Default slides shown when no paid banner ads exist ──────────────────
+      const DEFAULT_SLIDES = [
+        {
+          image:
+            "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&h=500&fit=crop",
+          alt: "Industrial Equipment",
+          title: "Premium Industrial Equipment",
+          subtitle: "Connect with verified suppliers worldwide",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=1600&h=500&fit=crop",
+          alt: "Office Solutions",
+          title: "Office Automation Solutions",
+          subtitle: "Transform your workspace with cutting-edge technology",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&h=500&fit=crop",
+          alt: "Agricultural Products",
+          title: "Agricultural Excellence",
+          subtitle: "Quality equipment for modern farming",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=500&fit=crop",
+          alt: "Solar Energy",
+          title: "Solar & Renewable Energy",
+          subtitle: "Sustainable solutions for a greener future",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1581092918484-8313e1f7e8c6?w=1600&h=500&fit=crop",
+          alt: "Medical Equipment",
+          title: "Medical Laboratory Instruments",
+          subtitle: "Precision tools for healthcare professionals",
+        },
+      ];
+
+      // ── Carousel state ───────────────────────────────────────────────────────
       let currentSlide = 0;
-      const slides = document.querySelectorAll(".carousel-slide");
-      const indicators = document.querySelectorAll(
-        ".carousel-indicators .indicator",
-      );
-      const totalSlides = slides.length;
+      let totalSlides = 0;
       let autoSlideInterval;
 
-      function showSlide(index) {
-        // Remove active class from all slides and indicators
-        slides.forEach((slide) => slide.classList.remove("active"));
-        indicators.forEach((indicator) => indicator.classList.remove("active"));
-
-        // Wrap around if index is out of bounds
-        if (index >= totalSlides) {
-          currentSlide = 0;
-        } else if (index < 0) {
-          currentSlide = totalSlides - 1;
-        } else {
-          currentSlide = index;
+      function buildSlideHTML(s, index) {
+        const imgEl = `<img src="${s.image}" alt="${s.alt || s.title}" loading="${index === 0 ? "eager" : "lazy"}" />`;
+        // Paid banner ads: link to ad detail page, no text overlay (advertiser designed the image)
+        // Default slides: show caption text overlay, no external link
+        if (s.isAd) {
+          return `<div class="carousel-slide${index === 0 ? " active" : ""}">
+            <a href="/ad.html?id=${s.id}" class="carousel-link" aria-label="${s.title}">${imgEl}</a>
+          </div>`;
         }
+        const inner = `
+          ${imgEl}
+          <div class="carousel-caption">
+            <h1>${s.title}</h1>
+            ${s.subtitle ? `<p>${s.subtitle}</p>` : ""}
+          </div>`;
+        return `<div class="carousel-slide${index === 0 ? " active" : ""}">${inner}</div>`;
+      }
 
-        // Add active class to current slide and indicator
-        slides[currentSlide].classList.add("active");
-        indicators[currentSlide].classList.add("active");
+      function initCarousel(slideData) {
+        const slidesEl = document.getElementById("carouselSlides");
+        const indicatorsEl = document.getElementById("carouselIndicators");
+        slidesEl.innerHTML = slideData.map(buildSlideHTML).join("");
+        indicatorsEl.innerHTML = slideData
+          .map(
+            (_, i) =>
+              `<button class="indicator${i === 0 ? " active" : ""}" data-slide="${i}" aria-label="Slide ${i + 1}"></button>`,
+          )
+          .join("");
+        totalSlides = slideData.length;
+        currentSlide = 0;
+      }
+
+      function showSlide(index) {
+        const slides = document.querySelectorAll(".carousel-slide");
+        const indicators = document.querySelectorAll(
+          ".carousel-indicators .indicator",
+        );
+        slides.forEach((s) => s.classList.remove("active"));
+        indicators.forEach((i) => i.classList.remove("active"));
+        if (index >= totalSlides) currentSlide = 0;
+        else if (index < 0) currentSlide = totalSlides - 1;
+        else currentSlide = index;
+        slides[currentSlide]?.classList.add("active");
+        indicators[currentSlide]?.classList.add("active");
       }
 
       function nextSlide() {
         showSlide(currentSlide + 1);
       }
-
       function prevSlide() {
         showSlide(currentSlide - 1);
       }
-
       function startAutoSlide() {
-        autoSlideInterval = setInterval(nextSlide, 4000); // Change slide every 4 seconds
+        autoSlideInterval = setInterval(nextSlide, 4000);
       }
-
       function stopAutoSlide() {
         clearInterval(autoSlideInterval);
       }
 
-      // Navigation button event listeners
-      const nextBtn = document.querySelector(".carousel-btn.next");
-      const prevBtn = document.querySelector(".carousel-btn.prev");
+      // ── Load banner ads from API, fall back to defaults ─────────────────────
+      (async function loadCarousel() {
+        let slideData = DEFAULT_SLIDES;
+        try {
+          const res = await fetch("/api/banner-ads");
+          if (!res.ok) throw new Error(`Banner ads API returned ${res.status}`);
+          const ads = await res.json();
+          if (Array.isArray(ads) && ads.length > 0) {
+            slideData = ads.map((ad) => ({
+              id: ad.id,
+              isAd: true,
+              image: ad.imageUrl,
+              alt: ad.title,
+              title: ad.title,
+              subtitle: ad.description || "",
+              targetUrl: ad.targetUrl || "",
+            }));
+          } else {
+            console.info("No active banner ads — showing default slides.", ads);
+          }
+        } catch (err) {
+          console.error(
+            "Carousel: failed to load banner ads, using defaults.",
+            err,
+          );
+        }
+        initCarousel(slideData);
 
-      if (nextBtn) {
-        nextBtn.addEventListener("click", () => {
-          nextSlide();
-          stopAutoSlide();
-          startAutoSlide(); // Restart auto-slide after manual navigation
-        });
-      }
+        // Attach nav buttons after slides are rendered
+        const nextBtn = document.querySelector(".carousel-btn.next");
+        const prevBtn = document.querySelector(".carousel-btn.prev");
+        if (nextBtn)
+          nextBtn.addEventListener("click", () => {
+            nextSlide();
+            stopAutoSlide();
+            startAutoSlide();
+          });
+        if (prevBtn)
+          prevBtn.addEventListener("click", () => {
+            prevSlide();
+            stopAutoSlide();
+            startAutoSlide();
+          });
 
-      if (prevBtn) {
-        prevBtn.addEventListener("click", () => {
-          prevSlide();
-          stopAutoSlide();
-          startAutoSlide();
-        });
-      }
+        document
+          .getElementById("carouselIndicators")
+          .addEventListener("click", (e) => {
+            const btn = e.target.closest(".indicator");
+            if (btn) {
+              showSlide(parseInt(btn.dataset.slide));
+              stopAutoSlide();
+              startAutoSlide();
+            }
+          });
 
-      // Indicator click event listeners
-      indicators.forEach((indicator, index) => {
-        indicator.addEventListener("click", () => {
-          showSlide(index);
-          stopAutoSlide();
-          startAutoSlide();
-        });
-      });
-
-      // Pause auto-slide on hover, resume on mouse leave
-      const carousel = document.querySelector(".hero-carousel");
-      if (carousel) {
-        carousel.addEventListener("mouseenter", stopAutoSlide);
-        carousel.addEventListener("mouseleave", startAutoSlide);
-        // Start auto-slide on page load
+        const carousel = document.querySelector(".hero-carousel");
+        if (carousel) {
+          carousel.addEventListener("mouseenter", stopAutoSlide);
+          carousel.addEventListener("mouseleave", startAutoSlide);
+        }
         startAutoSlide();
-      }
+      })();
 
       // Category scroll functionality
       const categoryTags = document.getElementById("categoryTags");
@@ -569,22 +607,10 @@
           const res = await fetch("/api/ads");
           const ads = await res.json();
 
-          console.log("Total ads fetched:", ads.length);
-          console.log("Sample ad:", ads[0]);
-
           // Filter for seller products only (role === 'seller' AND has price)
-          const products = ads.filter((ad) => {
-            const isSeller = ad.role === "seller";
-            const hasPrice = ad.price && ad.price > 0;
-            console.log(
-              `Ad ${ad.id}: role=${ad.role}, price=${ad.price}, passes=${
-                isSeller && hasPrice
-              }`,
-            );
-            return isSeller && hasPrice;
-          });
-
-          console.log("Filtered products:", products.length);
+          const products = ads.filter(
+            (ad) => ad.role === "seller" && ad.price && ad.price > 0,
+          );
 
           if (!products || products.length === 0) {
             grid.innerHTML = `
@@ -713,6 +739,38 @@
             '<p class="error-message">Error loading products.</p>';
         }
       }
+
+      // ── Signup modal ─────────────────────────────────────────────────────
+      (function () {
+        const modal = document.getElementById("signupModal");
+        const openBtn = document.getElementById("openSignupModal");
+        const closeBtn = modal.querySelector(".close");
+
+        function openModal() {
+          modal.removeAttribute("aria-hidden");
+          modal.style.display = "flex";
+          closeBtn.focus();
+        }
+        function closeModal() {
+          modal.setAttribute("aria-hidden", "true");
+          modal.style.display = "none";
+        }
+
+        openBtn.addEventListener("click", openModal);
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) closeModal();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeModal();
+        });
+
+        modal.querySelectorAll("[data-signup-role]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            window.location.href = `/signup.html?role=${btn.dataset.signupRole}`;
+          });
+        });
+      })();
 
       // Initialize
       loadFeaturedProducts();

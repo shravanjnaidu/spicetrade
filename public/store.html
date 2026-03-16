@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Store Details — spicetrade</title>
+    <title>Store Details — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .store-detail-container {
@@ -129,7 +129,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
@@ -237,7 +237,7 @@
 
           // Check if current user should see contact button
           const user = JSON.parse(
-            localStorage.getItem("spicetrade_user") || "null"
+            localStorage.getItem("bigspice_user") || "null"
           );
           const contactBtn = document.getElementById("contactStoreBtn");
           
@@ -309,7 +309,7 @@
 
       async function contactStore() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null"
+          localStorage.getItem("bigspice_user") || "null"
         );
 
         if (!user || !user.id) {

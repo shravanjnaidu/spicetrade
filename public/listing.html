@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Listing Details — spicetrade</title>
+    <title>Listing Details — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
       .listing-container {
@@ -447,7 +447,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="spicetrade logo" class="logo" /></a>
+      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
@@ -695,7 +695,7 @@
 
           // Get current user
           const user = JSON.parse(
-            localStorage.getItem("spicetrade_user") || "null",
+            localStorage.getItem("bigspice_user") || "null",
           );
           const isOwner = user && user.id === listing.userId;
 
@@ -800,6 +800,8 @@
               checkWishlistStatus(user.id, listing.id);
             } else if (user.role === "seller" && listing.role === "buyer") {
               contactBtn.onclick = () => contactBuyer(listing);
+            } else if (user.role === "seller" && listing.role === "seller") {
+              contactBtn.onclick = () => contactSeller(listing);
             }
           } else {
             // Not logged in - prompt to sign in
@@ -923,7 +925,7 @@
       // Check if user can review
       async function checkCanReview() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null",
+          localStorage.getItem("bigspice_user") || "null",
         );
         if (!user || !user.id) return;
 
@@ -984,7 +986,7 @@
             );
 
             const user = JSON.parse(
-              localStorage.getItem("spicetrade_user") || "null",
+              localStorage.getItem("bigspice_user") || "null",
             );
             const deleteBtn =
               user && user.id === review.userId
@@ -1067,7 +1069,7 @@
       // Submit review
       async function submitReview() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null",
+          localStorage.getItem("bigspice_user") || "null",
         );
         if (!user || !user.id) {
           alert("Please sign in to write a review");
@@ -1155,7 +1157,7 @@
       async function contactSeller(listing) {
         // Buyer contacting seller
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null",
+          localStorage.getItem("bigspice_user") || "null",
         );
 
         if (!user || !user.id) {
@@ -1193,7 +1195,7 @@
       async function contactBuyer(listing) {
         // Seller contacting buyer (only if conversation already exists)
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null",
+          localStorage.getItem("bigspice_user") || "null",
         );
 
         if (!user || !user.id) {
@@ -1285,7 +1287,7 @@
 
       async function toggleWishlist() {
         const user = JSON.parse(
-          localStorage.getItem("spicetrade_user") || "null",
+          localStorage.getItem("bigspice_user") || "null",
         );
         if (!user || !user.id) {
           alert("Please sign in to use wishlist");
