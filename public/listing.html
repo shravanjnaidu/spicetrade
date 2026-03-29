@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="/logos/bigspicebubble.png" type="image/png" sizes="32x32" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Listing Details — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
@@ -459,13 +460,15 @@
         text-decoration: none;
         margin-bottom: 20px;
       }
-      .req-back:hover { text-decoration: underline; }
+      .req-back:hover {
+        text-decoration: underline;
+      }
       .req-card {
         background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
         padding: 32px;
-        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
       }
       .req-type-badge {
         display: inline-flex;
@@ -478,7 +481,7 @@
         padding: 5px 14px;
         font-size: 13px;
         font-weight: 600;
-        letter-spacing: .4px;
+        letter-spacing: 0.4px;
         text-transform: uppercase;
         margin-bottom: 14px;
       }
@@ -528,15 +531,23 @@
         align-items: start;
       }
       @media (max-width: 700px) {
-        .req-body { grid-template-columns: 1fr; }
-        .req-card { padding: 20px; }
-        .req-title { font-size: 20px; }
-        .req-posted-date { margin-left: 0; }
+        .req-body {
+          grid-template-columns: 1fr;
+        }
+        .req-card {
+          padding: 20px;
+        }
+        .req-title {
+          font-size: 20px;
+        }
+        .req-posted-date {
+          margin-left: 0;
+        }
       }
       .req-section-label {
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: .8px;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
         color: #9ca3af;
         margin-bottom: 10px;
@@ -581,7 +592,9 @@
         color: #2563eb;
         text-decoration: none;
       }
-      .req-poster-name a:hover { text-decoration: underline; }
+      .req-poster-name a:hover {
+        text-decoration: underline;
+      }
       .req-poster-role {
         font-size: 12px;
         color: #6b7280;
@@ -597,9 +610,11 @@
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: background .2s;
+        transition: background 0.2s;
       }
-      .req-contact-btn:hover { background: #1d4ed8; }
+      .req-contact-btn:hover {
+        background: #1d4ed8;
+      }
       .req-owner-btns {
         display: flex;
         flex-direction: column;
@@ -615,7 +630,9 @@
         font-size: 14px;
         cursor: pointer;
       }
-      .req-btn-edit:hover { background: #eff6ff; }
+      .req-btn-edit:hover {
+        background: #eff6ff;
+      }
       .req-btn-delete {
         width: 100%;
         padding: 10px;
@@ -626,7 +643,9 @@
         font-size: 14px;
         cursor: pointer;
       }
-      .req-btn-delete:hover { background: #fef2f2; }
+      .req-btn-delete:hover {
+        background: #fef2f2;
+      }
       .req-login-note {
         font-size: 13px;
         color: #9ca3af;
@@ -637,13 +656,13 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
+      <a href="/"><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo" /></a>
       <div class="header-right"></div>
     </header>
 
     <main class="listing-container">
       <!-- Requirement View (shown instead of product layout for requirements) -->
-      <div id="requirementView" style="display:none"></div>
+      <div id="requirementView" style="display: none"></div>
 
       <div class="listing-detail">
         <!-- Left Column - Image Gallery -->
@@ -896,8 +915,7 @@
           const isRequirement =
             listing.listingType === "requirement" ||
             (listing.listingType === null &&
-              (listing.role === "buyer" ||
-                (!listing.role && !listing.price)));
+              (listing.role === "buyer" || (!listing.role && !listing.price)));
           if (isRequirement) {
             renderRequirementView(listing, user, isOwner);
             return;
@@ -1364,10 +1382,8 @@
         document.title = (listing.title || "Requirement") + " \u2014 BigSpice";
 
         const tags = Array.isArray(listing.tags) ? listing.tags : [];
-        const posterName =
-          listing.storeName || listing.author || "Anonymous";
-        const posterLabel =
-          listing.role === "buyer" ? "Buyer" : "Seller";
+        const posterName = listing.storeName || listing.author || "Anonymous";
+        const posterLabel = listing.role === "buyer" ? "Buyer" : "Seller";
         const postedDate = listing.createdAt
           ? new Date(listing.createdAt).toLocaleDateString("en-IN", {
               day: "numeric",

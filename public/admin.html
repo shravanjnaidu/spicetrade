@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="/logos/bigspicebubble.png" type="image/png" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Admin Dashboard — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
@@ -219,7 +220,9 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logo.svg" alt="BigSpice logo" class="logo" /></a>
+      <a href="/"
+        ><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo"
+      /></a>
       <nav>
         <button class="btn secondary" onclick="logout()">Logout</button>
       </nav>
@@ -514,12 +517,12 @@
                 <button class="btn btn-small secondary" onclick="deleteUser(${
                   user.id
                 }, '${escapeHtml(
-              user.name
-            )}')" style="background: #dc3545; border-color: #dc3545; color: white;">Delete</button>
+                  user.name,
+                )}')" style="background: #dc3545; border-color: #dc3545; color: white;">Delete</button>
               </div>
             </td>
           </tr>
-        `
+        `,
           )
           .join("");
       }
@@ -555,12 +558,12 @@
                 <button class="btn btn-small secondary" onclick="deleteUser(${
                   user.id
                 }, '${escapeHtml(
-              user.name
-            )}')" style="background: #dc3545; border-color: #dc3545; color: white;">Delete</button>
+                  user.name,
+                )}')" style="background: #dc3545; border-color: #dc3545; color: white;">Delete</button>
               </div>
             </td>
           </tr>
-        `
+        `,
           )
           .join("");
       }
@@ -596,12 +599,12 @@
                 <button class="btn btn-small secondary" onclick="deleteUser(${
                   user.id
                 }, '${escapeHtml(
-              user.name
-            )}')" style="background: #dc3545; border-color: #dc3545; color: white;">Delete</button>
+                  user.name,
+                )}')" style="background: #dc3545; border-color: #dc3545; color: white;">Delete</button>
               </div>
             </td>
           </tr>
-        `
+        `,
           )
           .join("");
       }
@@ -611,7 +614,7 @@
           return `<img src="${
             user.profilePicture
           }" class="profile-pic-small" alt="${escapeHtml(
-            user.name || "User"
+            user.name || "User",
           )}" />`;
         }
         const initial = (user.name || user.email || "U")
@@ -738,7 +741,7 @@
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password: password }),
-              }
+              },
             );
             const result = await res.json();
 
@@ -757,7 +760,7 @@
       async function deleteUser(userId, userName) {
         if (
           !confirm(
-            `Are you sure you want to delete user "${userName}"? This action cannot be undone.`
+            `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
           )
         ) {
           return;
