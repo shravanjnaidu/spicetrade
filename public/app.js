@@ -184,6 +184,16 @@ function performSearch(query) {
     resultsCount.textContent = `${filtered.length} result${filtered.length !== 1 ? "s" : ""} for "${query}"`;
   }
 
+  // Default sort: most popular
+  const sortSelect = document.getElementById("sortSelect");
+  if (sortSelect && sortSelect.value === "popular") {
+    filtered.sort((a, b) => {
+      const viewDiff = (b.views || 0) - (a.views || 0);
+      if (viewDiff !== 0) return viewDiff;
+      return (b.averageRating || 0) - (a.averageRating || 0);
+    });
+  }
+
   // Render Amazon-style results
   renderAmazonResults(filtered, query);
 
@@ -279,6 +289,14 @@ function renderAmazonResults(products, query) {
       store.className = "amazon-product-store";
       store.textContent = `by ${product.author}`;
       card.appendChild(store);
+    }
+
+    // Views badge (popularity indicator)
+    if (product.views && product.views > 0) {
+      const views = document.createElement("div");
+      views.className = "amazon-product-views";
+      views.textContent = `👁 ${product.views.toLocaleString()} view${product.views !== 1 ? "s" : ""}`;
+      card.appendChild(views);
     }
 
     grid.appendChild(card);
@@ -453,6 +471,37 @@ function applyFilters() {
     );
   }
 
+  // Apply max min-order filter
+  const maxMinOrder = parseFloat(document.getElementById("maxMinOrder")?.value);
+  if (!isNaN(maxMinOrder) && maxMinOrder >= 1) {
+    filtered = filtered.filter(
+      (ad) => !ad.minOrder || parseFloat(ad.minOrder) <= maxMinOrder,
+    );
+  }
+
+  // Apply minimum rating filter (reads hidden input set by star chips)
+  const minRating = parseFloat(
+    document.getElementById("minRatingValue")?.value || "0",
+  );
+  if (minRating > 0) {
+    filtered = filtered.filter((ad) => (ad.averageRating || 0) >= minRating);
+  }
+
+  // Apply in-stock filter
+  if (document.getElementById("filterInStock")?.checked) {
+    filtered = filtered.filter((ad) => ad.stock && ad.stock > 0);
+  }
+
+  // Apply verified filter
+  if (document.getElementById("filterVerified")?.checked) {
+    filtered = filtered.filter((ad) => ad.verified);
+  }
+
+  // Apply has-price filter
+  if (document.getElementById("filterHasPrice")?.checked) {
+    filtered = filtered.filter((ad) => ad.price && parseFloat(ad.price) > 0);
+  }
+
   currentFilteredResults = filtered;
 
   // Update results count
@@ -475,6 +524,13 @@ function applySorting(products, sortBy) {
   let sorted = [...products];
 
   switch (sortBy) {
+    case "popular":
+      sorted.sort((a, b) => {
+        const viewDiff = (b.views || 0) - (a.views || 0);
+        if (viewDiff !== 0) return viewDiff;
+        return (b.averageRating || 0) - (a.averageRating || 0);
+      });
+      break;
     case "price-low":
       sorted.sort(
         (a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0),
@@ -491,7 +547,7 @@ function applySorting(products, sortBy) {
       );
       break;
     case "rating":
-      sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      sorted.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
       break;
     default: // featured
       // Keep original order
@@ -1143,6 +1199,31 @@ if (applyPriceBtn) {
   applyPriceBtn.addEventListener("click", applyFilters);
 }
 
+// MOQ select — trigger filter on change
+const moqSelect = document.getElementById("maxMinOrder");
+if (moqSelect) {
+  moqSelect.addEventListener("change", applyFilters);
+}
+
+// Star rating chips
+document.querySelectorAll(".star-chip").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".star-chip")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    const ratingInput = document.getElementById("minRatingValue");
+    if (ratingInput) ratingInput.value = btn.dataset.rating || "0";
+    applyFilters();
+  });
+});
+
+// Checkbox quick-filters
+["filterInStock", "filterVerified", "filterHasPrice"].forEach((id) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("change", applyFilters);
+});
+
 const clearFiltersBtn = document.getElementById("clearFilters");
 if (clearFiltersBtn) {
   clearFiltersBtn.addEventListener("click", () => {
@@ -1158,6 +1239,25 @@ if (clearFiltersBtn) {
     const maxPrice = document.getElementById("maxPrice");
     if (minPrice) minPrice.value = "";
     if (maxPrice) maxPrice.value = "";
+
+    // Reset MOQ dropdown
+    const maxMinOrder = document.getElementById("maxMinOrder");
+    if (maxMinOrder) maxMinOrder.value = "";
+
+    // Reset star rating chips
+    document
+      .querySelectorAll(".star-chip")
+      .forEach((b) => b.classList.remove("active"));
+    const allChip = document.querySelector(".star-chip[data-rating='0']");
+    if (allChip) allChip.classList.add("active");
+    const ratingInput = document.getElementById("minRatingValue");
+    if (ratingInput) ratingInput.value = "0";
+
+    // Uncheck availability filters
+    ["filterInStock", "filterVerified", "filterHasPrice"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = false;
+    });
 
     // Re-apply search without filters
     const query = document.getElementById("q")?.value.trim();

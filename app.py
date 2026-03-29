@@ -695,6 +695,21 @@ def update_ad(ad_id):
         return jsonify({'error': 'database error'}), 500
 
 
+@app.route('/api/ads/<int:ad_id>/view', methods=['POST'])
+def increment_view(ad_id):
+    """Increment the view counter for a listing."""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE ads SET views = COALESCE(views, 0) + 1 WHERE id = %s', (ad_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('increment_view error:', e)
+        return jsonify({'error': 'database error'}), 500
+
+
 @app.route('/api/ads/<int:ad_id>', methods=['DELETE'])
 def delete_ad(ad_id):
     try:

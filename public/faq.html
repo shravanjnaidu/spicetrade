@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="icon"
+      href="/logos/bigspicebubble.png"
+      type="image/png"
+      sizes="32x32"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FAQ — BigSpice</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      body {
+        background: #f7f8fa;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .faq-hero {
+        background: linear-gradient(135deg, #d35400, #f39c12);
+        color: #fff;
+        text-align: center;
+        padding: 60px 20px 48px;
+      }
+      .faq-hero h1 {
+        font-size: 36px;
+        margin: 0 0 12px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+      .faq-hero p {
+        font-size: 17px;
+        opacity: 0.92;
+        margin: 0;
+      }
+      .faq-main {
+        flex: 1;
+        max-width: 820px;
+        margin: 40px auto;
+        padding: 0 20px;
+        width: 100%;
+      }
+      .faq-section {
+        margin-bottom: 40px;
+      }
+      .faq-section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #d35400;
+        margin: 0 0 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0e0d0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .faq-item {
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        overflow: hidden;
+        transition: box-shadow 0.2s;
+      }
+      .faq-item:hover {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+      }
+      .faq-question {
+        width: 100%;
+        background: none;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        padding: 18px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #222;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        line-height: 1.4;
+      }
+      .faq-question:focus-visible {
+        outline: 2px solid #d35400;
+        outline-offset: -2px;
+      }
+      .faq-icon {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fdf0e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d35400;
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 1;
+        transition:
+          transform 0.25s,
+          background 0.2s;
+      }
+      .faq-item.open .faq-icon {
+        transform: rotate(45deg);
+        background: #d35400;
+        color: #fff;
+      }
+      .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.3s ease,
+          padding 0.2s;
+        padding: 0 20px;
+        font-size: 15px;
+        color: #444;
+        line-height: 1.7;
+      }
+      .faq-item.open .faq-answer {
+        max-height: 600px;
+        padding: 0 20px 18px;
+      }
+      .faq-answer ul {
+        margin: 8px 0 0 0;
+        padding-left: 20px;
+      }
+      .faq-answer li {
+        margin-bottom: 4px;
+      }
+      .faq-answer a {
+        color: #d35400;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .faq-answer a:hover {
+        text-decoration: underline;
+      }
+      .faq-contact-banner {
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        padding: 32px 24px;
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .faq-contact-banner h3 {
+        font-size: 20px;
+        margin: 0 0 8px;
+        color: #222;
+      }
+      .faq-contact-banner p {
+        color: #666;
+        font-size: 15px;
+        margin: 0 0 20px;
+      }
+      .faq-contact-banner .btn-group {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .faq-contact-banner .btn-primary {
+        background: #d35400;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+      }
+      .faq-contact-banner .btn-primary:hover {
+        background: #b84800;
+      }
+      .faq-contact-banner .btn-secondary {
+        background: #fff;
+        color: #d35400;
+        border: 1.5px solid #d35400;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+      }
+      .faq-contact-banner .btn-secondary:hover {
+        background: #fdf0e6;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-left">
+        <a href="/"
+          ><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo"
+        /></a>
+      </div>
+      <div class="header-right">
+        <nav>
+          <a href="/login.html" class="btn">Sign in</a>
+          <a href="/signup.html" class="btn">Sign up</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="faq-hero">
+      <h1>Frequently Asked Questions</h1>
+      <p>Everything you need to know about buying and selling on BigSpice.</p>
+    </div>
+
+    <main class="faq-main">
+      <!-- ── GENERAL ──────────────────────────────────────────────────── -->
+      <section class="faq-section">
+        <h2 class="faq-section-title">🌐 General</h2>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            What is BigSpice?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            BigSpice is a B2B online marketplace dedicated to buying and selling
+            spices, herbs, teas, coffees, oils, and other food commodities.
+            Founded in 2022 by Spice Cloud Technologies (Canada), it connects
+            verified spice sellers with wholesale buyers across the globe,
+            making sourcing high-quality spices simple and transparent.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Is BigSpice free to use?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Creating an account, browsing listings, and messaging sellers are
+            all free. Sellers can list their products on the platform at no
+            cost. Optional paid advertising placements (banner ads) are
+            available for businesses that want premium visibility on the
+            homepage.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            What product categories are available on BigSpice?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            BigSpice covers a wide range of food trade categories, including:
+            <ul>
+              <li>
+                Spices &amp; Herbs (cumin, turmeric, cardamom, pepper, and more)
+              </li>
+              <li>
+                Tea &amp; Coffee (Assam, Darjeeling, Arabica, Robusta, and more)
+              </li>
+              <li>Oils &amp; Fats</li>
+              <li>Sugar &amp; Sweeteners</li>
+              <li>Dairy Products</li>
+              <li>Fruits &amp; Vegetables</li>
+              <li>Seafood</li>
+            </ul>
+            Use the search bar or the category filters on the homepage to
+            explore specific products.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Which countries does BigSpice serve?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            BigSpice is a global platform headquartered in Canada. Sellers can
+            specify their shipping locations when setting up their store, so you
+            can find suppliers that ship to your country. Both domestic and
+            international trade is supported.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Is my personal data secure on BigSpice?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Yes. Passwords are stored using industry-standard hashing (never in
+            plain text). All data is stored securely in our database. We do not
+            sell or share your personal information with third parties.
+            Sensitive fields such as tax numbers and addresses are only used for
+            account verification and communication purposes.
+          </div>
+        </div>
+      </section>
+
+      <!-- ── BUYERS ──────────────────────────────────────────────────── -->
+      <section class="faq-section">
+        <h2 class="faq-section-title">🛒 For Buyers</h2>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Do I need an account to browse listings?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            No. Anyone can browse product listings and store pages without
+            creating an account. However, you need a free account to message
+            sellers, save items to your wishlist, leave reviews, or post buying
+            requirements.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I become a buyer?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Click <a href="/signup.html">Sign up</a> and choose
+            <strong>Become a buyer</strong>. Fill in your name, email, and a
+            password — it takes less than a minute. Once signed in, you can
+            contact sellers, wishlist products, and post requirements.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I search for products?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Use the search bar at the top of any page. You can search by product
+            name, tag, category, or store name. The homepage also features
+            category filter buttons at the top — click any category to instantly
+            filter listings. Live autocomplete suggestions appear as you type to
+            help you find what you need faster.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I contact a seller?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Open any product listing and click the
+            <strong>Message Seller</strong> button. You'll be taken to the
+            messaging section where you can start a conversation directly. All
+            messages are kept private between you and the seller. You must be
+            signed in to send messages.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Can I save products I'm interested in?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Yes. Click the wishlist (heart) icon on any product card or listing
+            page to save it for later. Access all your saved items from the
+            <a href="/wishlist.html">Wishlist</a> page in your account.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I post a buying requirement?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Log in to your account and go to
+            <a href="/seller-requirements.html">My Requirements</a>. Fill in the
+            title, description, category, quantity, and deadline. Your
+            requirement will then be visible to sellers on the platform,
+            allowing them to reach out to you directly with matching offers.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I leave a review for a seller?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Navigate to the seller's store page or the listing you purchased.
+            Click <strong>Leave a Review</strong>, give a star rating, and write
+            your feedback. Reviews help the community make informed decisions
+            and reward trustworthy sellers.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Does BigSpice handle payments or shipping?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            BigSpice is a marketplace and discovery platform. Payments and
+            shipping arrangements are negotiated directly between the buyer and
+            seller via the messaging system. We recommend confirming payment
+            terms, shipping timelines, minimum order quantities, and product
+            quality before finalising any transaction.
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SELLERS ──────────────────────────────────────────────────── -->
+      <section class="faq-section">
+        <h2 class="faq-section-title">🏪 For Sellers</h2>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I start selling on BigSpice?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Click <a href="/signup.html">Sign up</a> and choose
+            <strong>Become a seller</strong>. You'll provide:
+            <ul>
+              <li>Your name, email, and password</li>
+              <li>Store name and business type</li>
+              <li>Product categories you sell</li>
+              <li>Business address and shipping locations</li>
+              <li>Optional: tax number, website, store logo</li>
+            </ul>
+            Once your account is created, you can immediately start adding
+            product listings from your seller dashboard.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Is there a fee to list products?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            No. Listing products on BigSpice is completely free. There are no
+            subscription fees or listing charges. Optional paid advertising
+            (homepage banner ads) is available for businesses that want to boost
+            their visibility.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I add and manage product listings?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            After signing in, go to your
+            <a href="/seller-dashboard.html">Seller Dashboard</a>. Click
+            <strong>Add Listing</strong> and fill in the product details: title,
+            description, category, tags, price, unit, minimum order quantity,
+            stock, and up to multiple product images. You can edit or delete any
+            listing at any time from your dashboard.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            What details should I include in a product listing?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            A well-crafted listing gets more attention. We recommend including:
+            <ul>
+              <li>Clear, descriptive product title</li>
+              <li>
+                Detailed description (origin, grade, certifications, processing
+                method)
+              </li>
+              <li>Accurate category and relevant tags</li>
+              <li>Price per unit (e.g., per kg, per tonne)</li>
+              <li>Minimum order quantity and available stock</li>
+              <li>High-quality product photos</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Can I upload multiple images for a product?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Yes. When creating or editing a listing, you can upload multiple
+            product images to give buyers a comprehensive view of your product.
+            Buyers can scroll through them on the listing detail page.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I receive and respond to buyer messages?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Buyer enquiries appear in the
+            <a href="/messages.html">Messages</a> section of your account.
+            You'll see a list of all conversations. Click any conversation to
+            read and reply. Keeping response times short improves your standing
+            on the platform.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            What is the store profile page?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Every seller gets a public store profile page that showcases their
+            store name, logo, business type, categories, location, and all
+            active listings. Buyers can browse your store page and get in touch.
+            You can customise and manage your store details from the
+            <a href="/store-profile.html">Store Profile</a> section.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How does listing verification work?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Listings can be marked as <strong>Verified</strong> by the BigSpice
+            admin team after review. Verified listings indicate that the product
+            details have been confirmed and the seller is a legitimate business.
+            This badge increases buyer confidence and can improve your listing's
+            visibility.
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADVERTISING ──────────────────────────────────────────────── -->
+      <section class="faq-section">
+        <h2 class="faq-section-title">📣 Advertising</h2>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How can I advertise my business on BigSpice?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            BigSpice offers banner ad slots on the homepage carousel, giving
+            your business prominent visibility to all visitors. Sign up or log
+            in as an <strong>Advertiser</strong> and go to your
+            <a href="/advertiser-dashboard.html">Advertiser Dashboard</a> to
+            submit a banner ad with your image and target URL.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            What are the specifications for banner ads?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Banner ads appear in the full-width homepage carousel. We recommend
+            using high-resolution landscape images (ideally 1600×500 px or
+            similar wide-format ratio) with clear branding and a compelling
+            call-to-action. An admin will review your submission before it goes
+            live.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How long does it take for my ad to go live?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Ad submissions are reviewed by the BigSpice admin team. Approval
+            typically happens within 1–2 business days. You will be notified
+            once your ad is approved and live on the platform.
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ACCOUNT & SUPPORT ─────────────────────────────────────────── -->
+      <section class="faq-section">
+        <h2 class="faq-section-title">⚙️ Account &amp; Support</h2>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            Can I be both a buyer and a seller?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Yes. While you sign up with a primary role (buyer, seller, or
+            advertiser), you can use the platform for multiple purposes. If you
+            need to switch or expand your role, update your profile settings or
+            contact support.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I update my profile or store details?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            Sign in and go to your <a href="/profile.html">Profile</a> page.
+            From there you can update your name, contact number, profile
+            picture, business address, and other account details. Sellers can
+            also update store information from the same area.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            I forgot my password. What do I do?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            On the <a href="/login.html">Sign in</a> page, look for the
+            <strong>Forgot password</strong> option and follow the instructions
+            to reset your password via your registered email address. If you
+            continue to experience issues, contact our support team.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I report a suspicious listing or user?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            If you encounter a fraudulent listing, spammy content, or suspicious
+            behaviour, please send a message to our support team (see below)
+            with the listing/user details. Our admin team reviews all reports
+            and takes appropriate action to keep the platform trustworthy.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            How do I delete my account?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            To request account deletion, please contact our support team with
+            your registered email address. We will process the deletion and
+            remove your data in accordance with applicable privacy regulations.
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CONTACT BANNER ─────────────────────────────────────────────── -->
+      <div class="faq-contact-banner">
+        <h3>Still have a question?</h3>
+        <p>
+          Our team is happy to help. Reach out via messages on the platform or
+          sign up to get started.
+        </p>
+        <div class="btn-group">
+          <a href="/login.html" class="btn-primary">Sign in to message us</a>
+          <a href="/signup.html" class="btn-secondary">Create a free account</a>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022 &nbsp;|&nbsp;
+      <a href="/faq.html" style="color: #fff; text-decoration: underline"
+        >FAQ</a
+      >
+    </footer>
+
+    <script>
+      document.querySelectorAll(".faq-question").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = btn.closest(".faq-item");
+          const isOpen = item.classList.contains("open");
+
+          // Close all open items
+          document.querySelectorAll(".faq-item.open").forEach((el) => {
+            el.classList.remove("open");
+            el.querySelector(".faq-question").setAttribute(
+              "aria-expanded",
+              "false",
+            );
+          });
+
+          // Toggle clicked item
+          if (!isOpen) {
+            item.classList.add("open");
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

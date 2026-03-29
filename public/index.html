@@ -4,13 +4,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>BigSpice — Buy & Sell Spices</title>
-    <link rel="icon" href="/logos/bigspicebubble.png" type="image/png" sizes="32x32" />
+    <link
+      rel="icon"
+      href="/logos/bigspicebubble.png"
+      type="image/png"
+      sizes="32x32"
+    />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="header-left">
-        <a href="/"><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo" /></a>
+        <a href="/"
+          ><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo"
+        /></a>
       </div>
 
       <div class="header-center">
@@ -151,6 +158,7 @@
             <div class="results-sort">
               <label for="sortSelect">Sort by:</label>
               <select id="sortSelect">
+                <option value="popular">Most Popular</option>
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
@@ -182,16 +190,87 @@
                 </div>
               </div>
 
-              <!-- Price Range (if applicable) -->
+              <!-- Price Range -->
               <div class="filter-group">
-                <h4>Price Range</h4>
+                <h4>Price Range (per unit)</h4>
                 <div class="price-range-inputs">
-                  <input type="number" id="minPrice" placeholder="Min" />
+                  <input
+                    type="number"
+                    id="minPrice"
+                    placeholder="Min"
+                    min="0"
+                  />
                   <span>to</span>
-                  <input type="number" id="maxPrice" placeholder="Max" />
+                  <input
+                    type="number"
+                    id="maxPrice"
+                    placeholder="Max"
+                    min="0"
+                  />
                   <button id="applyPriceFilter" class="apply-filter-btn">
                     Go
                   </button>
+                </div>
+              </div>
+
+              <!-- Min Order Filter -->
+              <div class="filter-group">
+                <h4>Min. Order Quantity</h4>
+                <select id="maxMinOrder" class="moq-select">
+                  <option value="">Any quantity</option>
+                  <option value="10">Up to 10 units</option>
+                  <option value="50">Up to 50 units</option>
+                  <option value="100">Up to 100 units</option>
+                  <option value="500">Up to 500 units</option>
+                  <option value="1000">Up to 1,000 units</option>
+                  <option value="5000">Up to 5,000 units</option>
+                </select>
+              </div>
+
+              <!-- Min Rating Filter -->
+              <div class="filter-group">
+                <h4>Minimum Rating</h4>
+                <div class="star-rating-chips">
+                  <button
+                    type="button"
+                    class="star-chip active"
+                    data-rating="0"
+                  >
+                    All
+                  </button>
+                  <button type="button" class="star-chip" data-rating="3">
+                    <span class="chip-stars">★★★</span
+                    ><span class="chip-label">3+</span>
+                  </button>
+                  <button type="button" class="star-chip" data-rating="4">
+                    <span class="chip-stars">★★★★</span
+                    ><span class="chip-label">4+</span>
+                  </button>
+                  <button type="button" class="star-chip" data-rating="4.5">
+                    <span class="chip-stars">★★★★★</span
+                    ><span class="chip-label">4.5+</span>
+                  </button>
+                </div>
+                <!-- hidden input to carry the value, read by applyFilters -->
+                <input type="hidden" id="minRatingValue" value="0" />
+              </div>
+
+              <!-- Availability & Quality -->
+              <div class="filter-group">
+                <h4>Availability &amp; Quality</h4>
+                <div class="filter-options">
+                  <label>
+                    <input type="checkbox" id="filterInStock" />
+                    <span>In Stock only</span>
+                  </label>
+                  <label>
+                    <input type="checkbox" id="filterVerified" />
+                    <span>✓ Verified listings only</span>
+                  </label>
+                  <label>
+                    <input type="checkbox" id="filterHasPrice" />
+                    <span>Has price listed</span>
+                  </label>
                 </div>
               </div>
 
@@ -259,8 +338,8 @@
         <!-- Featured Products Section (Amazon-style) -->
         <section class="featured container">
           <div class="section-header">
-            <h2>Featured Products</h2>
-            <a href="/seller-dashboard.html" class="view-all"
+            <h2>🔥 Popular Products</h2>
+            <a href="/all-listings.html" class="view-all"
               >View all products →</a
             >
           </div>
@@ -291,7 +370,10 @@
     </main>
 
     <footer class="footer">
-      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022
+      &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022 &nbsp;|&nbsp;
+      <a href="/faq.html" style="color: #fff; text-decoration: underline"
+        >FAQ</a
+      >
     </footer>
 
     <!-- Signup modal (shown when user clicks Sign up on landing) -->
@@ -612,6 +694,15 @@
             (ad) => ad.role === "seller" && ad.price && ad.price > 0,
           );
 
+          // Sort by popularity: views desc, then average rating desc, then newest
+          products.sort((a, b) => {
+            const viewDiff = (b.views || 0) - (a.views || 0);
+            if (viewDiff !== 0) return viewDiff;
+            const ratingDiff = (b.averageRating || 0) - (a.averageRating || 0);
+            if (ratingDiff !== 0) return ratingDiff;
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          });
+
           if (!products || products.length === 0) {
             grid.innerHTML = `
               <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: #f9f9f9; border-radius: 8px; border: 2px dashed #ddd;">
@@ -728,6 +819,14 @@
               badge.className = "delivery-badge";
               badge.textContent = "In Stock";
               info.appendChild(badge);
+            }
+
+            // Popular badge (top 3 by views, or over 10 views)
+            if (product.views && product.views >= 10) {
+              const popBadge = document.createElement("div");
+              popBadge.className = "popular-badge";
+              popBadge.textContent = `🔥 ${product.views} views`;
+              info.appendChild(popBadge);
             }
 
             card.appendChild(info);

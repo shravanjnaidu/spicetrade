@@ -672,6 +672,18 @@ textarea {
   align-self: flex-start;
 }
 
+.popular-badge {
+  font-size: 11px;
+  color: #b84800;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: #fef3e2;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
 /* Empty and error states */
 .empty-message,
 .error-message {
@@ -1922,6 +1934,84 @@ select[multiple] {
   font-size: 13px;
 }
 
+/* MOQ dropdown */
+.moq-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d5d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  cursor: pointer;
+  appearance: auto;
+  transition: border-color 0.15s;
+}
+
+.moq-select:hover,
+.moq-select:focus {
+  border-color: #c7511f;
+  outline: none;
+}
+
+/* Star rating chip buttons */
+.star-rating-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.star-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 10px;
+  border: 1.5px solid #d5d9d9;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.star-chip .chip-stars {
+  color: #f5a623;
+  font-size: 11px;
+  letter-spacing: -1px;
+}
+
+.star-chip .chip-label {
+  color: #555;
+}
+
+.star-chip:hover {
+  border-color: #c7511f;
+  color: #c7511f;
+  background: #fff8f4;
+}
+
+.star-chip:hover .chip-label {
+  color: #c7511f;
+}
+
+.star-chip.active {
+  border-color: #c7511f;
+  background: #c7511f;
+  color: #fff;
+}
+
+.star-chip.active .chip-stars {
+  color: #ffe8a0;
+}
+
+.star-chip.active .chip-label {
+  color: #fff;
+}
+
 .apply-filter-btn {
   padding: 6px 16px;
   background: #f0f2f2;
@@ -2074,6 +2164,12 @@ select[multiple] {
 .amazon-product-store:hover {
   color: #c7511f;
   text-decoration: underline;
+}
+
+.amazon-product-views {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
 }
 
 .amazon-badge {
