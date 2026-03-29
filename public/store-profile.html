@@ -829,6 +829,9 @@
         // Show "edit" banner if viewing own profile
         if (localUser && String(localUser.id) === String(userId)) {
           document.getElementById("ownCtaBanner").style.display = "flex";
+        } else {
+          // Count this visit (fire-and-forget — don't track own profile views)
+          fetch(`/api/stores/${userId}/view`, { method: 'POST' }).catch(() => {});
         }
 
         // If logged in and not the owner, make contact button open a conversation

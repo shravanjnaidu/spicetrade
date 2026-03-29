@@ -626,9 +626,8 @@
             return;
           }
           list.innerHTML = "";
-          // Show only 8 stores (2 rows of 4), newest first
+          // API already returns stores sorted by visits DESC — show top 8
           stores
-            .reverse()
             .slice(0, 8)
             .forEach((store) => {
               const card = document.createElement("div");
@@ -650,6 +649,9 @@
                     .charAt(0)
                     .toUpperCase()}</div>`;
 
+              const popularBadge = store.storeViews >= 5
+                ? `<span class="store-popular-badge">🔥 Popular</span>` : '';
+
               card.innerHTML = `
               ${logoHtml}
               <div class="store-info">
@@ -668,6 +670,8 @@
                   <span class="badge">${escapeHtml(
                     store.businessType || "Seller",
                   )}</span>
+                  ${popularBadge}
+                  ${store.storeViews > 0 ? `<span class="store-views-count">👁 ${store.storeViews}</span>` : ''}
                 </div>
               </div>
             `;

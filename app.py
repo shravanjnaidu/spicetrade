@@ -70,6 +70,8 @@ def init_db():
         profilePicture TEXT,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+    # Add store_views column if it doesn't exist (safe migration)
+    cur.execute('''ALTER TABLE users ADD COLUMN IF NOT EXISTS store_views INTEGER DEFAULT 0''')
     
     # Create ads table
     cur.execute('''CREATE TABLE IF NOT EXISTS ads (
@@ -519,7 +521,10 @@ def get_stores():
     try:
         db = get_db()
         cur = dict_cursor(db)
-        cur.execute('SELECT id, name, email, storeName, businessType, categories, address, website, logo_path, createdAt FROM users WHERE role = %s ORDER BY createdAt DESC LIMIT 20', ('seller',))
+        # Sort by store_views DESC (most visited first), then newest
+        cur.execute('''SELECT id, name, email, storeName, businessType, categories, address, website, logo_path, createdAt, COALESCE(store_views, 0) AS store_views
+            FROM users WHERE role = %s
+            ORDER BY store_views DESC, createdAt DESC LIMIT 20''', ('seller',))
         rows = cur.fetchall()
         db.close()
         results = []
@@ -534,12 +539,28 @@ def get_stores():
                 'address': r['address'],
                 'website': r['website'],
                 'logo': r['logo_path'],
-                'createdAt': r['createdat']
+                'createdAt': r['createdat'],
+                'storeViews': int(r['store_views'] or 0)
             })
         return jsonify(results)
     except Exception as e:
         print('stores error', e)
         return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/stores/<int:store_id>/view', methods=['POST'])
+def increment_store_view(store_id):
+    """Fire-and-forget store visit counter"""
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute('UPDATE users SET store_views = COALESCE(store_views, 0) + 1 WHERE id = %s AND role = %s', (store_id, 'seller'))
+        db.commit()
+        db.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        print('store view error', e)
+        return jsonify({'error': 'db error'}), 500
 
 
 @app.route('/api/ads', methods=['GET'])
