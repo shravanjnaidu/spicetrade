@@ -686,8 +686,11 @@
         if (!grid) return;
 
         try {
-          const res = await fetch("/api/ads");
-          const ads = await res.json();
+          // Reuse the shared fetch promise from app.js (avoids duplicate requests)
+          const ads =
+            typeof _getAdsPromise === "function"
+              ? await _getAdsPromise()
+              : await fetch("/api/ads").then((r) => r.json());
 
           // Filter for seller products only (role === 'seller' AND has price)
           const products = ads.filter(
@@ -843,7 +846,8 @@
       (function () {
         const modal = document.getElementById("signupModal");
         const openBtn = document.getElementById("openSignupModal");
-        const closeBtn = modal.querySelector(".close");
+        const closeBtn = modal ? modal.querySelector(".close") : null;
+        if (!modal || !openBtn || !closeBtn) return; // updateHeader() may have replaced the button
 
         function openModal() {
           modal.removeAttribute("aria-hidden");

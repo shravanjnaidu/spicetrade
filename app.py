@@ -226,6 +226,46 @@ app = Flask(__name__, static_folder=str(BASE_DIR / 'public'), static_url_path=''
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB upload limit
 CORS(app)
 
+# ── Image optimisation helper ─────────────────────────────────────────────────
+try:
+    from PIL import Image as PILImage
+    _PILLOW_OK = True
+except ImportError:
+    _PILLOW_OK = False
+
+# Product listing images: resize to max 1200px wide, quality 82
+_PRODUCT_MAX_PX = 1200
+# Store logos / avatars: resize to max 400px, quality 85
+_AVATAR_MAX_PX = 400
+
+def optimise_and_save(stream, dest_path: Path, max_px: int = _PRODUCT_MAX_PX, quality: int = 82):
+    """
+    Open an uploaded image stream, resize (keeping aspect ratio) so the longer
+    edge is ≤ max_px, and save as WebP.  Falls back to raw save if Pillow is
+    not available.
+    """
+    if not _PILLOW_OK:
+        with open(str(dest_path), 'wb') as f:
+            f.write(stream.read())
+        return
+    try:
+        img = PILImage.open(stream)
+        # Convert palette / RGBA to RGB for WebP compatibility
+        if img.mode not in ('RGB', 'RGBA'):
+            img = img.convert('RGB')
+        # Resize only if larger than limit
+        w, h = img.size
+        if max(w, h) > max_px:
+            ratio = max_px / max(w, h)
+            img = img.resize((int(w * ratio), int(h * ratio)), PILImage.LANCZOS)
+        img.save(str(dest_path), 'WEBP', quality=quality, method=4)
+    except Exception as e:
+        print(f'optimise_and_save warning ({dest_path.name}): {e} — saving raw')
+        stream.seek(0)
+        with open(str(dest_path), 'wb') as f:
+            f.write(stream.read())
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Initialize DB immediately so we don't rely on server hooks that may differ across environments
 init_db()
 
@@ -301,16 +341,16 @@ def upload_file():
             if file.filename == '':
                 continue
             
-            # Generate secure filename with timestamp
-            filename = secure_filename(file.filename)
+            # Generate secure filename with timestamp, always save as .webp
+            original_name = secure_filename(file.filename)
+            stem = Path(original_name).stem
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-            filename = f"{timestamp}_{filename}"
+            filename = f"{timestamp}_{stem}.webp"
             
-            # Save file
+            # Save and optimise
             save_path = uploads_dir / filename
-            file.save(str(save_path))
+            optimise_and_save(file.stream, save_path)
             
-            # Add URL path
             url = f"/uploads/{filename}"
             uploaded_urls.append(url)
         
@@ -371,12 +411,11 @@ def signup():
     if logo_file and getattr(logo_file, 'filename', None):
         uploads_dir = BASE_DIR / 'public' / 'uploads'
         uploads_dir.mkdir(parents=True, exist_ok=True)
-        filename = secure_filename(logo_file.filename)
-        # prefix with timestamp to avoid collisions
+        stem = Path(secure_filename(logo_file.filename)).stem
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-        filename = f"{ts}_{filename}"
+        filename = f"{ts}_{stem}.webp"
         save_path = uploads_dir / filename
-        logo_file.save(str(save_path))
+        optimise_and_save(logo_file.stream, save_path, max_px=_AVATAR_MAX_PX, quality=85)
         logo_path = f"/uploads/{filename}"
     
     # handle profile picture upload (for buyers)
@@ -385,11 +424,11 @@ def signup():
     if profile_file and getattr(profile_file, 'filename', None):
         uploads_dir = BASE_DIR / 'public' / 'uploads'
         uploads_dir.mkdir(parents=True, exist_ok=True)
-        filename = secure_filename(profile_file.filename)
+        stem = Path(secure_filename(profile_file.filename)).stem
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-        filename = f"profile_{ts}_{filename}"
+        filename = f"profile_{ts}_{stem}.webp"
         save_path = uploads_dir / filename
-        profile_file.save(str(save_path))
+        optimise_and_save(profile_file.stream, save_path, max_px=_AVATAR_MAX_PX, quality=85)
         profile_picture = f"/uploads/{filename}"
 
     # Generate unique ID
@@ -509,9 +548,31 @@ def get_ads():
         import json
         db = get_db()
         cur = dict_cursor(db)
-        cur.execute('SELECT ads.*, users.name AS author, users.storeName, users.role, users.profilePicture FROM ads LEFT JOIN users ON ads.userId = users.id ORDER BY ads.createdAt DESC')
+        # Single query: pre-aggregate review stats in a subquery then join
+        # avoids N+1 round-trips AND any GROUP BY functional-dependency issues
+        cur.execute('''
+            SELECT
+                ads.*,
+                users.name            AS author,
+                users.storeName,
+                users.role,
+                users.profilePicture,
+                COALESCE(rev.totalreviews, 0)   AS totalreviews,
+                COALESCE(rev.averagerating, 0)  AS averagerating
+            FROM ads
+            LEFT JOIN users ON ads.userId = users.id
+            LEFT JOIN (
+                SELECT adId,
+                       COUNT(*)   AS totalreviews,
+                       AVG(rating) AS averagerating
+                FROM reviews
+                GROUP BY adId
+            ) rev ON rev.adId = ads.id
+            ORDER BY ads.createdAt DESC
+        ''')
         rows = cur.fetchall()
-        
+        db.close()
+
         results = []
         for r in rows:
             row_keys = r.keys()
@@ -524,21 +585,10 @@ def get_ads():
                 category = r['category'] if 'category' in row_keys else None
             except:
                 category = None
-            
-            # Get review stats for this product
-            ad_id = r['id']
-            cur.execute('''
-                SELECT 
-                    COUNT(*) as totalReviews,
-                    AVG(rating) as averageRating
-                FROM reviews
-                WHERE adId = %s
-            ''', (ad_id,))
-            review_row = cur.fetchone()
-            total_reviews = review_row['totalreviews'] if review_row else 0
-            avg_rating = round(review_row['averagerating'], 1) if review_row and review_row['averagerating'] else 0
-            
-            # Safely get values with defaults (PostgreSQL returns lowercase column names)
+
+            total_reviews = r['totalreviews'] if r['totalreviews'] else 0
+            avg_rating = round(float(r['averagerating']), 1) if r['averagerating'] else 0
+
             results.append({
                 'id': r['id'],
                 'title': r['title'],
@@ -563,8 +613,7 @@ def get_ads():
                 'reviewCount': total_reviews,
                 'averageRating': avg_rating
             })
-        
-        db.close()
+
         return jsonify(results)
     except Exception as e:
         print('get_ads error:', e)
@@ -750,11 +799,11 @@ def update_profile():
         if pic_file and getattr(pic_file, 'filename', None):
             uploads_dir = BASE_DIR / 'public' / 'uploads'
             uploads_dir.mkdir(parents=True, exist_ok=True)
-            filename = secure_filename(pic_file.filename)
+            stem = Path(secure_filename(pic_file.filename)).stem
             ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-            filename = f"profile_{ts}_{filename}"
+            filename = f"profile_{ts}_{stem}.webp"
             save_path = uploads_dir / filename
-            pic_file.save(str(save_path))
+            optimise_and_save(pic_file.stream, save_path, max_px=_AVATAR_MAX_PX, quality=85)
             profile_picture = f"/uploads/{filename}"
         
         # Build update query dynamically
@@ -1427,10 +1476,10 @@ def create_banner_ad():
         ext = os.path.splitext(secure_filename(file.filename))[1].lower()
         if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
             return jsonify({'error': 'Image must be JPG, PNG, or WebP'}), 400
-        fname = f'banner_{uuid.uuid4().hex}{ext}'
+        fname = f'banner_{uuid.uuid4().hex}.webp'
         uploads_dir = BASE_DIR / 'public' / 'uploads'
         uploads_dir.mkdir(parents=True, exist_ok=True)
-        file.save(str(uploads_dir / fname))
+        optimise_and_save(file.stream, uploads_dir / fname, max_px=1600, quality=85)
         image_url = f'/uploads/{fname}'
 
         db = get_db()
@@ -1550,11 +1599,10 @@ def update_banner_ad(ad_id):
 
         if 'image' in request.files and request.files['image'].filename:
             file = request.files['image']
-            ext = os.path.splitext(secure_filename(file.filename))[1].lower()
-            fname = f'banner_{uuid.uuid4().hex}{ext}'
+            fname = f'banner_{uuid.uuid4().hex}.webp'
             uploads_dir = BASE_DIR / 'public' / 'uploads'
             uploads_dir.mkdir(parents=True, exist_ok=True)
-            file.save(str(uploads_dir / fname))
+            optimise_and_save(file.stream, uploads_dir / fname, max_px=1600)
             updates['imageUrl'] = f'/uploads/{fname}'
 
         if not updates:
@@ -1922,8 +1970,12 @@ def can_review(ad_id):
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
-    """Serve uploaded files directly — must come before the catch-all route."""
-    return send_from_directory(str(BASE_DIR / 'public' / 'uploads'), filename)
+    """Serve uploaded files with long-lived cache headers."""
+    response = send_from_directory(str(BASE_DIR / 'public' / 'uploads'), filename)
+    # Images are content-addressed (timestamp in name) so cache for 1 year
+    response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    response.headers['Vary'] = 'Accept-Encoding'
+    return response
 
 
 @app.route('/', defaults={'path': ''})
@@ -1931,7 +1983,14 @@ def serve_upload(filename):
 def serve(path):
     # Serve static files from public/, fallback to index.html
     if path != '' and (BASE_DIR / 'public' / path).exists():
-        return send_from_directory(str(BASE_DIR / 'public'), path)
+        resp = send_from_directory(str(BASE_DIR / 'public'), path)
+        # Cache CSS/JS/fonts/images for 7 days; HTML stays fresh
+        ext = Path(path).suffix.lower()
+        if ext in ('.css', '.js', '.woff', '.woff2', '.ttf', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico'):
+            resp.headers['Cache-Control'] = 'public, max-age=604800'
+        else:
+            resp.headers['Cache-Control'] = 'no-cache'
+        return resp
     return send_from_directory(str(BASE_DIR / 'public'), 'index.html')
 
 

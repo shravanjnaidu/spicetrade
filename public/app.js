@@ -95,16 +95,24 @@ const searchForm = document.getElementById("searchForm");
 const searchInput = document.getElementById("q");
 let searchTimeout = null;
 let allAds = []; // Cache all ads for faster filtering
+let _adsPromise = null; // Shared fetch promise — only one request to /api/ads per page
+
+function _getAdsPromise() {
+  if (!_adsPromise) {
+    _adsPromise = fetch("/api/ads")
+      .then((r) => r.json())
+      .catch((err) => {
+        console.error("Failed to fetch ads:", err);
+        _adsPromise = null; // allow retry on error
+        return [];
+      });
+  }
+  return _adsPromise;
+}
 
 // Fetch all ads once for search
 async function fetchAllAds() {
-  try {
-    const res = await fetch("/api/ads");
-    allAds = await res.json();
-  } catch (err) {
-    console.error("Failed to fetch ads:", err);
-    allAds = [];
-  }
+  allAds = await _getAdsPromise();
 }
 
 // Enhanced search function that searches across multiple fields
@@ -924,8 +932,7 @@ async function loadAds() {
   if (!list) return;
   list.innerHTML = "Loading...";
   try {
-    const res = await fetch("/api/ads");
-    let ads = await res.json();
+    let ads = await _getAdsPromise();
 
     // Filter ads by current user if on dashboard page
     if (window.location.pathname.includes("/dashboard.html")) {
