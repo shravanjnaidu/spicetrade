@@ -42,6 +42,27 @@ endblock %} {% block content %} {# Banner / hero search strip #}
   </div>
 </section>
 
+{# Buyer requirements #}
+<section class="section-block">
+  <div class="section-header">
+    <h2>📋 Latest Buyer Requirements</h2>
+    <a href="/all-listings.html" class="see-all-link">See all →</a>
+  </div>
+  <div id="requirementsList" class="requirements-list">
+    {% for _ in range(4) %}
+    <div class="req-card skeleton-card" aria-hidden="true">
+      <div class="skeleton skeleton-text" style="width: 70%"></div>
+      <div class="skeleton skeleton-text short"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="req-post-cta">
+    <a href="/seller-requirements.html" class="btn secondary"
+      >+ Post a Requirement</a
+    >
+  </div>
+</section>
+
 {# Featured stores #}
 <section class="section-block">
   <div class="section-header">

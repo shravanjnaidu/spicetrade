@@ -17,6 +17,7 @@
 
   // ── DOM refs ────────────────────────────────────────────────────────────────
   var listingsGrid = document.getElementById("listingsGrid");
+  var requirementsList = document.getElementById("requirementsList");
   var storesRow = document.getElementById("storesRow");
   var bannerSection = document.getElementById("bannerSection");
   var bannerCarousel = document.getElementById("bannerCarousel");
@@ -85,17 +86,72 @@
       .join("");
   }
 
+  function isRequirement(ad) {
+    return (
+      ad.listingType === "requirement" ||
+      (ad.listingType === null &&
+        (ad.role === "buyer" || (!ad.role && !ad.price)))
+    );
+  }
+
+  function renderRequirements(reqs) {
+    if (!requirementsList) return;
+    if (!reqs || reqs.length === 0) {
+      requirementsList.innerHTML =
+        '<p class="empty-msg">No requirements posted yet.</p>';
+      return;
+    }
+    requirementsList.innerHTML = reqs
+      .slice(0, 8)
+      .map(function (ad) {
+        var timeAgo = ad.createdAt
+          ? new Date(ad.createdAt).toLocaleDateString()
+          : "";
+        return (
+          '<a class="req-card" href="/listing.html?id=' +
+          esc(ad.id) +
+          '">' +
+          '<div class="req-card-title">' +
+          esc(ad.title) +
+          "</div>" +
+          '<div class="req-card-meta">' +
+          (ad.category
+            ? '<span class="req-tag">' + esc(ad.category) + "</span>"
+            : "") +
+          (ad.author || ad.storeName
+            ? '<span class="req-author">' +
+              esc(ad.storeName || ad.author) +
+              "</span>"
+            : "") +
+          (timeAgo ? '<span class="req-date">' + timeAgo + "</span>" : "") +
+          "</div>" +
+          "</a>"
+        );
+      })
+      .join("");
+  }
+
   function loadListings() {
     fetch("/api/ads")
       .then(function (r) {
         return r.json();
       })
-      .then(renderListings)
+      .then(function (ads) {
+        var reqs = [];
+        var listings = [];
+        (ads || []).forEach(function (ad) {
+          if (isRequirement(ad)) reqs.push(ad);
+          else listings.push(ad);
+        });
+        renderListings(listings);
+        renderRequirements(reqs);
+      })
       .catch(function (err) {
         console.error("[home-desktop] listings error", err);
         if (listingsGrid)
           listingsGrid.innerHTML =
             '<p class="empty-msg">Could not load listings.</p>';
+        if (requirementsList) requirementsList.innerHTML = "";
       });
   }
 
