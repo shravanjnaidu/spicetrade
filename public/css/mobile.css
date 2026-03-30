@@ -378,17 +378,88 @@
   font-size: 0.88rem;
 }
 
-/* ─── Banner carousel (mobile — single image) ────────────────────────────────── */
+/* ─── Banner carousel (mobile — sliding) ────────────────────────────────── */
 
 .mobile-banner-carousel {
   width: 100%;
   overflow: hidden;
+  position: relative;
+  border-radius: 8px;
 }
 .mobile-banner-carousel img {
   width: 100%;
   aspect-ratio: 16/7;
   object-fit: cover;
   display: block;
+}
+
+/* Sliding track */
+.mobile-banner-carousel .c-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.mobile-banner-carousel .c-slide {
+  min-width: 100%;
+  display: block;
+  flex-shrink: 0;
+}
+.mobile-banner-carousel .c-slide img {
+  width: 100%;
+  aspect-ratio: 16/7;
+  object-fit: cover;
+  display: block;
+}
+
+/* Prev / Next arrows */
+.mobile-banner-carousel .c-prev,
+.mobile-banner-carousel .c-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  padding: 4px 11px 8px;
+  cursor: pointer;
+  border-radius: 5px;
+  z-index: 10;
+  user-select: none;
+}
+.mobile-banner-carousel .c-prev {
+  left: 6px;
+}
+.mobile-banner-carousel .c-next {
+  right: 6px;
+}
+
+/* Dot indicators */
+.mobile-banner-carousel .c-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  z-index: 10;
+}
+.mobile-banner-carousel .c-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.25s,
+    border-color 0.25s;
+}
+.mobile-banner-carousel .c-dot.active {
+  background: #fff;
+  border-color: #fff;
 }
 
 /* ─── Stores horizontal scroll ───────────────────────────────────────────────── */

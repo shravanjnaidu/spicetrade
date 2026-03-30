@@ -281,6 +281,60 @@ def optimise_and_save(stream, dest_path: Path, max_px: int = _PRODUCT_MAX_PX, qu
 # Initialize DB immediately so we don't rely on server hooks that may differ across environments
 init_db()
 
+
+def seed_default_banners():
+    """Insert 4 default banner ads if the table is empty."""
+    try:
+        db = get_db()
+        cur = dict_cursor(db)
+        cur.execute("SELECT COUNT(*) AS cnt FROM banner_ads WHERE status = 'active'")
+        row = cur.fetchone()
+        if row and (row.get('cnt') or 0) > 0:
+            cur.close()
+            db.close()
+            return  # banners already exist
+        defaults = [
+            {
+                'title': 'Premium Spices & Herbs',
+                'description': 'Source verified spice suppliers in bulk. Best prices direct from farms.',
+                'imageUrl': '/banners/banner-spices.svg',
+                'targetUrl': '/all-listings.html?category=Spices%20%26%20Herbs',
+            },
+            {
+                'title': 'Quality Pulses & Legumes',
+                'description': 'Certified quality · Direct from farmers · Nationwide delivery.',
+                'imageUrl': '/banners/banner-pulses.svg',
+                'targetUrl': '/all-listings.html?category=Pulses%20%26%20Legumes',
+            },
+            {
+                'title': 'Premium Tea & Coffee',
+                'description': 'Bulk orders from trusted estates. Fine grades for wholesale buyers.',
+                'imageUrl': '/banners/banner-tea.svg',
+                'targetUrl': '/all-listings.html?category=Tea%20%26%20Coffee',
+            },
+            {
+                'title': 'Nuts & Dry Fruits',
+                'description': 'Best grades at wholesale prices. Source directly from processors.',
+                'imageUrl': '/banners/banner-nuts.svg',
+                'targetUrl': '/all-listings.html?category=Nuts%20%26%20Dry%20Fruits',
+            },
+        ]
+        for b in defaults:
+            cur.execute(
+                "INSERT INTO banner_ads (title, description, imageUrl, targetUrl, status) "
+                "VALUES (%s, %s, %s, %s, 'active')",
+                (b['title'], b['description'], b['imageUrl'], b['targetUrl'])
+            )
+        db.commit()
+        cur.close()
+        db.close()
+        print('[seed] Inserted 4 default banner ads')
+    except Exception as e:
+        print('[seed] seed_default_banners error:', e)
+
+
+seed_default_banners()
+
 # ── Redis (optional — required for multi-worker deployments) ─────────────────
 # Set REDIS_URL env var in production, e.g. redis://localhost:6379/0
 _redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 300" width="1400" height="300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A0A00"/>
+      <stop offset="55%" stop-color="#3D1C08"/>
+      <stop offset="100%" stop-color="#6B3015"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.1)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="300" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1240" cy="150" r="280" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="1360" cy="270" r="160" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1180" cy="10"  r="120" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="110"  cy="30"  r="155" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="55"   cy="255" r="105" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Decorative coffee bean shapes -->
+  <ellipse cx="310" cy="85"  rx="14" ry="22" fill="rgba(180,100,40,0.35)" transform="rotate(-10 310 85)"/>
+  <ellipse cx="355" cy="185" rx="10" ry="17" fill="rgba(180,100,40,0.28)" transform="rotate(18 355 185)"/>
+  <ellipse cx="285" cy="235" rx="13" ry="21" fill="rgba(180,100,40,0.22)" transform="rotate(-30 285 235)"/>
+  <ellipse cx="1085" cy="70"  rx="11" ry="18" fill="rgba(180,100,40,0.32)" transform="rotate(12 1085 70)"/>
+  <ellipse cx="1065" cy="220" rx="13" ry="20" fill="rgba(180,100,40,0.28)" transform="rotate(-18 1065 220)"/>
+
+  <!-- Steam-like wavy lines above text (subtle) -->
+  <path d="M680,25 Q690,15 700,25 Q710,35 720,25" stroke="rgba(255,255,255,0.15)" stroke-width="2" fill="none"/>
+  <path d="M690,10 Q700,0 710,10" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" fill="none"/>
+
+  <!-- Border lines -->
+  <rect x="0" y="0" width="1400" height="3" fill="rgba(200,130,60,0.3)"/>
+  <rect x="0" y="297" width="1400" height="3" fill="rgba(200,130,60,0.3)"/>
+
+  <!-- Category tag pill -->
+  <rect x="542" y="52" width="316" height="30" rx="15" fill="rgba(255,255,255,0.12)"/>
+  <text x="700" y="73" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle" font-weight="bold" letter-spacing="2">FOOD &amp; AGRICULTURE</text>
+
+  <!-- Main heading -->
+  <text x="700" y="148" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="-1">Tea &amp; Coffee</text>
+
+  <!-- Subtitle -->
+  <text x="700" y="191" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="rgba(255,255,255,0.85)" text-anchor="middle">Bulk orders from trusted estates · Fine grades for wholesale buyers</text>
+
+  <!-- CTA button -->
+  <rect x="576" y="216" width="248" height="48" rx="24" fill="url(#btnGrad)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <text x="700" y="246" font-family="Arial, Helvetica, sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Browse Listings  &#8594;</text>
+</svg>

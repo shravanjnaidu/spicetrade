@@ -235,6 +235,156 @@
   display: block;
 }
 
+/* Sliding track */
+.c-track {
+  display: flex;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.c-slide {
+  min-width: 100%;
+  display: block;
+  flex-shrink: 0;
+}
+.c-slide img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Prev / Next arrows */
+.c-prev,
+.c-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.38);
+  color: #fff;
+  border: none;
+  font-size: 32px;
+  line-height: 1;
+  padding: 6px 14px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  z-index: 10;
+  transition: background 0.2s;
+  user-select: none;
+}
+.c-prev {
+  left: 10px;
+}
+.c-next {
+  right: 10px;
+}
+.c-prev:hover,
+.c-next:hover {
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* Dot indicators */
+.c-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+.c-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.25s,
+    border-color 0.25s;
+}
+.c-dot.active {
+  background: #fff;
+  border-color: #fff;
+}
+
+/* ─── Requirements section (desktop) ──────────────────────────────────────────── */
+
+.empty-msg {
+  color: #999;
+  font-size: 0.9rem;
+  padding: 12px 0;
+  grid-column: 1 / -1;
+}
+
+.requirements-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.req-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #f0e8e0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.req-card:hover {
+  border-color: #c0341c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.req-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.req-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #777;
+}
+
+.req-tag {
+  background: #fff4ee;
+  color: #c0341c;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.73rem;
+  font-weight: 500;
+}
+
+.req-author {
+  color: #555;
+}
+
+.req-date {
+  color: #aaa;
+  margin-left: auto;
+}
+
+.req-post-cta {
+  padding: 10px 0 4px;
+  text-align: right;
+}
+
 /* ─── Site footer ─────────────────────────────────────────────────────────────── */
 
 .site-footer {

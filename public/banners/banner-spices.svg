@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 300" width="1400" height="300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7B1A08"/>
+      <stop offset="60%" stop-color="#C0341C"/>
+      <stop offset="100%" stop-color="#D4691A"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.1)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="300" fill="url(#bg)"/>
+
+  <!-- Decorative large circles -->
+  <circle cx="1250" cy="150" r="260" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="1340" cy="280" r="160" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1180" cy="20"  r="130" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="120"  cy="30"  r="140" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="60"   cy="250" r="100" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Subtle spice dot pattern left decorative -->
+  <circle cx="300" cy="80"  r="6" fill="rgba(255,200,100,0.4)"/>
+  <circle cx="340" cy="140" r="4" fill="rgba(255,200,100,0.3)"/>
+  <circle cx="280" cy="210" r="8" fill="rgba(255,200,100,0.35)"/>
+  <circle cx="360" cy="240" r="5" fill="rgba(255,200,100,0.25)"/>
+
+  <!-- Spice dots right -->
+  <circle cx="1050" cy="70"  r="5" fill="rgba(255,220,120,0.4)"/>
+  <circle cx="1090" cy="160" r="7" fill="rgba(255,220,120,0.3)"/>
+  <circle cx="1060" cy="240" r="4" fill="rgba(255,220,120,0.35)"/>
+
+  <!-- Top subtle border line -->
+  <rect x="0" y="0" width="1400" height="3" fill="rgba(255,220,100,0.3)"/>
+  <!-- Bottom subtle border line -->
+  <rect x="0" y="297" width="1400" height="3" fill="rgba(255,220,100,0.3)"/>
+
+  <!-- Category tag pill -->
+  <rect x="542" y="52" width="316" height="30" rx="15" fill="rgba(255,255,255,0.15)"/>
+  <text x="700" y="73" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-weight="bold" letter-spacing="2">FOOD &amp; AGRICULTURE</text>
+
+  <!-- Main heading -->
+  <text x="700" y="148" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="-1">Spices &amp; Herbs</text>
+
+  <!-- Subtitle -->
+  <text x="700" y="191" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="rgba(255,255,255,0.85)" text-anchor="middle">Source verified suppliers · Bulk pricing direct from farms</text>
+
+  <!-- CTA button -->
+  <rect x="576" y="216" width="248" height="48" rx="24" fill="url(#btnGrad)" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+  <text x="700" y="246" font-family="Arial, Helvetica, sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Browse Listings  &#8594;</text>
+</svg>

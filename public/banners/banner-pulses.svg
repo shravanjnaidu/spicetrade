@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 300" width="1400" height="300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0C3320"/>
+      <stop offset="55%" stop-color="#1A6B3C"/>
+      <stop offset="100%" stop-color="#2D9B5A"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.1)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="300" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1260" cy="150" r="270" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="1350" cy="290" r="150" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1190" cy="10"  r="120" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="100"  cy="20"  r="150" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="50"   cy="260" r="110" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Decorative leaf-like dots -->
+  <ellipse cx="310" cy="90"  rx="10" ry="18" fill="rgba(120,220,120,0.3)" transform="rotate(-20 310 90)"/>
+  <ellipse cx="350" cy="190" rx="8"  ry="14" fill="rgba(120,220,120,0.25)" transform="rotate(15 350 190)"/>
+  <ellipse cx="280" cy="230" rx="12" ry="20" fill="rgba(120,220,120,0.2)" transform="rotate(-35 280 230)"/>
+  <ellipse cx="1080" cy="75"  rx="9"  ry="16" fill="rgba(120,220,120,0.3)" transform="rotate(20 1080 75)"/>
+  <ellipse cx="1060" cy="210" rx="11" ry="18" fill="rgba(120,220,120,0.25)" transform="rotate(-15 1060 210)"/>
+
+  <!-- Border lines -->
+  <rect x="0" y="0" width="1400" height="3" fill="rgba(150,255,150,0.25)"/>
+  <rect x="0" y="297" width="1400" height="3" fill="rgba(150,255,150,0.25)"/>
+
+  <!-- Category tag pill -->
+  <rect x="542" y="52" width="316" height="30" rx="15" fill="rgba(255,255,255,0.15)"/>
+  <text x="700" y="73" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-weight="bold" letter-spacing="2">FOOD &amp; AGRICULTURE</text>
+
+  <!-- Main heading -->
+  <text x="700" y="148" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="-1">Pulses &amp; Legumes</text>
+
+  <!-- Subtitle -->
+  <text x="700" y="191" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="rgba(255,255,255,0.85)" text-anchor="middle">Certified quality · Direct from farmers · Nationwide delivery</text>
+
+  <!-- CTA button -->
+  <rect x="576" y="216" width="248" height="48" rx="24" fill="url(#btnGrad)" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+  <text x="700" y="246" font-family="Arial, Helvetica, sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Browse Listings  &#8594;</text>
+</svg>

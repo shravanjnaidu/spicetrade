@@ -205,22 +205,116 @@
     if (!banners || banners.length === 0 || !bannerSection || !bannerCarousel)
       return;
     bannerSection.style.display = "";
-    bannerCarousel.innerHTML = banners
-      .slice(0, 1)
-      .map(function (b) {
-        return (
-          '<a href="' +
-          esc(b.targetUrl || "#") +
-          '" target="_blank" rel="noopener noreferrer">' +
-          '<img src="' +
-          esc(b.imageUrl) +
-          '" alt="' +
-          esc(b.title) +
-          '" loading="lazy" />' +
-          "</a>"
-        );
-      })
-      .join("");
+
+    if (banners.length === 1) {
+      var b = banners[0];
+      bannerCarousel.innerHTML =
+        '<a href="' +
+        esc(b.targetUrl || "#") +
+        '" target="_blank" rel="noopener noreferrer">' +
+        '<img src="' +
+        esc(b.imageUrl) +
+        '" alt="' +
+        esc(b.title) +
+        '" loading="lazy" />' +
+        "</a>";
+      return;
+    }
+
+    // ── Multi-slide carousel ──────────────────────────────────────────────────
+    var current = 0;
+    var total = banners.length;
+    var timer;
+
+    var track =
+      '<div class="c-track">' +
+      banners
+        .map(function (b) {
+          return (
+            '<a class="c-slide" href="' +
+            esc(b.targetUrl || "#") +
+            '" target="_blank" rel="noopener noreferrer">' +
+            '<img src="' +
+            esc(b.imageUrl) +
+            '" alt="' +
+            esc(b.title) +
+            '" loading="lazy" />' +
+            "</a>"
+          );
+        })
+        .join("") +
+      "</div>";
+
+    var controls =
+      '<button class="c-prev" aria-label="Previous slide">&#8249;</button>' +
+      '<button class="c-next" aria-label="Next slide">&#8250;</button>' +
+      '<div class="c-dots">' +
+      banners
+        .map(function (_, i) {
+          return (
+            '<button class="c-dot' +
+            (i === 0 ? " active" : "") +
+            '" data-i="' +
+            i +
+            '" aria-label="Go to slide ' +
+            (i + 1) +
+            '"></button>'
+          );
+        })
+        .join("") +
+      "</div>";
+
+    bannerCarousel.innerHTML = track + controls;
+
+    var trackEl = bannerCarousel.querySelector(".c-track");
+
+    function goTo(idx) {
+      current = ((idx % total) + total) % total;
+      trackEl.style.transform = "translateX(-" + current * 100 + "%)";
+      bannerCarousel.querySelectorAll(".c-dot").forEach(function (d, i) {
+        d.classList.toggle("active", i === current);
+      });
+    }
+
+    function startAuto() {
+      timer = setInterval(function () {
+        goTo(current + 1);
+      }, 5000);
+    }
+
+    function stopAuto() {
+      clearInterval(timer);
+    }
+
+    bannerCarousel
+      .querySelector(".c-prev")
+      .addEventListener("click", function (e) {
+        e.preventDefault();
+        stopAuto();
+        goTo(current - 1);
+        startAuto();
+      });
+    bannerCarousel
+      .querySelector(".c-next")
+      .addEventListener("click", function (e) {
+        e.preventDefault();
+        stopAuto();
+        goTo(current + 1);
+        startAuto();
+      });
+    bannerCarousel.querySelectorAll(".c-dot").forEach(function (dot) {
+      dot.addEventListener("click", function (e) {
+        e.preventDefault();
+        stopAuto();
+        goTo(parseInt(dot.dataset.i, 10));
+        startAuto();
+      });
+    });
+
+    bannerCarousel.addEventListener("mouseenter", stopAuto);
+    bannerCarousel.addEventListener("mouseleave", startAuto);
+
+    startAuto();
   }
 
   function loadBanners() {
