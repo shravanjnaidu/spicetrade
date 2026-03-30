@@ -1,0 +1,68 @@
+{# templates/desktop/index.html ---------------------------- Desktop homepage:
+feature banner, ad carousel, listings grid (3–4 cols), featured stores row. All
+listing data is fetched client-side via /api/ads and /api/stores to avoid
+coupling the Jinja2 route to heavy DB queries on every page load. #} {% extends
+"desktop/layout.html" %} {% block title %}BigSpice — Buy &amp; Sell Spices
+Online{% endblock %} {% block description %}India's B2B marketplace for spice
+trade. Browse verified suppliers, post requirements, and connect with buyers.{%
+endblock %} {% block content %} {# Banner / hero search strip #}
+<section class="hero-strip">
+  <h1>Source &amp; Supply Spices at Scale</h1>
+  <p class="hero-sub">Verified suppliers · Bulk pricing · Direct trade</p>
+  <form class="hero-search-form" id="heroSearchForm">
+    <input
+      name="q"
+      type="search"
+      placeholder="e.g. Turmeric, Black Pepper, Cardamom…"
+      autocomplete="off"
+    />
+    <button type="submit" class="btn">Search</button>
+  </form>
+</section>
+
+{# Ad carousel (banner ads) #}
+<section class="section-block" id="bannerSection" style="display: none">
+  <div class="banner-carousel" id="bannerCarousel"></div>
+</section>
+
+{# Featured / recent listings #}
+<section class="section-block">
+  <div class="section-header">
+    <h2>Latest Listings</h2>
+    <a href="/all-listings.html" class="see-all-link">See all →</a>
+  </div>
+  <div id="listingsGrid" class="listings-grid desktop-grid">
+    {# Skeleton placeholders while JS loads #} {% for _ in range(12) %}
+    <div class="listing-card skeleton-card" aria-hidden="true">
+      <div class="skeleton skeleton-img"></div>
+      <div class="skeleton skeleton-text"></div>
+      <div class="skeleton skeleton-text short"></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# Featured stores #}
+<section class="section-block">
+  <div class="section-header">
+    <h2>Top Stores</h2>
+    <a href="/all-stores.html" class="see-all-link">See all →</a>
+  </div>
+  <div id="storesRow" class="stores-row">
+    {% for _ in range(6) %}
+    <div class="store-card skeleton-card" aria-hidden="true">
+      <div class="skeleton skeleton-avatar"></div>
+      <div class="skeleton skeleton-text"></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock content %} {% block scripts %} {# Page-specific initialisation —
+loads after layout's app.js #} {{ super() }}
+<script>
+  // Pass server-detected device hint to client-side JS
+  window.__DEVICE__ = {{ device | tojson }};
+</script>
+<script src="/js/home-desktop.js" defer></script>
+{% endblock %}

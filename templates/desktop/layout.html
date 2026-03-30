@@ -1,0 +1,211 @@
+{#
+  templates/desktop/layout.html
+  ------------------------------
+  Full desktop layout: logo, search bar, primary nav, horizontal category
+  strip, and a two-column content area (sidebar + main).
+
+  Blocks exposed to child templates:
+    head         — extra <head> tags (og: meta, canonical, etc.)
+    title        — <title> text
+    description  — meta description
+    sidebar      — left sidebar content (default: category filter links)
+    content      — main page content
+    scripts      — page-specific JavaScript at the bottom of <body>
+#}
+{% extends "base.html" %}
+
+{% block body %}
+
+{# ── Site header ──────────────────────────────────────────────────────────── #}
+<header class="site-header">
+  <div class="header-left">
+    <a href="/">
+      <img src="/logos/bigspicelogo.png" alt="BigSpice" class="logo" />
+    </a>
+  </div>
+
+  <div class="header-center">
+    <form id="searchForm" class="search-form" role="search">
+      <input
+        id="q"
+        name="q"
+        type="search"
+        placeholder="Search products, categories, suppliers..."
+        autocomplete="off"
+      />
+      <div id="searchSuggestions" class="search-suggestions" style="display:none"></div>
+      <button type="button" id="clearSearch" class="clear-btn"
+              aria-label="Clear search" style="display:none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <button type="submit" class="search-btn" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <div class="header-right">
+    <nav class="primary-nav">
+      <a href="/all-listings.html" class="nav-link">Browse</a>
+      <a href="/all-stores.html"   class="nav-link">Stores</a>
+      <a href="/seller-requirements.html" class="nav-link">Post Requirement</a>
+      <a href="/login.html" class="btn secondary" id="loginBtn">Sign in</a>
+      <button class="btn" id="openSignupModal">Sign up</button>
+    </nav>
+    {# Switch to mobile view #}
+    <a href="?view=mobile" class="view-switch-link" title="Switch to mobile view">📱</a>
+  </div>
+</header>
+
+{# ── Category bar ──────────────────────────────────────────────────────────── #}
+<nav class="sub-header" aria-label="Category navigation">
+  <div class="sub-header-inner">
+
+    <div class="all-categories-wrapper">
+      <button type="button" class="sub-all-btn" id="allCategoriesBtn"
+              aria-expanded="false" aria-haspopup="true">
+        ☰ All
+      </button>
+      <div class="all-categories-dropdown" id="allCategoriesDropdown" role="menu">
+        <div class="cat-dropdown-group">
+          <h4>Food &amp; Agriculture</h4>
+          {% for cat in [
+            ('Spices & Herbs',  'Spices%20%26%20Herbs'),
+            ('Grains & Cereals','Grains%20%26%20Cereals'),
+            ('Pulses & Legumes','Pulses%20%26%20Legumes'),
+            ('Nuts & Dry Fruits','Nuts%20%26%20Dry%20Fruits'),
+            ('Oils & Fats',     'Oils%20%26%20Fats'),
+            ('Tea & Coffee',    'Tea%20%26%20Coffee'),
+            ('Dairy Products',  'Dairy%20Products'),
+            ('Fruits & Vegetables','Fruits%20%26%20Vegetables'),
+            ('Seafood',         'Seafood'),
+            ('Organic & Natural Products','Organic%20%26%20Natural%20Products'),
+          ] %}
+            <a href="/all-listings.html?category={{ cat[1] }}" role="menuitem">{{ cat[0] }}</a>
+          {% endfor %}
+        </div>
+        <div class="cat-dropdown-group">
+          <h4>Industrial &amp; Supply Chain</h4>
+          {% for cat in [
+            ('Packaging Materials',   'Packaging%20Materials'),
+            ('Machinery & Equipment', 'Machinery%20%26%20Equipment'),
+            ('Chemicals & Raw Materials','Chemicals%20%26%20Raw%20Materials'),
+          ] %}
+            <a href="/all-listings.html?category={{ cat[1] }}" role="menuitem">{{ cat[0] }}</a>
+          {% endfor %}
+        </div>
+        <div class="cat-dropdown-group">
+          <h4>Other</h4>
+          <a href="/all-listings.html?category=Other" role="menuitem">Other</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-scroll-wrapper">
+      <button class="scroll-arrow scroll-left" id="scrollLeft" aria-label="Scroll left">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <div class="header-tags" id="categoryTags" role="list">
+        {% for cat in [
+          ('Spices & Herbs',   'Spices%20%26%20Herbs'),
+          ('Grains & Cereals', 'Grains%20%26%20Cereals'),
+          ('Pulses & Legumes', 'Pulses%20%26%20Legumes'),
+          ('Nuts & Dry Fruits','Nuts%20%26%20Dry%20Fruits'),
+          ('Oils & Fats',      'Oils%20%26%20Fats'),
+          ('Tea & Coffee',     'Tea%20%26%20Coffee'),
+          ('Dairy Products',   'Dairy%20Products'),
+          ('Fruits & Vegetables','Fruits%20%26%20Vegetables'),
+          ('Seafood',          'Seafood'),
+          ('Packaging Materials','Packaging%20Materials'),
+          ('Machinery & Equipment','Machinery%20%26%20Equipment'),
+          ('Other',            'Other'),
+        ] %}
+          <a class="cat" href="/all-listings.html?category={{ cat[1] }}" role="listitem">{{ cat[0] }}</a>
+        {% endfor %}
+      </div>
+      <button class="scroll-arrow scroll-right" id="scrollRight" aria-label="Scroll right">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+</nav>
+
+{# ── Page body: sidebar + main content ────────────────────────────────────── #}
+<div class="desktop-body">
+
+  <aside class="desktop-sidebar" aria-label="Filters">
+    {% block sidebar %}
+    <div class="sidebar-section">
+      <h3>Categories</h3>
+      <ul class="sidebar-cat-list">
+        {% for cat in [
+          ('All Products',     '/all-listings.html'),
+          ('Spices & Herbs',   '/all-listings.html?category=Spices%20%26%20Herbs'),
+          ('Grains & Cereals', '/all-listings.html?category=Grains%20%26%20Cereals'),
+          ('Pulses & Legumes', '/all-listings.html?category=Pulses%20%26%20Legumes'),
+          ('Nuts & Dry Fruits','/all-listings.html?category=Nuts%20%26%20Dry%20Fruits'),
+          ('Oils & Fats',      '/all-listings.html?category=Oils%20%26%20Fats'),
+          ('Tea & Coffee',     '/all-listings.html?category=Tea%20%26%20Coffee'),
+          ('Dairy Products',   '/all-listings.html?category=Dairy%20Products'),
+          ('Fruits & Vegetables','/all-listings.html?category=Fruits%20%26%20Vegetables'),
+          ('Seafood',          '/all-listings.html?category=Seafood'),
+          ('Organic & Natural','/all-listings.html?category=Organic%20%26%20Natural%20Products'),
+          ('Packaging',        '/all-listings.html?category=Packaging%20Materials'),
+          ('Machinery',        '/all-listings.html?category=Machinery%20%26%20Equipment'),
+        ] %}
+          <li><a href="{{ cat[1] }}">{{ cat[0] }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="sidebar-section">
+      <h3>Quick Links</h3>
+      <ul class="sidebar-cat-list">
+        <li><a href="/all-stores.html">Browse Stores</a></li>
+        <li><a href="/seller-requirements.html">Post a Requirement</a></li>
+        <li><a href="/seller-dashboard.html">Seller Dashboard</a></li>
+      </ul>
+    </div>
+    {% endblock sidebar %}
+  </aside>
+
+  <main class="desktop-main">
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+{# ── Footer ────────────────────────────────────────────────────────────────── #}
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2025 BigSpice. All rights reserved.</p>
+    <nav class="footer-links">
+      <a href="/faq.html">FAQ</a>
+      <a href="/seller-requirements.html">Sell on BigSpice</a>
+    </nav>
+  </div>
+</footer>
+
+{% endblock body %}
+
+{% block scripts %}
+<script src="/app.js" defer></script>
+{% endblock %}

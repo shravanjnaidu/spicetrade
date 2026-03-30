@@ -1,0 +1,52 @@
+{# templates/base.html ------------------- Root Jinja2 template. All page
+templates ultimately extend this file. Context variables injected automatically
+by the device context-processor (middleware/device_middleware.py): device ->
+'mobile' | 'desktop' view_override -> 'mobile' | 'desktop' | None #}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      {% block title %}BigSpice — Buy &amp; Sell Spices{% endblock %}
+    </title>
+    <meta
+      name="description"
+      content="{% block description %}India's B2B spice trade marketplace.{% endblock %}"
+    />
+    <link
+      rel="icon"
+      href="/logos/bigspicebubble.png"
+      type="image/png"
+      sizes="32x32"
+    />
+
+    {# Core styles (shared) #}
+    <link rel="stylesheet" href="/styles.css" />
+
+    {# Responsive media-query fallback — always loaded regardless of device #}
+    <link rel="stylesheet" href="/css/responsive.css" />
+
+    {# Device-specific stylesheet #} {% if device == 'mobile' %}
+    <link rel="stylesheet" href="/css/mobile.css" />
+    {% else %}
+    <link rel="stylesheet" href="/css/desktop.css" />
+    {% endif %} {% block head %}{% endblock %}
+  </head>
+
+  <body class="device-{{ device }}">
+    {% block body %}{% endblock %} {# Persist the ?view= override as a cookie so
+    the user's explicit preference survives navigation to other pages without
+    repeating the query parameter. Cookie lifetime: 1 year. SameSite=Lax
+    prevents CSRF risk. #} {% if view_override %}
+    <script>
+      (function () {
+        try {
+          document.cookie =
+            "view={{ view_override }};path=/;max-age=31536000;SameSite=Lax;Secure";
+        } catch (e) {}
+      })();
+    </script>
+    {% endif %} {% block scripts %}{% endblock %}
+  </body>
+</html>

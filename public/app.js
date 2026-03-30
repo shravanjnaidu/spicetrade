@@ -1180,15 +1180,8 @@ function filterByCategory(cat) {
     });
 }
 
-document
-  .querySelectorAll(".sub-header .cat, .header-tags .cat")
-  .forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      const cat = el.textContent.trim();
-      filterByCategory(cat);
-    });
-  });
+// Category links navigate via their href to /all-listings.html?category=...
+// No click interception needed — let the <a> tags do their job.
 
 // Amazon-style filter controls
 const sortSelect = document.getElementById("sortSelect");

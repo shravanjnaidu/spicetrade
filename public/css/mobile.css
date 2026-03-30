@@ -1,0 +1,493 @@
+/*
+ * public/css/mobile.css
+ * ──────────────────────
+ * Styles loaded ONLY for the mobile layout (.device-mobile).
+ * Prioritises performance: smaller touch targets resolved by larger tap areas,
+ * full-width layouts, a compact sticky header, a slide-in drawer, and a
+ * persistent bottom tab bar.
+ *
+ * Images in mobile templates MUST carry loading="lazy" so this sheet does
+ * not need to do anything extra — the browser handles deferral natively.
+ */
+
+:root {
+  --mob-header-h: 52px;
+  --mob-bottom-h: 58px;
+  --mob-accent: var(--accent, #d35400);
+}
+
+/* ─── Reset body for mobile ─────────────────────────────────────────────────── */
+
+.device-mobile body {
+  /* reserve space for fixed header and bottom bar */
+  padding-top: var(--mob-header-h);
+  padding-bottom: var(--mob-bottom-h);
+}
+
+/* ─── Compact sticky header ─────────────────────────────────────────────────── */
+
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--mob-header-h);
+  background: #fff;
+  border-bottom: 1px solid #ebebeb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 200;
+}
+
+.hamburger-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.hamburger-btn span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+}
+
+.mobile-logo {
+  height: 34px;
+  display: block;
+}
+.mobile-logo-link {
+  line-height: 0;
+}
+
+.mobile-search-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Slide-in navigation drawer ────────────────────────────────────────────── */
+
+.mobile-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+}
+.mobile-drawer[aria-hidden="false"] {
+  pointer-events: all;
+}
+
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.mobile-drawer[aria-hidden="false"] .drawer-backdrop {
+  opacity: 1;
+}
+
+.drawer-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(280px, 80vw);
+  background: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.mobile-drawer[aria-hidden="false"] .drawer-nav {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.drawer-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: #666;
+}
+
+.drawer-links {
+  list-style: none;
+  padding: 12px 0;
+  margin: 0;
+  flex: 1;
+}
+.drawer-links li + li {
+  border-top: 1px solid #f5f5f5;
+}
+.drawer-links a {
+  display: block;
+  padding: 14px 20px;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.drawer-links a:hover {
+  color: var(--mob-accent);
+  background: #fff8f4;
+}
+.drawer-links .btn {
+  display: block;
+  margin: 8px 20px;
+  text-align: center;
+}
+.drawer-divider {
+  height: 1px;
+  background: #eee;
+  margin: 8px 0;
+}
+
+.drawer-footer {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ─── Full-screen search overlay ────────────────────────────────────────────── */
+
+.mobile-search-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 400;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0;
+  transform: translateY(-100%);
+  transition: transform 0.2s;
+}
+.mobile-search-overlay[aria-hidden="false"] {
+  transform: translateY(0);
+}
+
+.search-overlay-inner {
+  width: 100%;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.search-overlay-close {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #555;
+  padding: 4px 8px;
+}
+
+.mobile-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mobile-search-form input {
+  flex: 1;
+  padding: 9px 16px;
+  border: 1.5px solid #ddd;
+  border-radius: 24px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  background: #f8f8f8;
+  min-height: 0; /* prevent iOS tall input quirk */
+  appearance: none; /* strip iOS native search styling */
+  -webkit-appearance: none;
+}
+.mobile-search-form input:focus {
+  outline: none;
+  border-color: var(--mob-accent);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(211, 84, 0, 0.1);
+}
+.mobile-search-form .btn {
+  padding: 9px 18px;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ─── Category chip scroller ────────────────────────────────────────────────── */
+
+.mobile-cat-scroller {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 12px;
+}
+.mobile-cat-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-cat-inner {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+  white-space: nowrap;
+}
+
+.mobile-cat-chip {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: #444;
+  text-decoration: none;
+  background: #fafafa;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+.mobile-cat-chip:hover,
+.mobile-cat-chip.active {
+  border-color: var(--mob-accent);
+  color: var(--mob-accent);
+  background: #fff8f4;
+}
+
+/* ─── Main content area ──────────────────────────────────────────────────────── */
+
+.mobile-main {
+  padding: 0 0 20px;
+}
+
+/* ─── Bottom tab bar ─────────────────────────────────────────────────────────── */
+
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--mob-bottom-h);
+  background: #fff;
+  border-top: 1px solid #e9e9e9;
+  display: flex;
+  z-index: 200;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: #888;
+  font-size: 0.68rem;
+  padding: 6px 0;
+  transition: color 0.15s;
+}
+.tab-item svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tab-item.active,
+.tab-item:hover {
+  color: var(--mob-accent);
+}
+
+/* ─── Mobile hero ────────────────────────────────────────────────────────────── */
+
+.mobile-hero {
+  background: linear-gradient(135deg, #fff8f4 0%, #fef3eb 100%);
+  padding: 20px 16px;
+  text-align: center;
+}
+.mobile-hero h1 {
+  font-size: 1.25rem;
+  margin: 0 0 4px;
+}
+.mobile-hero-sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ─── Listings grid — 2 columns on mobile ────────────────────────────────────── */
+
+.mobile-grid {
+  grid-template-columns: repeat(2, 1fr);
+  padding: 0 12px;
+  gap: 12px;
+}
+
+.listing-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+}
+.listing-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+.listing-card-body {
+  padding: 8px;
+}
+.listing-card-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0 0 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.listing-card-price {
+  color: var(--mob-accent);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+/* ─── Banner carousel (mobile — single image) ────────────────────────────────── */
+
+.mobile-banner-carousel {
+  width: 100%;
+  overflow: hidden;
+}
+.mobile-banner-carousel img {
+  width: 100%;
+  aspect-ratio: 16/7;
+  object-fit: cover;
+  display: block;
+}
+
+/* ─── Stores horizontal scroll ───────────────────────────────────────────────── */
+
+.stores-scroll-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 16px 8px;
+}
+.stores-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.stores-scroll-row .store-card {
+  flex: 0 0 120px;
+  width: 120px;
+}
+
+/* ─── Load-more button ───────────────────────────────────────────────────────── */
+
+.load-more-wrap {
+  text-align: center;
+  padding: 16px;
+}
+.load-more-btn {
+  width: 100%;
+  max-width: 280px;
+}
+
+/* ─── Section spacing on mobile ─────────────────────────────────────────────── */
+
+.section-block {
+  padding: 16px 0;
+}
+.section-header {
+  padding: 0 16px 12px;
+}
+
+/* ─── Requirements section ───────────────────────────────────────────────────── */
+
+.mobile-requirements-section {
+  background: #fffaf7;
+  border-top: 1px solid #fde8d8;
+  border-bottom: 1px solid #fde8d8;
+}
+
+.requirements-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.req-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #f0e8e0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+.req-card:hover {
+  border-color: var(--mob-accent);
+}
+
+.req-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.req-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.req-tag {
+  background: #fff4ee;
+  color: var(--mob-accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+}
+
+.req-post-cta {
+  padding: 14px 16px 4px;
+  text-align: center;
+}

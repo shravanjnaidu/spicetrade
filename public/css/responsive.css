@@ -1,0 +1,185 @@
+/*
+ * public/css/responsive.css
+ * ─────────────────────────
+ * Pure CSS fallback that mirrors the server-side device split using media
+ * queries.  This file is ALWAYS loaded (on both mobile and desktop) so the
+ * page degrades gracefully even if JavaScript or cookies are unavailable.
+ *
+ * Rule of thumb
+ * ─────────────
+ *   ≤ 767 px  → mobile treatment
+ *   768–1023  → tablet (uses mobile styles with wider cards)
+ *   ≥ 1024 px → desktop treatment
+ *
+ * These rules SUPPLEMENT desktop.css / mobile.css; they are not a full
+ * duplicate.  Only layout-critical differences live here.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Shared helpers
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Smooth skeleton shimmer for placeholder cards */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+.skeleton-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  margin-bottom: 8px;
+}
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 6px;
+}
+.skeleton-text.short {
+  width: 60%;
+}
+.skeleton-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+}
+
+/* Section layout shared between both views */
+.section-block {
+  padding: 24px 16px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.see-all-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+/* Listing grid base */
+.listings-grid {
+  display: grid;
+  gap: 16px;
+}
+
+/* Store cards shared */
+.store-card {
+  text-align: center;
+  padding: 16px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+}
+
+/* View-switch links */
+.view-switch-link {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+.view-switch-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ≤ 767 px  —  force mobile layout when .device-desktop accidentally loads
+   on a narrow viewport (CSS fallback)
+═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Hide desktop-only elements */
+  .desktop-sidebar,
+  .primary-nav .nav-link,
+  .sub-header,
+  .category-scroll-wrapper,
+  .hero-strip {
+    display: none !important;
+  }
+
+  /* Full-width grid on mobile */
+  .listings-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Header switches to mobile compact style */
+  .site-header {
+    padding: 8px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .site-header .logo {
+    height: 36px;
+  }
+
+  /* Push content above bottom tab bar */
+  .mobile-main {
+    padding-bottom: 68px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   768 – 1023 px  —  tablet: 2 columns, no sidebar
+═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .desktop-sidebar {
+    display: none;
+  }
+  .desktop-body {
+    display: block;
+  }
+  .desktop-main {
+    width: 100%;
+  }
+
+  .listings-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stores-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ≥ 1024 px  —  force desktop layout when .device-mobile loads on wide screen
+═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* Hide mobile-only elements */
+  .mobile-header,
+  .mobile-drawer,
+  .mobile-search-overlay,
+  .mobile-cat-scroller,
+  .bottom-tab-bar {
+    display: none !important;
+  }
+
+  /* Restore desktop header */
+  .site-header {
+    display: flex;
+  }
+
+  /* Restore listings columns */
+  .listings-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -1,0 +1,175 @@
+{#
+  templates/mobile/layout.html
+  ----------------------------
+  Simplified mobile layout:
+    • Compact header  — logo + hamburger icon only (no search bar in header)
+    • Slide-in drawer — nav links hidden behind hamburger
+    • Full-width search — opens an overlay when search icon is tapped
+    • Bottom tab bar   — Home / Browse / Messages / Profile
+    • No sidebar       — categories shown as horizontal chip scroller
+
+  Blocks:
+    head      — extra <head> tags
+    title     — <title> text
+    content   — page body content
+    scripts   — JS at end of <body>
+#}
+{% extends "base.html" %}
+
+{% block body %}
+
+{# ── Compact mobile header ─────────────────────────────────────────────────── #}
+<header class="mobile-header">
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+
+  <a href="/" class="mobile-logo-link">
+    <img src="/logos/bigspicelogo.png" alt="BigSpice" class="mobile-logo"
+         width="120" height="40" />
+  </a>
+
+  <button class="mobile-search-btn" id="mobileSearchBtn" aria-label="Search">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </button>
+</header>
+
+{# ── Slide-in navigation drawer ────────────────────────────────────────────── #}
+<div class="mobile-drawer" id="mobileDrawer" aria-hidden="true" role="dialog" aria-label="Navigation menu">
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <nav class="drawer-nav">
+    <div class="drawer-header">
+      <img src="/logos/bigspicelogo.png" alt="BigSpice" width="100" />
+      <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close menu">✕</button>
+    </div>
+    <ul class="drawer-links">
+      <li><a href="/">🏠 Home</a></li>
+      <li><a href="/all-listings.html">🛍 Browse Listings</a></li>
+      <li><a href="/all-stores.html">🏪 Stores</a></li>
+      <li><a href="/seller-requirements.html">📋 Post Requirement</a></li>
+      <li><a href="/messages.html">💬 Messages</a></li>
+      <li><a href="/wishlist.html">❤️ Wishlist</a></li>
+      <li class="drawer-divider"></li>
+      <li><a href="/login.html" class="btn">Sign in</a></li>
+      <li><a href="#" id="drawerSignupBtn" class="btn secondary">Sign up</a></li>
+    </ul>
+    <div class="drawer-footer">
+      <a href="?view=desktop" class="view-switch-link">🖥 Switch to desktop view</a>
+    </div>
+  </nav>
+</div>
+
+{# ── Full-screen search overlay ────────────────────────────────────────────── #}
+<div class="mobile-search-overlay" id="mobileSearchOverlay" aria-hidden="true" role="search">
+  <div class="search-overlay-inner">
+    <button class="search-overlay-close" id="searchOverlayClose" aria-label="Close search">✕</button>
+    <form id="searchForm" class="mobile-search-form">
+      <input id="q" name="q" type="search"
+             placeholder="Search products, categories, suppliers…"
+             autocomplete="off" autofocus />
+      <button type="submit" class="btn">Search</button>
+    </form>
+    <div id="searchSuggestions" class="search-suggestions" style="display:none"></div>
+  </div>
+</div>
+
+{# ── Category chip scroller ────────────────────────────────────────────────── #}
+<div class="mobile-cat-scroller" role="navigation" aria-label="Categories">
+  <div class="mobile-cat-inner" id="mobileCatInner">
+    {% for cat in [
+      ('🌶 Spices',    'Spices%20%26%20Herbs'),
+      ('🌾 Grains',    'Grains%20%26%20Cereals'),
+      ('🫘 Pulses',    'Pulses%20%26%20Legumes'),
+      ('🥜 Nuts',      'Nuts%20%26%20Dry%20Fruits'),
+      ('🫒 Oils',      'Oils%20%26%20Fats'),
+      ('🍵 Tea',       'Tea%20%26%20Coffee'),
+      ('🥛 Dairy',     'Dairy%20Products'),
+      ('🍎 Fruits',    'Fruits%20%26%20Vegetables'),
+      ('🐟 Seafood',   'Seafood'),
+      ('📦 Packaging', 'Packaging%20Materials'),
+      ('⚙️ Machinery', 'Machinery%20%26%20Equipment'),
+    ] %}
+    <a class="mobile-cat-chip" href="/all-listings.html?category={{ cat[1] }}">{{ cat[0] }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+{# ── Page content ──────────────────────────────────────────────────────────── #}
+<main class="mobile-main">
+  {% block content %}{% endblock %}
+</main>
+
+{# ── Bottom tab bar ────────────────────────────────────────────────────────── #}
+<nav class="bottom-tab-bar" aria-label="Main navigation">
+  <a href="/"                  class="tab-item active" aria-current="page">
+    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </a>
+  <a href="/all-listings.html" class="tab-item">
+    <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>Browse</span>
+  </a>
+  <a href="/messages.html"    class="tab-item">
+    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Messages</span>
+  </a>
+  <a href="/profile.html"     class="tab-item">
+    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </a>
+</nav>
+
+{% endblock body %}
+
+{% block scripts %}
+<script src="/app.js" defer></script>
+<script>
+  // ── Hamburger / drawer toggle ──────────────────────────────────────────────
+  (function () {
+    var btn     = document.getElementById('hamburgerBtn');
+    var drawer  = document.getElementById('mobileDrawer');
+    var backdrop= document.getElementById('drawerBackdrop');
+    var closeBtn= document.getElementById('drawerCloseBtn');
+
+    function openDrawer() {
+      drawer.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      drawer.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    if (btn)      btn.addEventListener('click', openDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+    // ── Search overlay ─────────────────────────────────────────────────────
+    var searchBtn     = document.getElementById('mobileSearchBtn');
+    var searchOverlay = document.getElementById('mobileSearchOverlay');
+    var searchClose   = document.getElementById('searchOverlayClose');
+
+    function openSearch() {
+      searchOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      var inp = searchOverlay.querySelector('input');
+      if (inp) inp.focus();
+    }
+    function closeSearch() {
+      searchOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    if (searchBtn)  searchBtn.addEventListener('click', openSearch);
+    if (searchClose)searchClose.addEventListener('click', closeSearch);
+  })();
+</script>
+{% block page_scripts %}{% endblock %}
+{% endblock scripts %}

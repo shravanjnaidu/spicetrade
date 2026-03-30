@@ -1,29 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="/logos/bigspicebubble.png" type="image/png" sizes="32x32" />
+    <link
+      rel="icon"
+      href="/logos/bigspicebubble.png"
+      type="image/png"
+      sizes="32x32"
+    />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>All Listings — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo" /></a>
+      <a href="/"
+        ><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo"
+      /></a>
       <div class="header-right"></div>
     </header>
 
-    <main class="container" style="margin-top: 40px; flex: 1 0 auto;">
+    <main class="container" style="margin-top: 40px; flex: 1 0 auto">
       <div class="section-header">
         <h2>All Listings</h2>
-        <p style="color: #666; margin: 0;">Browse all available listings</p>
+        <p style="color: #666; margin: 0">Browse all available listings</p>
       </div>
-      <div id="adsList" class="ads-grid" style="margin-top: 24px;">Loading listings...</div>
+      <div id="adsList" class="ads-grid" style="margin-top: 24px">
+        Loading listings...
+      </div>
     </main>
 
     <footer class="footer">
       &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022 &nbsp;|&nbsp;
-      <a href="/faq.html" style="color:#fff;text-decoration:underline;">FAQ</a>
+      <a href="/faq.html" style="color: #fff; text-decoration: underline"
+        >FAQ</a
+      >
     </footer>
 
     <script src="/app.js"></script>
@@ -32,10 +43,32 @@
         const list = document.getElementById("adsList");
         if (!list) return;
         list.innerHTML = "Loading...";
+
+        const params = new URLSearchParams(window.location.search);
+        const categoryFilter = params.get("category");
+
         try {
           const res = await fetch("/api/ads");
           const ads = await res.json();
-          renderAds(ads);
+
+          const filtered = categoryFilter
+            ? ads.filter(
+                (a) =>
+                  (a.category || "").toLowerCase() ===
+                  categoryFilter.toLowerCase(),
+              )
+            : ads;
+
+          if (categoryFilter) {
+            const titleEl = document.querySelector(".section-header h2");
+            if (titleEl) titleEl.textContent = categoryFilter;
+            const subtitleEl = document.querySelector(".section-header p");
+            if (subtitleEl)
+              subtitleEl.textContent = `Showing listings in "${categoryFilter}"`;
+            document.title = `${categoryFilter} — BigSpice`;
+          }
+
+          renderAds(filtered);
         } catch (err) {
           list.innerHTML = "<p>Error loading listings</p>";
         }
@@ -45,7 +78,14 @@
         const list = document.getElementById("adsList");
         if (!list) return;
         if (!ads || !ads.length) {
-          list.innerHTML = "<p>No listings</p>";
+          const catFilter = new URLSearchParams(window.location.search).get(
+            "category",
+          );
+          if (catFilter) {
+            list.innerHTML = `<p>No listings found in <strong>${catFilter}</strong>. <a href="/all-listings.html">View all listings</a></p>`;
+          } else {
+            list.innerHTML = "<p>No listings</p>";
+          }
           return;
         }
         list.innerHTML = "";
@@ -88,7 +128,9 @@
           meta.appendChild(author);
 
           const date = document.createElement("small");
-          date.textContent = a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "";
+          date.textContent = a.createdAt
+            ? new Date(a.createdAt).toLocaleDateString()
+            : "";
           meta.appendChild(date);
 
           body.appendChild(meta);

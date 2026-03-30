@@ -1,0 +1,77 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}BigSpice — Buy &amp; Sell Spices{% endblock %}
+{% block description %}India's B2B spice trade marketplace. Browse verified suppliers and post requirements.{% endblock %}
+
+{% block content %}
+
+<section class="mobile-hero">
+  <h1>Source Spices at Scale</h1>
+  <p class="mobile-hero-sub">Verified suppliers · Bulk pricing</p>
+</section>
+
+<section id="mobileBannerSection" style="display:none">
+  <div id="mobileBannerCarousel" class="mobile-banner-carousel"></div>
+</section>
+
+<section class="section-block">
+  <div class="section-header">
+    <h2>Latest Listings</h2>
+    <a href="/all-listings.html" class="see-all-link">See all</a>
+  </div>
+  <div id="listingsGrid" class="listings-grid mobile-grid">
+    {% for _ in range(6) %}
+    <div class="listing-card skeleton-card" aria-hidden="true">
+      <div class="skeleton skeleton-img"></div>
+      <div class="skeleton skeleton-text"></div>
+      <div class="skeleton skeleton-text short"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="load-more-wrap">
+    <button class="btn secondary load-more-btn" id="loadMoreBtn">Load more</button>
+  </div>
+</section>
+
+<section class="section-block mobile-requirements-section">
+  <div class="section-header">
+    <h2>📋 Buyer Requirements</h2>
+    <a href="/all-listings.html" class="see-all-link">See all</a>
+  </div>
+  <div id="requirementsList" class="requirements-list">
+    {% for _ in range(3) %}
+    <div class="req-card skeleton-card" aria-hidden="true">
+      <div class="skeleton skeleton-text" style="width:70%"></div>
+      <div class="skeleton skeleton-text short"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="req-post-cta">
+    <a href="/seller-requirements.html" class="btn secondary">+ Post a Requirement</a>
+  </div>
+</section>
+
+<section class="section-block">
+  <div class="section-header">
+    <h2>Top Stores</h2>
+    <a href="/all-stores.html" class="see-all-link">See all</a>
+  </div>
+  <div id="storesRow" class="stores-scroll-row">
+    {% for _ in range(4) %}
+    <div class="store-card skeleton-card" aria-hidden="true">
+      <div class="skeleton skeleton-avatar"></div>
+      <div class="skeleton skeleton-text"></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock content %}
+
+{% block page_scripts %}
+<script>
+  window.__DEVICE__ = {{ device | tojson }};
+  window.__MOBILE_PAGE_SIZE__ = 12;
+</script>
+<script src="/js/home-mobile.js" defer></script>
+{% endblock %}

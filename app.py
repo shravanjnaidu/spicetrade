@@ -11,7 +11,7 @@ import queue
 import threading
 import uuid
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context
+from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context, render_template, make_response, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -224,9 +224,19 @@ def init_db():
     conn.close()
 
 
-app = Flask(__name__, static_folder=str(BASE_DIR / 'public'), static_url_path='')
+app = Flask(
+    __name__,
+    static_folder=str(BASE_DIR / 'public'),
+    static_url_path='',
+    template_folder=str(BASE_DIR / 'templates'),
+)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB upload limit
 CORS(app)
+
+# ── Device-detection middleware ───────────────────────────────────────────────
+from middleware.device_middleware import init_device_middleware
+init_device_middleware(app)
+# ─────────────────────────────────────────────────────────────────────────────
 
 # ── Image optimisation helper ─────────────────────────────────────────────────
 try:
@@ -1997,6 +2007,42 @@ def serve_upload(filename):
     response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
     response.headers['Vary'] = 'Accept-Encoding'
     return response
+
+
+# ── Device-aware homepage ─────────────────────────────────────────────────────
+@app.route('/')
+def index():
+    """
+    Mobile → Jinja2 template (templates/mobile/index.html).
+    Desktop → original static public/index.html (unchanged).
+
+    Override precedence:
+      1. ?view=mobile|desktop  query param
+      2. 'view' cookie
+      3. User-Agent detection
+    """
+    device = getattr(g, 'device', 'desktop')
+    view_override = getattr(g, 'view_override', None)
+
+    if device == 'desktop':
+        # Serve the original static page exactly as before
+        resp = send_from_directory(str(BASE_DIR / 'public'), 'index.html')
+        resp.headers['Cache-Control'] = 'no-cache'
+        return resp
+
+    # Mobile: Jinja2 template
+    html = render_template('mobile/index.html')
+    resp = make_response(html)
+    resp.headers['Cache-Control'] = 'no-cache, no-store'
+    if view_override:
+        resp.set_cookie(
+            'view', view_override,
+            max_age=365 * 24 * 3600,
+            samesite='Lax',
+            httponly=False,
+        )
+    return resp
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 @app.route('/', defaults={'path': ''})
