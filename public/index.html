@@ -566,7 +566,7 @@
                 &#8249;
               </button>
               <div
-                id="featuredProductsGrid"
+                id="listingsGrid"
                 class="hscroll-track products-hscroll"
               ></div>
               <button
@@ -597,7 +597,7 @@
               >
                 &#8249;
               </button>
-              <div id="storesList" class="hscroll-track stores-hscroll"></div>
+              <div id="storesRow" class="hscroll-track stores-hscroll"></div>
               <button
                 class="hscroll-btn hscroll-next"
                 id="storeScrollNext"
@@ -618,7 +618,7 @@
               </h2>
               <a href="/all-listings.html" class="home-see-all">Browse all →</a>
             </div>
-            <div id="adsList" class="ads-grid"></div>
+            <div id="requirementsList" class="ads-grid"></div>
           </div>
         </section>
 
@@ -985,7 +985,7 @@
 
       // Load and render stores
       async function loadStores() {
-        const list = document.getElementById("storesList");
+        const list = document.getElementById("storesRow");
         if (!list) return;
         try {
           const res = await fetch("/api/stores");
@@ -1056,7 +1056,7 @@
 
       // Load Featured Products (from sellers only)
       async function loadFeaturedProducts() {
-        const grid = document.getElementById("featuredProductsGrid");
+        const grid = document.getElementById("listingsGrid");
         if (!grid) return;
 
         try {
@@ -1253,7 +1253,7 @@
       (function () {
         const prev = document.getElementById("productScrollPrev");
         const next = document.getElementById("productScrollNext");
-        const track = document.getElementById("featuredProductsGrid");
+        const track = document.getElementById("listingsGrid");
         if (prev && next && track) {
           prev.addEventListener("click", () =>
             track.scrollBy({ left: -340, behavior: "smooth" }),
@@ -1268,7 +1268,7 @@
       (function () {
         const prev = document.getElementById("storeScrollPrev");
         const next = document.getElementById("storeScrollNext");
-        const track = document.getElementById("storesList");
+        const track = document.getElementById("storesRow");
         if (prev && next && track) {
           prev.addEventListener("click", () =>
             track.scrollBy({ left: -280, behavior: "smooth" }),
@@ -1298,9 +1298,73 @@
         });
       })();
 
+      // ── Buyer Requirements ────────────────────────────────────────────────
+      async function loadRequirements() {
+        const list = document.getElementById("requirementsList");
+        if (!list) return;
+
+        function isRequirement(ad) {
+          var lt = ad.listingType;
+          var ltUnset = lt == null || lt === "";
+          return (
+            lt === "requirement" ||
+            (ltUnset && (ad.role === "buyer" || (!ad.role && !ad.price)))
+          );
+        }
+
+        try {
+          const ads =
+            typeof _getAdsPromise === "function"
+              ? await _getAdsPromise()
+              : await fetch("/api/ads").then((r) => r.json());
+
+          const reqs = (ads || []).filter(isRequirement).slice(0, 8);
+
+          if (reqs.length === 0) {
+            list.innerHTML =
+              '<div class="req-empty-state"><p class="req-empty-msg">No buyer requirements posted yet.</p></div>';
+            return;
+          }
+
+          list.innerHTML = reqs
+            .map((ad) => {
+              const dateStr = ad.createdAt
+                ? new Date(ad.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "";
+              const qtyTag = ad.quantity
+                ? `<span class="req-tag req-tag-qty">Qty: ${escapeHtml(String(ad.quantity))}${ad.unit ? " " + escapeHtml(ad.unit) : ""}</span>`
+                : "";
+              const catTag = ad.category
+                ? `<span class="req-tag">${escapeHtml(ad.category)}</span>`
+                : "";
+              const author =
+                ad.storeName || ad.author
+                  ? `<span class="req-author">${escapeHtml(ad.storeName || ad.author)}</span>`
+                  : "";
+              const date = dateStr
+                ? `<span class="req-date">${dateStr}</span>`
+                : "";
+              return `<a class="req-card" href="/listing.html?id=${encodeURIComponent(ad.id)}">
+                <div class="req-card-title">${escapeHtml(ad.title)}</div>
+                <div class="req-card-meta">${catTag}${qtyTag}${author}${date}</div>
+              </a>`;
+            })
+            .join("");
+        } catch (err) {
+          console.error("[index] requirements error", err);
+          list.innerHTML =
+            '<div class="req-empty-state"><p class="req-empty-msg">Could not load requirements.</p></div>';
+        }
+      }
+
       // Initialize
       loadFeaturedProducts();
       loadStores();
+      loadRequirements();
     </script>
   </body>
 </html>
