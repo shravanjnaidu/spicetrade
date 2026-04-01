@@ -131,10 +131,13 @@
 }
 
 .listing-card {
-  border: 1px solid #f0f0f0;
+  border: 1px solid #e8e8e8;
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
+  text-decoration: none; /* card is an <a> element */
+  color: inherit;
+  display: block;
   transition:
     box-shadow 0.2s,
     transform 0.15s;
@@ -143,33 +146,44 @@
 .listing-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+  border-color: #d0d0d0;
 }
 .listing-card img {
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
   display: block;
+  background: #f7f7f7;
 }
 .listing-card-body {
   padding: 12px;
 }
 .listing-card-title {
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  margin: 0 0 4px;
-  white-space: nowrap;
+  color: #0f1111;
+  margin: 0 0 6px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-decoration: none;
 }
 .listing-card-price {
-  color: var(--accent);
+  color: #b12704;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 4px;
 }
 .listing-card-meta {
   font-size: 0.78rem;
   color: var(--muted);
   margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Stores row ─────────────────────────────────────────────────────────────── */
@@ -383,6 +397,18 @@
 .req-post-cta {
   padding: 10px 0 4px;
   text-align: right;
+}
+
+/* Empty / error state inside requirements list */
+.req-empty-state {
+  grid-column: 1 / -1;
+  padding: 28px 0 12px;
+  text-align: center;
+}
+.req-empty-msg {
+  color: #999;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 /* ─── Site footer ─────────────────────────────────────────────────────────────── */

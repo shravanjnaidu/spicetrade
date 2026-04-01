@@ -130,11 +130,34 @@
   }
   .site-header .logo {
     height: 36px;
+    width: auto; /* prevent stretch */
   }
 
   /* Push content above bottom tab bar */
   .mobile-main {
     padding-bottom: 68px;
+  }
+
+  /* Prevent footer columns from overflowing on narrow screens */
+  .footer-columns {
+    gap: 24px;
+  }
+  .footer-main {
+    gap: 24px;
+  }
+  .site-footer.ecommerce-footer {
+    padding: 28px 16px 16px;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Product grid: single column on very small phones */
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 }
 
@@ -157,6 +180,9 @@
   }
   .stores-row {
     grid-template-columns: repeat(3, 1fr);
+  }
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

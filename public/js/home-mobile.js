@@ -43,14 +43,42 @@
   }
 
   function isRequirement(ad) {
+    var lt = ad.listingType;
+    var ltUnset = lt == null || lt === "";
     return (
-      ad.listingType === "requirement" ||
-      (ad.listingType === null &&
-        (ad.role === "buyer" || (!ad.role && !ad.price)))
+      lt === "requirement" ||
+      (ltUnset && (ad.role === "buyer" || (!ad.role && !ad.price)))
+    );
+  }
+
+  function renderStars(avg, count) {
+    if (!count || count === 0)
+      return '<span class="card-no-reviews">No reviews</span>';
+    var full = Math.floor(avg);
+    var half = avg - full >= 0.5 ? 1 : 0;
+    var empty = 5 - full - half;
+    var stars =
+      '<span class="card-stars-filled">' +
+      "★".repeat(full) +
+      "</span>" +
+      (half ? '<span class="card-stars-half">★</span>' : "") +
+      '<span class="card-stars-empty">' +
+      "☆".repeat(empty) +
+      "</span>";
+    return (
+      '<div class="card-rating">' +
+      stars +
+      '<span class="card-rating-count">(' +
+      count +
+      ")</span>" +
+      "</div>"
     );
   }
 
   // ── Products grid ─────────────────────────────────────────────────────────────
+
+  // Cache: adId → { avg, count }
+  var _ratingCache = {};
 
   function renderPage() {
     if (!listingsGrid || _products.length === 0) return;
@@ -70,6 +98,10 @@
           '" loading="lazy" />'
         : '<div style="width:100%;aspect-ratio:1;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:2rem">📦</div>';
 
+      var rStats = _ratingCache[ad.id] || {};
+      var ratingHtml = renderStars(rStats.avg || 0, rStats.count || 0);
+      var sellerName = ad.storeName || ad.author || "";
+
       var card = document.createElement("a");
       card.className = "listing-card";
       card.href = "/listing.html?id=" + encodeURIComponent(ad.id);
@@ -79,9 +111,13 @@
         '<div class="listing-card-title">' +
         esc(ad.title) +
         "</div>" +
+        ratingHtml +
         '<div class="listing-card-price">' +
         formatPrice(ad.price, ad.unit) +
         "</div>" +
+        (sellerName
+          ? '<div class="listing-card-seller">' + esc(sellerName) + "</div>"
+          : "") +
         "</div>";
       listingsGrid.appendChild(card);
     });
@@ -99,14 +135,17 @@
     if (!reqList) return;
     if (!reqs || reqs.length === 0) {
       reqList.innerHTML =
-        '<p style="padding:12px 16px;color:#888;font-size:.85rem">No requirements posted yet.</p>';
+        '<div class="req-empty-state"><p class="req-empty-msg">No buyer requirements posted yet.</p></div>';
       return;
     }
     reqList.innerHTML = reqs
       .slice(0, 8)
       .map(function (ad) {
         var timeAgo = ad.createdAt
-          ? new Date(ad.createdAt).toLocaleDateString()
+          ? new Date(ad.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+            })
           : "";
         return (
           '<a class="req-card" href="/listing.html?id=' +
@@ -118,6 +157,12 @@
           '<div class="req-card-meta">' +
           (ad.category
             ? '<span class="req-tag">' + esc(ad.category) + "</span>"
+            : "") +
+          (ad.quantity
+            ? '<span class="req-tag req-tag-qty">Qty: ' +
+              esc(String(ad.quantity)) +
+              (ad.unit ? " " + esc(ad.unit) : "") +
+              "</span>"
             : "") +
           (ad.author || ad.storeName
             ? '<span class="req-author">' +
@@ -150,9 +195,30 @@
           listingsGrid.innerHTML =
             '<p style="padding:16px;grid-column:1/-1;text-align:center;color:#888">No listings yet.</p>';
           if (loadMoreBtn) loadMoreBtn.style.display = "none";
-        } else {
-          renderPage();
+          renderRequirements(reqs);
+          return;
         }
+
+        // Fetch review stats for all products in parallel, then render
+        var statsFetches = _products.map(function (ad) {
+          return fetch("/api/reviews/stats/" + ad.id)
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (s) {
+              if (s && s.totalReviews) {
+                _ratingCache[ad.id] = {
+                  avg: s.averageRating,
+                  count: s.totalReviews,
+                };
+              }
+            })
+            .catch(function () {}); // ignore per-product errors
+        });
+
+        Promise.all(statsFetches).then(function () {
+          renderPage();
+        });
 
         renderRequirements(reqs);
       })

@@ -449,6 +449,29 @@
           overflow-x: auto;
         }
       }
+      @media (max-width: 768px) {
+        .listing-container {
+          padding: 0 12px;
+          margin: 12px auto;
+        }
+        .listing-detail {
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+        }
+        .buy-box {
+          order: -1;
+        }
+        .listing-image-section {
+          order: 0;
+        }
+        .listing-content {
+          order: 1;
+        }
+        .reviews-section {
+          order: 2;
+        }
+      }
 
       /* ── Requirement View ────────────────────────────────────────────── */
       .req-view {
@@ -693,19 +716,6 @@
               <span class="stars">★★★★★</span>
               <span class="rating-count" id="ratingCount">128 ratings</span>
             </div>
-          </div>
-
-          <div
-            class="product-price-section"
-            id="priceSectionMobile"
-            style="display: none"
-          >
-            <div class="price-label">Price:</div>
-            <div class="product-price">
-              <span id="productPriceMobile">—</span>
-              <span class="price-unit" id="priceUnitMobile"></span>
-            </div>
-            <div class="product-moq" id="moqMobile"></div>
           </div>
 
           <div class="product-details-section">
@@ -954,13 +964,10 @@
             ? `$${parseFloat(listing.price).toFixed(2)}`
             : "Contact for price";
           document.getElementById("productPrice").textContent = priceText;
-          document.getElementById("productPriceMobile").textContent = priceText;
 
           // Populate unit
           if (listing.unit) {
             document.getElementById("priceUnit").textContent =
-              `/${listing.unit}`;
-            document.getElementById("priceUnitMobile").textContent =
               `/${listing.unit}`;
             document.getElementById("productUnit").textContent = listing.unit;
             document.getElementById("unitRow").style.display = "flex";
@@ -972,7 +979,6 @@
               listing.unit || "units"
             }`;
             document.getElementById("moqBox").textContent = moqText;
-            document.getElementById("moqMobile").textContent = moqText;
             document.getElementById("productMOQ").textContent = `${
               listing.minOrder
             } ${listing.unit || "units"}`;
@@ -1110,12 +1116,6 @@
           // Load reviews
           loadReviews();
           loadReviewStats();
-
-          // Show mobile price section on small screens
-          if (window.innerWidth <= 1024) {
-            document.getElementById("priceSectionMobile").style.display =
-              "block";
-          }
 
           // Check if user can review and show form if eligible
           if (user && user.id) {
@@ -1380,16 +1380,6 @@
           alert("Error deleting review");
         }
       }
-
-      // Handle window resize for responsive price display
-      window.addEventListener("resize", () => {
-        const mobileSection = document.getElementById("priceSectionMobile");
-        if (window.innerWidth <= 1024) {
-          mobileSection.style.display = "block";
-        } else {
-          mobileSection.style.display = "none";
-        }
-      });
 
       // ── Requirement View Renderer ─────────────────────────────────────────
       function renderRequirementView(listing, user, isOwner) {

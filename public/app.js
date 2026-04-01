@@ -833,7 +833,8 @@ function renderAds(ads) {
   const list = document.getElementById("adsList");
   if (!list) return;
   if (!ads || !ads.length) {
-    list.innerHTML = "<p>No listings</p>";
+    list.innerHTML =
+      '<div class="req-empty-state"><p class="req-empty-msg">No buyer requirements posted yet.</p></div>';
     return;
   }
   list.innerHTML = "";
@@ -946,12 +947,14 @@ async function loadAds() {
       window.location.pathname === "/" ||
       window.location.pathname === "/index.html"
     ) {
-      ads = ads.filter(
-        (ad) =>
-          ad.listingType === "requirement" ||
-          (ad.listingType === null &&
-            (ad.role === "buyer" || (!ad.role && !ad.price))),
-      );
+      ads = ads.filter((ad) => {
+        const lt = ad.listingType;
+        const ltUnset = lt == null || lt === "";
+        return (
+          lt === "requirement" ||
+          (ltUnset && (ad.role === "buyer" || (!ad.role && !ad.price)))
+        );
+      });
     }
 
     renderAds(ads);

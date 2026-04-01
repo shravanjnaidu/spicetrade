@@ -87,10 +87,12 @@
   }
 
   function isRequirement(ad) {
+    // Treat null, undefined, and empty string as unset
+    var lt = ad.listingType;
+    var ltUnset = lt == null || lt === "";
     return (
-      ad.listingType === "requirement" ||
-      (ad.listingType === null &&
-        (ad.role === "buyer" || (!ad.role && !ad.price)))
+      lt === "requirement" ||
+      (ltUnset && (ad.role === "buyer" || (!ad.role && !ad.price)))
     );
   }
 
@@ -98,14 +100,20 @@
     if (!requirementsList) return;
     if (!reqs || reqs.length === 0) {
       requirementsList.innerHTML =
-        '<p class="empty-msg">No requirements posted yet.</p>';
+        '<div class="req-empty-state">' +
+        '<p class="req-empty-msg">No buyer requirements posted yet.</p>' +
+        "</div>";
       return;
     }
     requirementsList.innerHTML = reqs
       .slice(0, 8)
       .map(function (ad) {
         var timeAgo = ad.createdAt
-          ? new Date(ad.createdAt).toLocaleDateString()
+          ? new Date(ad.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
           : "";
         return (
           '<a class="req-card" href="/listing.html?id=' +
@@ -117,6 +125,12 @@
           '<div class="req-card-meta">' +
           (ad.category
             ? '<span class="req-tag">' + esc(ad.category) + "</span>"
+            : "") +
+          (ad.quantity
+            ? '<span class="req-tag req-tag-qty">Qty: ' +
+              esc(String(ad.quantity)) +
+              (ad.unit ? " " + esc(ad.unit) : "") +
+              "</span>"
             : "") +
           (ad.author || ad.storeName
             ? '<span class="req-author">' +
@@ -151,7 +165,11 @@
         if (listingsGrid)
           listingsGrid.innerHTML =
             '<p class="empty-msg">Could not load listings.</p>';
-        if (requirementsList) requirementsList.innerHTML = "";
+        if (requirementsList)
+          requirementsList.innerHTML =
+            '<div class="req-empty-state">' +
+            '<p class="req-empty-msg">Could not load requirements. Please try again later.</p>' +
+            "</div>";
       });
   }
 

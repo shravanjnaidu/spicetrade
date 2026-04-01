@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/logos/bigspicebubble.png" type="image/png" sizes="32x32" />
+    <link
+      rel="icon"
+      href="/logos/bigspicebubble.png"
+      type="image/png"
+      sizes="32x32"
+    />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Messages — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
@@ -235,6 +240,22 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+      .chat-back-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: none;
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        color: #007185;
+        cursor: pointer;
+        padding: 0;
+        margin-bottom: 8px;
+      }
+      .chat-back-btn:hover {
+        color: #c45500;
+      }
       .empty-state {
         display: flex;
         flex-direction: column;
@@ -250,24 +271,34 @@
         color: #666;
       }
       @media (max-width: 768px) {
+        .messages-container {
+          margin: 0;
+          padding: 0 8px;
+        }
         .messages-layout {
           grid-template-columns: 1fr;
+          height: calc(100vh - 130px);
         }
         .conversations-panel {
-          display: none;
-        }
-        .conversations-panel.mobile-show {
           display: block;
         }
-        .chat-panel.mobile-hide {
+        .chat-panel {
           display: none;
+        }
+        .chat-panel.mobile-active {
+          display: flex;
+        }
+        .chat-back-btn {
+          display: inline-flex !important;
         }
       }
     </style>
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo" /></a>
+      <a href="/"
+        ><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo"
+      /></a>
       <div class="header-right"></div>
     </header>
 
@@ -416,6 +447,18 @@
         renderConversations();
         await loadMessages(conversationId);
         renderChatPanel();
+        // On mobile: hide conversation list, show chat panel
+        if (window.innerWidth <= 768) {
+          document.querySelector(".conversations-panel").style.display = "none";
+          document.getElementById("chatPanel").classList.add("mobile-active");
+        }
+      }
+
+      function showConversationList() {
+        document.querySelector(".conversations-panel").style.display = "";
+        document.getElementById("chatPanel").classList.remove("mobile-active");
+        currentConversationId = null;
+        renderConversations();
       }
 
       async function loadMessages(conversationId) {
@@ -464,6 +507,7 @@
 
         panel.innerHTML = `
           <div class="chat-header">
+            <button class="chat-back-btn" onclick="showConversationList()">&#8592; Conversations</button>
             <div class="chat-header-content">
               ${avatar}
               <div>
