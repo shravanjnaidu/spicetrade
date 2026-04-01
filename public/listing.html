@@ -21,14 +21,18 @@
       .listing-detail {
         display: grid;
         grid-template-columns: 1fr 1.2fr 400px;
+        grid-template-rows: auto 1fr;
         gap: 24px;
         background: #fff;
         padding: 24px;
         margin-bottom: 20px;
+        align-items: start;
       }
 
       /* Left Column - Image Gallery */
       .listing-image-section {
+        grid-column: 1;
+        grid-row: 1 / 3;
         height: fit-content;
         display: flex;
         gap: 12px;
@@ -67,8 +71,17 @@
         border-radius: 8px;
       }
 
+      /* Title block — direct grid child, col-2 row-1 */
+      .listing-title-block {
+        grid-column: 2;
+        grid-row: 1;
+        padding: 0 16px;
+      }
+
       /* Middle Column - Details */
       .listing-content {
+        grid-column: 2;
+        grid-row: 2;
         padding: 0 16px;
       }
       .listing-header h1 {
@@ -346,6 +359,8 @@
 
       /* Right Column - Buy Box */
       .buy-box {
+        grid-column: 3;
+        grid-row: 1 / 3;
         height: fit-content;
         border: 1px solid #d5d9d9;
         border-radius: 8px;
@@ -440,6 +455,16 @@
       @media (max-width: 1024px) {
         .listing-detail {
           grid-template-columns: 1fr;
+          grid-template-rows: auto;
+        }
+        /* Reset explicit placement so items stack in HTML order */
+        .listing-image-section,
+        .listing-title-block,
+        .listing-content,
+        .buy-box,
+        .reviews-section {
+          grid-column: 1;
+          grid-row: auto;
         }
         .listing-image-section {
           flex-direction: column-reverse;
@@ -450,26 +475,172 @@
         }
       }
       @media (max-width: 768px) {
-        .listing-container {
-          padding: 0 12px;
-          margin: 12px auto;
+        /* ── Prevent horizontal overflow ───────────────────── */
+        html,
+        body {
+          overflow-x: hidden;
+          width: 100%;
         }
+
+        /* ── Container ─────────────────────────────────────── */
+        .listing-container {
+          padding: 0;
+          margin: 0;
+          width: 100%;
+          max-width: 100%;
+        }
+        /* Full-width flex column, sections separated by gray gaps */
         .listing-detail {
-          padding: 12px;
           display: flex;
           flex-direction: column;
+          /* Critical: override align-items:start from desktop grid.
+             Without this, flex children only take content-width
+             and pile up on the left side of the screen. */
+          align-items: stretch;
+          padding: 0;
+          gap: 0;
+          background: #f3f3f3;
+          width: 100%;
+        }
+
+        /* ── Section ordering (Amazon flow) ─────────────────── */
+        .listing-image-section {
+          order: 1;
+          width: 100%;
+          min-width: 0;
+        }
+        .listing-title-block {
+          order: 2;
+          width: 100%;
+          min-width: 0;
         }
         .buy-box {
-          order: -1;
-        }
-        .listing-image-section {
-          order: 0;
+          order: 3;
+          width: 100%;
+          min-width: 0;
         }
         .listing-content {
-          order: 1;
+          order: 4;
+          width: 100%;
+          min-width: 0;
         }
         .reviews-section {
-          order: 2;
+          order: 5;
+          width: 100%;
+          min-width: 0;
+        }
+
+        /* ── Image: edge-to-edge ────────────────────────────── */
+        .listing-image-section {
+          background: #fff;
+          margin-bottom: 8px;
+          padding: 0;
+          flex-direction: column-reverse;
+        }
+        .listing-image {
+          border-radius: 0;
+          border-left: none;
+          border-right: none;
+          border-top: none;
+          max-height: 300px;
+        }
+        .image-thumbnails {
+          flex-direction: row;
+          overflow-x: auto;
+          padding: 8px 12px;
+          gap: 8px;
+        }
+
+        /* ── Title + rating block ───────────────────────────── */
+        .listing-title-block {
+          background: #fff;
+          padding: 14px 16px 10px;
+          margin-bottom: 8px;
+        }
+        .listing-header h1 {
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1.4;
+          margin-bottom: 8px;
+        }
+        .listing-rating {
+          margin-bottom: 0;
+          padding-bottom: 0;
+          border-bottom: none;
+        }
+
+        /* ── Buy box: flat section, no card frame ───────────── */
+        .buy-box {
+          background: #fff;
+          border: none;
+          border-radius: 0;
+          padding: 14px 16px;
+          margin-bottom: 8px;
+        }
+        .buy-box-price {
+          font-size: 28px;
+          color: #b12704;
+          font-weight: 700;
+          margin-bottom: 2px;
+        }
+        .buy-box-stock {
+          font-size: 14px;
+          margin: 4px 0 10px;
+        }
+        .buy-box-seller {
+          margin: 10px 0;
+          padding: 10px 0;
+        }
+        .buy-box-actions {
+          margin-top: 10px;
+          gap: 10px;
+        }
+        .buy-box-btn {
+          padding: 13px 20px;
+          font-size: 15px;
+          border-radius: 24px;
+          min-height: 48px;
+          font-weight: 600;
+        }
+        .buy-box-security {
+          font-size: 12px;
+          padding-top: 12px;
+          margin-top: 12px;
+        }
+
+        /* ── Details + description ──────────────────────────── */
+        .listing-content {
+          background: #fff;
+          padding: 14px 16px;
+          margin-bottom: 8px;
+        }
+        .detail-label {
+          flex: 0 0 110px;
+          font-size: 13px;
+        }
+        .listing-description p,
+        .detail-value {
+          word-break: break-word;
+          overflow-wrap: break-word;
+        }
+
+        /* ── Reviews ────────────────────────────────────────── */
+        .reviews-section {
+          background: #fff;
+          padding: 14px 16px;
+          margin-bottom: 8px;
+          margin-top: 0;
+          padding-top: 14px;
+          border-top: none;
+          grid-column: auto;
+        }
+        .review-summary {
+          grid-template-columns: 110px 1fr;
+          gap: 16px;
+          margin-bottom: 20px;
+        }
+        .avg-rating {
+          font-size: 36px;
         }
       }
 
@@ -708,8 +879,8 @@
           </div>
         </div>
 
-        <!-- Middle Column - Product Details -->
-        <div class="listing-content">
+        <!-- Title + Rating block: col-2 row-1 on desktop, order-2 on mobile -->
+        <div class="listing-title-block">
           <div class="listing-header">
             <h1 id="listingTitle">Loading...</h1>
             <div class="listing-rating">
@@ -717,7 +888,10 @@
               <span class="rating-count" id="ratingCount">128 ratings</span>
             </div>
           </div>
+        </div>
 
+        <!-- Middle Column - Product Details (col-2 row-2 on desktop) -->
+        <div class="listing-content">
           <div class="product-details-section">
             <h2 class="section-title">Product Details</h2>
             <div class="detail-item">

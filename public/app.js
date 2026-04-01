@@ -575,6 +575,16 @@ if (searchForm) {
     // Hide suggestions when submitting
     hideSuggestions();
 
+    // If no inline search results panel exists (e.g. mobile template or any
+    // page other than the desktop home), redirect to all-listings with ?q=.
+    if (!document.getElementById("searchResultsContainer")) {
+      if (query) {
+        window.location.href =
+          "/all-listings.html?q=" + encodeURIComponent(query);
+      }
+      return;
+    }
+
     if (!query) {
       // If empty, show home content
       const searchResultsContainer = document.getElementById(

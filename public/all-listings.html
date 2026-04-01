@@ -46,23 +46,45 @@
 
         const params = new URLSearchParams(window.location.search);
         const categoryFilter = params.get("category");
+        const qFilter = params.get("q");
 
         try {
           const res = await fetch("/api/ads");
           const ads = await res.json();
 
-          const filtered = categoryFilter
-            ? ads.filter(
-                (a) =>
-                  (a.category || "").toLowerCase() ===
-                  categoryFilter.toLowerCase(),
-              )
-            : ads;
+          const filtered = ads.filter((a) => {
+            // Category match
+            const catOk =
+              !categoryFilter ||
+              (a.category || "").toLowerCase() === categoryFilter.toLowerCase();
 
-          if (categoryFilter) {
-            const titleEl = document.querySelector(".section-header h2");
+            // Text search match
+            if (!qFilter) return catOk;
+            const q = qFilter.toLowerCase();
+            const textOk =
+              (a.title || "").toLowerCase().includes(q) ||
+              (a.description || "").toLowerCase().includes(q) ||
+              (a.category || "").toLowerCase().includes(q) ||
+              (a.author || "").toLowerCase().includes(q) ||
+              (a.storeName || "").toLowerCase().includes(q) ||
+              (Array.isArray(a.tags) &&
+                a.tags.some((t) => t.toLowerCase().includes(q)));
+
+            return catOk && textOk;
+          });
+
+          // Update page heading
+          const titleEl = document.querySelector(".section-header h2");
+          const subtitleEl = document.querySelector(".section-header p");
+          if (qFilter && !categoryFilter) {
+            if (titleEl) titleEl.textContent = `Results for "${qFilter}"`;
+            if (subtitleEl)
+              subtitleEl.textContent = `${filtered.length} listing${
+                filtered.length !== 1 ? "s" : ""
+              } found`;
+            document.title = `"${qFilter}" — BigSpice`;
+          } else if (categoryFilter) {
             if (titleEl) titleEl.textContent = categoryFilter;
-            const subtitleEl = document.querySelector(".section-header p");
             if (subtitleEl)
               subtitleEl.textContent = `Showing listings in "${categoryFilter}"`;
             document.title = `${categoryFilter} — BigSpice`;
@@ -81,7 +103,10 @@
           const catFilter = new URLSearchParams(window.location.search).get(
             "category",
           );
-          if (catFilter) {
+          const qf = new URLSearchParams(window.location.search).get("q");
+          if (qf) {
+            list.innerHTML = `<p>No listings found for <strong>&ldquo;${qf}&rdquo;</strong>. <a href="/all-listings.html">View all listings</a></p>`;
+          } else if (catFilter) {
             list.innerHTML = `<p>No listings found in <strong>${catFilter}</strong>. <a href="/all-listings.html">View all listings</a></p>`;
           } else {
             list.innerHTML = "<p>No listings</p>";
