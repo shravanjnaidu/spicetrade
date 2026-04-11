@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent: #d35400;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: #222;
+    background: #fff;
+    line-height: 1.5;
+  }
+}
+
+@layer utilities {
+  /* hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Password requirement list */
+.pwd-requirements li {
+  list-style: none;
+  font-size: 13px;
+  color: #999;
+  padding: 2px 0;
+}
+.pwd-requirements li::before {
+  content: "✗ ";
+  color: #ccc;
+}
+.pwd-requirements li.req-met::before {
+  content: "✓ ";
+  color: #2ecc71;
+}
+.pwd-requirements li.req-met {
+  color: #27ae60;
+}

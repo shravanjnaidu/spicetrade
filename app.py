@@ -1133,6 +1133,9 @@ def admin_update_user(user_id):
         if 'address' in data:
             updates.append('address = %s')
             params.append(data['address'])
+        if 'logo_path' in data:
+            updates.append('logo_path = %s')
+            params.append(data['logo_path'])
         
         if not updates:
             return jsonify({'error': 'No fields to update'}), 400
@@ -1200,6 +1203,98 @@ def admin_delete_user(user_id):
         return jsonify({'success': True})
     except Exception as e:
         print('admin_delete_user error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/admin/ads', methods=['GET'])
+def admin_get_ads():
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('''
+            SELECT a.id, a.title, a.description, a.price, a.category, a.imageUrl,
+                   a.listingType, a.verified, a.views, a.createdAt,
+                   u.name AS authorName, u.storeName, a.userId
+            FROM ads a
+            LEFT JOIN users u ON a.userId = u.id
+            ORDER BY a.createdAt DESC
+        ''')
+        rows = cursor.fetchall()
+        db.close()
+        ads = []
+        for row in rows:
+            ads.append({
+                'id': row['id'],
+                'title': row['title'],
+                'description': row['description'],
+                'price': row['price'],
+                'category': row['category'],
+                'imageUrl': row['imageurl'],
+                'listingType': row['listingtype'],
+                'verified': row['verified'],
+                'views': row['views'],
+                'createdAt': row['createdat'],
+                'authorName': row['authorname'],
+                'storeName': row['storename'],
+                'userId': row['userid'],
+            })
+        return jsonify({'success': True, 'ads': ads})
+    except Exception as e:
+        print('admin_get_ads error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/admin/ads/<int:ad_id>', methods=['PUT'])
+def admin_update_ad(ad_id):
+    try:
+        data = request.get_json() or {}
+        updates = []
+        params = []
+        for field in ('title', 'description', 'price', 'category'):
+            if field in data:
+                updates.append(f'{field} = %s')
+                params.append(data[field])
+        if 'verified' in data:
+            updates.append('verified = %s')
+            params.append(1 if data['verified'] else 0)
+        if 'imageUrl' in data:
+            updates.append('imageUrl = %s')
+            params.append(data['imageUrl'])
+        if not updates:
+            return jsonify({'error': 'No fields to update'}), 400
+        params.append(ad_id)
+        query = f"UPDATE ads SET {', '.join(updates)} WHERE id = %s"
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute(query, params)
+        db.commit()
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('admin_update_ad error:', e)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/admin/ads/<int:ad_id>', methods=['DELETE'])
+def admin_delete_ad(ad_id):
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('DELETE FROM ads WHERE id = %s', (ad_id,))
+        db.commit()
+        deleted = cursor.rowcount
+        db.close()
+        if deleted == 0:
+            return jsonify({'success': False, 'error': 'Listing not found'}), 404
+        return jsonify({'success': True})
+    except Exception as e:
+        print('admin_delete_ad error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
@@ -2116,6 +2211,6 @@ def serve(path):
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 3000))
+    port = int(os.environ.get('PORT', 5000))
     # Dev server only. For production use: gunicorn -c gunicorn.conf.py app:app
     app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
