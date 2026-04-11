@@ -8,41 +8,44 @@ import SwiftUI
 struct MessagesListView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var messageViewModel: MessageViewModel
-    
-    // Timer for auto-refresh
+
     let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
-    
+
     var body: some View {
         NavigationStack {
-            Group {
+            ZStack {
+                Color(.systemGroupedBackground).ignoresSafeArea()
+
                 if messageViewModel.isLoading && messageViewModel.conversations.isEmpty {
-                    ProgressView("Loading messages...")
+                    VStack(spacing: 14) {
+                        ProgressView().scaleEffect(1.3)
+                        Text("Loading messages…")
+                            .font(.subheadline).foregroundColor(.secondary)
+                    }
                 } else if messageViewModel.conversations.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "message")
-                            .font(.system(size: 60))
-                            .foregroundColor(.gray)
-                        
-                        Text("No conversations yet")
-                            .font(.headline)
-                        
-                        Text("Start chatting with sellers or buyers")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
+                    emptyState
                 } else {
-                    List(messageViewModel.conversations) { conversation in
-                        NavigationLink(destination: ChatView(conversation: conversation)) {
-                            ConversationRow(conversation: conversation, currentUserId: authViewModel.currentUser?.id ?? 0)
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(messageViewModel.conversations) { conversation in
+                                NavigationLink(destination: ChatView(conversation: conversation)) {
+                                    PremiumConversationRow(
+                                        conversation: conversation,
+                                        currentUserId: authViewModel.currentUser?.id ?? 0
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+
+                                Divider()
+                                    .padding(.leading, 82)
+                            }
                         }
-                        .listRowBackground(
-                            (conversation.unreadCount ?? 0) > 0 ? 
-                            Color.orange.opacity(0.05) : Color.clear
-                        )
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                     }
-                    .listStyle(.plain)
                     .refreshable {
                         if let userId = authViewModel.currentUser?.id {
                             await messageViewModel.loadConversations(userId: userId)
@@ -52,6 +55,7 @@ struct MessagesListView: View {
                 }
             }
             .navigationTitle("Messages")
+            .navigationBarTitleDisplayMode(.large)
             .task {
                 if let userId = authViewModel.currentUser?.id {
                     await messageViewModel.loadConversations(userId: userId)
@@ -68,133 +72,163 @@ struct MessagesListView: View {
             }
         }
     }
+
+    private var emptyState: some View {
+        VStack(spacing: 18) {
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.12))
+                    .frame(width: 100, height: 100)
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 38))
+                    .foregroundColor(.orange)
+            }
+            Text("No Messages Yet")
+                .font(.title3).fontWeight(.bold)
+            Text("Start a conversation with a seller\nor buyer to get started.")
+                .font(.subheadline).foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+    }
 }
 
-struct ConversationRow: View {
+// MARK: - Premium Conversation Row
+
+struct PremiumConversationRow: View {
     let conversation: Conversation
     let currentUserId: Int
-    
+
+    private let brandRed    = Color(red: 0.65, green: 0.15, blue: 0.02)
+    private let brandOrange = Color(red: 0.95, green: 0.50, blue: 0.08)
+
     var otherPersonName: String {
-        if currentUserId == conversation.buyerId {
-            return conversation.storeName ?? conversation.sellerName ?? "Seller"
-        } else {
-            return conversation.buyerName ?? "Buyer"
-        }
+        currentUserId == conversation.buyerId
+            ? (conversation.storeName ?? conversation.sellerName ?? "Seller")
+            : (conversation.buyerName ?? "Buyer")
     }
-    
+
     var otherPersonPicture: String? {
-        if currentUserId == conversation.buyerId {
-            return conversation.sellerPicture
-        } else {
-            return conversation.buyerPicture
-        }
+        currentUserId == conversation.buyerId
+            ? conversation.sellerPicture
+            : conversation.buyerPicture
     }
-    
-    var hasUnread: Bool {
-        (conversation.unreadCount ?? 0) > 0
-    }
-    
+
+    var hasUnread: Bool { (conversation.unreadCount ?? 0) > 0 }
+    var isBuyer: Bool { currentUserId == conversation.buyerId }
+
     var body: some View {
-        HStack(spacing: 12) {
-            // Profile picture with unread indicator
-            ZStack(alignment: .topTrailing) {
-                if let profilePicture = otherPersonPicture {
-                    AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        default:
-                            Image(systemName: "person.circle.fill")
-                                .resizable()
-                        }
-                    }
-                    .frame(width: 56, height: 56)
-                    .clipShape(Circle())
-                } else {
-                    Image(systemName: currentUserId == conversation.buyerId ? "storefront.circle.fill" : "person.circle.fill")
-                        .resizable()
-                        .frame(width: 56, height: 56)
-                        .foregroundColor(.orange)
-                }
-                
-                // Red dot for unread
+        HStack(spacing: 14) {
+            // Avatar
+            ZStack(alignment: .bottomTrailing) {
+                avatarView
+                    .frame(width: 52, height: 52)
+
                 if hasUnread {
                     Circle()
                         .fill(Color.red)
-                        .frame(width: 16, height: 16)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white, lineWidth: 2)
-                        )
-                        .offset(x: 4, y: -4)
+                        .frame(width: 14, height: 14)
+                        .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 2))
                 }
             }
-            
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
+
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline) {
                     Text(otherPersonName)
-                        .font(hasUnread ? .headline : .body)
-                        .fontWeight(hasUnread ? .bold : .regular)
-                    
+                        .font(.system(size: 15, weight: hasUnread ? .bold : .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+
                     Spacer()
-                    
-                    if let lastMessageTime = conversation.lastMessageTime {
-                        Text(formatDate(lastMessageTime))
-                            .font(.caption)
-                            .foregroundColor(hasUnread ? .orange : .secondary)
+
+                    if let t = conversation.lastMessageTime {
+                        Text(formatDate(t))
+                            .font(.system(size: 12))
+                            .foregroundColor(hasUnread ? brandOrange : .secondary)
                             .fontWeight(hasUnread ? .semibold : .regular)
                     }
                 }
-                
+
                 HStack {
                     if let lastMessage = conversation.lastMessage {
                         Text(lastMessage)
-                            .font(.subheadline)
+                            .font(.system(size: 13))
                             .foregroundColor(hasUnread ? .primary : .secondary)
-                            .fontWeight(hasUnread ? .semibold : .regular)
-                            .lineLimit(2)
+                            .fontWeight(hasUnread ? .medium : .regular)
+                            .lineLimit(1)
                     }
-                    
+
                     Spacer()
-                    
-                    if let unreadCount = conversation.unreadCount, unreadCount > 0 {
-                        Text("\(unreadCount)")
-                            .font(.caption)
-                            .fontWeight(.bold)
+
+                    if let count = conversation.unreadCount, count > 0 {
+                        Text("\(count)")
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(minWidth: 20, minHeight: 20)
-                            .padding(.horizontal, 6)
+                            .padding(.horizontal, 7).padding(.vertical, 3)
                             .background(Color.red)
-                            .clipShape(Circle())
+                            .clipShape(Capsule())
                     }
                 }
             }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(Color(.systemGray3))
         }
-        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(hasUnread
+            ? Color(red: 1.0, green: 0.97, blue: 0.94)
+            : Color(.systemBackground)
+        )
     }
-    
+
+    @ViewBuilder
+    private var avatarView: some View {
+        if let pic = otherPersonPicture {
+            AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(pic)")) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill().clipShape(Circle())
+                default:
+                    defaultAvatar
+                }
+            }
+        } else {
+            defaultAvatar
+        }
+    }
+
+    private var defaultAvatar: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [brandRed.opacity(0.8), brandOrange],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                )
+            Image(systemName: isBuyer ? "storefront.fill" : "person.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundColor(.white)
+        }
+    }
+
     private func formatDate(_ dateString: String) -> String {
-        // Simple date formatting - can be enhanced
         let formatter = ISO8601DateFormatter()
         if let date = formatter.date(from: dateString) {
-            let now = Date()
-            let components = Calendar.current.dateComponents([.day, .hour, .minute], from: date, to: now)
-            
-            if let days = components.day, days > 0 {
-                return days == 1 ? "Yesterday" : "\(days)d ago"
-            } else if let hours = components.hour, hours > 0 {
-                return "\(hours)h ago"
-            } else if let minutes = components.minute, minutes > 0 {
-                return "\(minutes)m ago"
-            } else {
-                return "Just now"
-            }
+            let components = Calendar.current.dateComponents([.day, .hour, .minute], from: date, to: Date())
+            if let d = components.day, d > 0 { return d == 1 ? "Yesterday" : "\(d)d" }
+            if let h = components.hour, h > 0 { return "\(h)h" }
+            if let m = components.minute, m > 0 { return "\(m)m" }
+            return "Now"
         }
         return dateString
     }
 }
+
+// MARK: - Backwards-compat alias
+typealias ConversationRow = PremiumConversationRow
 
 #Preview {
     MessagesListView()

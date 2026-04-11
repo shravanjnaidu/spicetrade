@@ -99,7 +99,7 @@ struct SellerProductRow: View {
         HStack(spacing: 12) {
             // Product image
             if let imageUrl = product.imageURLs.first {
-                AsyncImage(url: URL(string: "http://localhost:3000\(imageUrl)")) { phase in
+                AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(imageUrl)")) { phase in
                     switch phase {
                     case .empty:
                         Rectangle()

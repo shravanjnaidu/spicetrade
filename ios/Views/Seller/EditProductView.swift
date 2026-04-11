@@ -22,7 +22,18 @@ struct EditProductView: View {
     @State private var isSubmitting = false
     @State private var errorMessage: String?
     
-    let categories = ["Spices", "Foods", "Beverages", "Grains", "Oils", "Others"]
+    let categories = [
+        "Spices & Herbs",
+        "Pulses & Legumes",
+        "Tea & Coffee",
+        "Nuts & Dry Fruits",
+        "Grains & Cereals",
+        "Oils & Fats",
+        "Sugar & Sweeteners",
+        "Dairy Products",
+        "Organic Products",
+        "Others"
+    ]
     
     init(product: Product, onUpdate: @escaping () -> Void) {
         self.product = product

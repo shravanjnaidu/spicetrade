@@ -61,7 +61,7 @@ struct ChatView: View {
                 HStack(alignment: .bottom, spacing: 12) {
                     // Profile picture
                     if let profilePicture = otherPersonPicture {
-                        AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
+                        AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(profilePicture)")) { phase in
                             switch phase {
                             case .success(let image):
                                 image

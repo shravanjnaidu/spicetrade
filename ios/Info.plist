@@ -63,6 +63,18 @@
 		<true/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>bigspice.in</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
+	<key>SpiceTradeAPIURL</key>
+	<string>https://bigspice.in</string>
 </dict>
 </plist>

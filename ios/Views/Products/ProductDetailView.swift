@@ -127,7 +127,7 @@ struct ProductDetailView: View {
                             }) {
                                 HStack {
                                     if let profilePicture = product.profilePicture {
-                                        AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
+                                        AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(profilePicture)")) { phase in
                                             switch phase {
                                             case .success(let image):
                                                 image.resizable()
@@ -177,7 +177,8 @@ struct ProductDetailView: View {
                                     address: nil,
                                     website: nil,
                                     logo: product.profilePicture,
-                                    createdAt: nil
+                                    createdAt: nil,
+                                    storeViews: nil
                                 ))) {
                                     EmptyView()
                                 }
@@ -333,14 +334,16 @@ struct ProductDetailView: View {
         .task {
             await reviewViewModel.loadReviews(productId: product.id)
             await reviewViewModel.loadStats(productId: product.id)
-            
+
             if let userId = authViewModel.currentUser?.id {
                 await checkWishlistStatus(userId: userId)
                 await checkCanReview()
             }
+            // Track view count
+            await APIService.shared.incrementAdView(adId: product.id)
         }
     }
-    
+
     private func checkCanReview() async {
         guard let userId = authViewModel.currentUser?.id else {
             canReview = false
@@ -450,7 +453,7 @@ struct ReviewRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 if let profilePicture = review.profilePicture {
-                    AsyncImage(url: URL(string: "http://localhost:3000\(profilePicture)")) { phase in
+                    AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(profilePicture)")) { phase in
                         switch phase {
                         case .success(let image):
                             image.resizable()

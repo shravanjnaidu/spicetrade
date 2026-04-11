@@ -22,11 +22,22 @@ struct User: Codable, Identifiable {
     var location: String?
     var profilePicture: String?
     var createdAt: String?
-    
+    // Extended store-profile fields
+    var tagline: String?
+    var storeDescription: String?
+    var ownerMessage: String?
+    var yearEstablished: String?
+    var employeeCount: String?
+    var annualTurnover: String?
+    var paymentModes: String?
+    var exportMarkets: String?
+    var certifications: String?
+    var whyUs: String?
+
     var isSeller: Bool {
         role == "seller"
     }
-    
+
     var isBuyer: Bool {
         role == "buyer"
     }
@@ -51,6 +62,17 @@ struct AuthResponse: Codable {
     let location: String?
     let profilePicture: String?
     let error: String?
+    // Extended store-profile fields
+    let tagline: String?
+    let storeDescription: String?
+    let ownerMessage: String?
+    let yearEstablished: String?
+    let employeeCount: String?
+    let annualTurnover: String?
+    let paymentModes: String?
+    let exportMarkets: String?
+    let certifications: String?
+    let whyUs: String?
 }
 
 // MARK: - Product/Ad Model
@@ -76,7 +98,13 @@ struct Product: Codable, Identifiable {
     var views: Int?
     var reviewCount: Int?
     var averageRating: Double?
-    
+    /// "product" or "requirement" — mirrors the web app's listingType field
+    var listingType: String?
+
+    var isRequirement: Bool {
+        listingType == "requirement"
+    }
+
     var imageURLs: [String] {
         if let images = images, !images.isEmpty {
             return images.components(separatedBy: ",").filter { !$0.isEmpty }
@@ -85,31 +113,24 @@ struct Product: Codable, Identifiable {
         }
         return []
     }
-    
+
     /// Returns full URLs for images, ensuring they have the correct format
     func fullImageURL(for imagePath: String) -> String {
-        // If already a full URL, return as is
         if imagePath.hasPrefix("http://") || imagePath.hasPrefix("https://") {
             return imagePath
         }
-        
-        // If starts with /uploads/, prepend base URL
         if imagePath.hasPrefix("/uploads/") {
-            return "http://localhost:3000\(imagePath)"
+            return "\(APIConfig.baseURL)\(imagePath)"
         }
-        
-        // If just filename, add /uploads/ prefix
         if !imagePath.hasPrefix("/") {
-            return "http://localhost:3000/uploads/\(imagePath)"
+            return "\(APIConfig.baseURL)/uploads/\(imagePath)"
         }
-        
-        // Otherwise prepend base URL
-        return "http://localhost:3000\(imagePath)"
+        return "\(APIConfig.baseURL)\(imagePath)"
     }
-    
+
     var priceText: String {
-        if let price = price {
-            return "$\(String(format: "%.2f", price))\(unit != nil ? "/\(unit!)" : "")"
+        if let price = price, price > 0 {
+            return "₹\(String(format: "%.2f", price))\(unit != nil ? "/\(unit!)" : "")"
         }
         return "Price on request"
     }
@@ -293,8 +314,56 @@ struct Store: Codable, Identifiable {
     let website: String?
     let logo: String?
     let createdAt: String?
-    
+    let storeViews: Int?
+
     var displayName: String {
         storeName ?? name ?? "Store"
     }
+}
+
+// MARK: - Public Profile (full seller profile from /api/user/public/:id)
+struct PublicProfile: Codable {
+    let id: Int
+    let name: String?
+    let email: String?
+    let phone: String?
+    let role: String?
+    let storeName: String?
+    let businessType: String?
+    let categories: String?
+    let address: String?
+    let website: String?
+    let logo: String?
+    let uniqueId: String?
+    let location: String?
+    let profilePicture: String?
+    let tagline: String?
+    let storeDescription: String?
+    let ownerMessage: String?
+    let yearEstablished: String?
+    let employeeCount: String?
+    let annualTurnover: String?
+    let paymentModes: String?
+    let exportMarkets: String?
+    let certifications: String?
+    let whyUs: String?
+    let createdAt: String?
+    let products: [Product]?
+
+    var displayName: String {
+        storeName ?? name ?? "Store"
+    }
+}
+
+// MARK: - Banner Ad Model
+struct BannerAd: Codable, Identifiable {
+    let id: Int
+    let userId: Int?
+    let title: String
+    let description: String?
+    let imageUrl: String
+    let targetUrl: String
+    let status: String?
+    let createdAt: String?
+    let expiresAt: String?
 }
