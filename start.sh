@@ -5,7 +5,7 @@ echo "Starting BigSpice..."
 
 # Start Flask backend in background
 echo "[1/2] Starting Flask backend on port 5000..."
-python app.py &
+python3 app.py &
 FLASK_PID=$!
 
 # Start Next.js frontend
