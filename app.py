@@ -1136,6 +1136,18 @@ def admin_update_user(user_id):
         if 'logo_path' in data:
             updates.append('logo_path = %s')
             params.append(data['logo_path'])
+        if 'website' in data:
+            updates.append('website = %s')
+            params.append(data['website'])
+        if 'categories' in data:
+            updates.append('categories = %s')
+            params.append(data['categories'])
+        if 'taxNumber' in data:
+            updates.append('taxNumber = %s')
+            params.append(data['taxNumber'])
+        if 'role' in data and data['role'] in ('buyer', 'seller', 'advertiser', 'admin'):
+            updates.append('role = %s')
+            params.append(data['role'])
         
         if not updates:
             return jsonify({'error': 'No fields to update'}), 400
@@ -1297,6 +1309,83 @@ def admin_delete_ad(ad_id):
         print('admin_delete_ad error:', e)
         import traceback
         traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/admin/banner-ads', methods=['GET'])
+def admin_get_banner_ads():
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('''
+            SELECT b.id, b.userId, b.title, b.description, b.imageUrl, b.targetUrl,
+                   b.status, b.createdAt, b.expiresAt,
+                   b.contactName, b.contactNumber, b.industry, b.adAddress, b.notes,
+                   u.name AS advertiserName, u.storeName AS advertiserCompany
+            FROM banner_ads b
+            LEFT JOIN users u ON u.id = b.userId
+            ORDER BY b.createdAt DESC
+        ''')
+        rows = cursor.fetchall()
+        db.close()
+        ads = [{
+            'id': r['id'], 'userId': r['userid'], 'title': r['title'],
+            'description': r['description'], 'imageUrl': r['imageurl'],
+            'targetUrl': r['targeturl'], 'status': r['status'],
+            'contactName': r['contactname'], 'contactNumber': r['contactnumber'],
+            'industry': r['industry'], 'adAddress': r['adaddress'], 'notes': r['notes'],
+            'advertiserName': r['advertisername'], 'advertiserCompany': r['advertisercompany'],
+            'createdAt': r['createdat'].isoformat() if r['createdat'] else None,
+            'expiresAt': r['expiresat'].isoformat() if r['expiresat'] else None,
+        } for r in rows]
+        return jsonify({'success': True, 'ads': ads})
+    except Exception as e:
+        print('admin_get_banner_ads error:', e)
+        import traceback; traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/admin/banner-ads/<int:ad_id>', methods=['PUT'])
+def admin_update_banner_ad(ad_id):
+    try:
+        data = request.get_json() or {}
+        updates = []
+        params = []
+        for field in ('title', 'description', 'targetUrl', 'status', 'expiresAt',
+                      'contactName', 'contactNumber', 'industry', 'adAddress', 'notes'):
+            if field in data:
+                updates.append(f'{field} = %s')
+                params.append(data[field] or None)
+        if not updates:
+            return jsonify({'error': 'No fields to update'}), 400
+        params.append(ad_id)
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute(f"UPDATE banner_ads SET {', '.join(updates)} WHERE id = %s", params)
+        db.commit()
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('admin_update_banner_ad error:', e)
+        import traceback; traceback.print_exc()
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/admin/banner-ads/<int:ad_id>', methods=['DELETE'])
+def admin_delete_banner_ad(ad_id):
+    try:
+        db = get_db()
+        cursor = dict_cursor(db)
+        cursor.execute('DELETE FROM banner_ads WHERE id = %s', (ad_id,))
+        db.commit()
+        deleted = cursor.rowcount
+        db.close()
+        if deleted == 0:
+            return jsonify({'success': False, 'error': 'Banner ad not found'}), 404
+        return jsonify({'success': True})
+    except Exception as e:
+        print('admin_delete_banner_ad error:', e)
+        import traceback; traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
 
 

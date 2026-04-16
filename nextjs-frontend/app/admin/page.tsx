@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User, Ad } from "@/types";
 
-type Tab = "all" | "sellers" | "buyers" | "listings";
+type Tab =
+  | "all"
+  | "sellers"
+  | "buyers"
+  | "advertisers"
+  | "listings"
+  | "bannerads";
 
 interface EditModal {
   user: User;
@@ -15,7 +21,43 @@ interface EditModal {
   storeName: string;
   businessType: string;
   address: string;
+  website: string;
+  categories: string;
+  taxNumber: string;
+  role: string;
   logoUrl: string;
+}
+
+interface BannerAd {
+  id: number;
+  userId: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+  targetUrl: string;
+  status: string;
+  contactName: string;
+  contactNumber: string;
+  industry: string;
+  adAddress: string;
+  notes: string;
+  advertiserName: string;
+  advertiserCompany: string;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+interface BannerEditModal {
+  ad: BannerAd;
+  title: string;
+  description: string;
+  targetUrl: string;
+  status: string;
+  expiresAt: string;
+  contactName: string;
+  contactNumber: string;
+  industry: string;
+  notes: string;
 }
 
 interface PasswordModal {
@@ -61,11 +103,16 @@ export default function AdminPage() {
   const [editModal, setEditModal] = useState<EditModal | null>(null);
   const [adEditModal, setAdEditModal] = useState<AdEditModal | null>(null);
   const [pwdModal, setPwdModal] = useState<PasswordModal | null>(null);
+  const [bannerAds, setBannerAds] = useState<BannerAd[]>([]);
+  const [bannerEditModal, setBannerEditModal] =
+    useState<BannerEditModal | null>(null);
+  const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [editError, setEditError] = useState("");
   const [adEditError, setAdEditError] = useState("");
   const [pwdError, setPwdError] = useState("");
+  const [bannerEditError, setBannerEditError] = useState("");
 
   useEffect(() => {
     if (
@@ -81,14 +128,16 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [usersRes, adsRes, adminAdsRes] = await Promise.all([
+      const [usersRes, adsRes, adminAdsRes, bannerAdsRes] = await Promise.all([
         fetch("/api/admin/users").then((r) => r.json()),
         fetch("/api/ads").then((r) => r.json()),
         fetch("/api/admin/ads").then((r) => r.json()),
+        fetch("/api/admin/banner-ads").then((r) => r.json()),
       ]);
       if (usersRes.success) setUsers(usersRes.users);
       if (Array.isArray(adsRes)) setAds(adsRes);
       if (adminAdsRes.success) setAdminAds(adminAdsRes.ads);
+      if (bannerAdsRes.success) setBannerAds(bannerAdsRes.ads);
     } catch {
       /* empty */
     }
@@ -170,6 +219,10 @@ export default function AdminPage() {
       storeName: u.storeName || "",
       businessType: u.businessType || "",
       address: u.address || "",
+      website: u.website || "",
+      categories: u.categories || "",
+      taxNumber: u.taxNumber || "",
+      role: u.role || "buyer",
       logoUrl: u.logo || "",
     });
 
@@ -191,6 +244,10 @@ export default function AdminPage() {
             storeName: editModal.storeName,
             businessType: editModal.businessType,
             address: editModal.address,
+            website: editModal.website,
+            categories: editModal.categories,
+            taxNumber: editModal.taxNumber,
+            role: editModal.role,
             logo_path: editModal.logoUrl || undefined,
           }),
         });
@@ -248,6 +305,64 @@ export default function AdminPage() {
     loadData();
   };
 
+  const openBannerEdit = (b: BannerAd) =>
+    setBannerEditModal({
+      ad: b,
+      title: b.title || "",
+      description: b.description || "",
+      targetUrl: b.targetUrl || "",
+      status: b.status || "active",
+      expiresAt: b.expiresAt ? b.expiresAt.slice(0, 10) : "",
+      contactName: b.contactName || "",
+      contactNumber: b.contactNumber || "",
+      industry: b.industry || "",
+      notes: b.notes || "",
+    });
+
+  const saveBannerEdit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!bannerEditModal) return;
+      setSaving(true);
+      setBannerEditError("");
+      try {
+        const res = await fetch(
+          `/api/admin/banner-ads/${bannerEditModal.ad.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: bannerEditModal.title,
+              description: bannerEditModal.description,
+              targetUrl: bannerEditModal.targetUrl,
+              status: bannerEditModal.status,
+              expiresAt: bannerEditModal.expiresAt || null,
+              contactName: bannerEditModal.contactName,
+              contactNumber: bannerEditModal.contactNumber,
+              industry: bannerEditModal.industry,
+              notes: bannerEditModal.notes,
+            }),
+          },
+        );
+        const j = await res.json();
+        if (j.success) {
+          setBannerEditModal(null);
+          loadData();
+        } else setBannerEditError(j.error || "Failed to save.");
+      } catch {
+        setBannerEditError("Network error.");
+      }
+      setSaving(false);
+    },
+    [bannerEditModal],
+  );
+
+  const deleteBannerAd = async (id: number) => {
+    if (!confirm("Delete this banner ad? This action is irreversible.")) return;
+    await fetch(`/api/admin/banner-ads/${id}`, { method: "DELETE" });
+    loadData();
+  };
+
   const logout = () => {
     sessionStorage.removeItem("admin_auth");
     router.push("/admin/login");
@@ -255,15 +370,32 @@ export default function AdminPage() {
 
   const sellers = users.filter((u) => u.role === "seller");
   const buyers = users.filter((u) => u.role === "buyer" || !u.role);
+  const advertisers = users.filter((u) => u.role === "advertiser");
+
+  const q = search.toLowerCase();
+  const filterUsers = (list: User[]) =>
+    q
+      ? list.filter(
+          (u) =>
+            (u.name || "").toLowerCase().includes(q) ||
+            (u.email || "").toLowerCase().includes(q) ||
+            (u.storeName || "").toLowerCase().includes(q) ||
+            String(u.uniqueId || u.id)
+              .toLowerCase()
+              .includes(q),
+        )
+      : list;
 
   const displayedUsers: User[] =
     tab === "sellers"
-      ? sellers
+      ? filterUsers(sellers)
       : tab === "buyers"
-        ? buyers
-        : tab === "listings"
-          ? []
-          : users;
+        ? filterUsers(buyers)
+        : tab === "advertisers"
+          ? filterUsers(advertisers)
+          : tab === "listings" || tab === "bannerads"
+            ? []
+            : filterUsers(users);
 
   const Avatar = ({ u }: { u: User }) =>
     u.profilePicture || u.logo ? (
@@ -300,12 +432,14 @@ export default function AdminPage() {
 
       <main className="max-w-screen-xl mx-auto w-full px-4 py-10">
         {/* Stats grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           {[
             { label: "Total Users", value: users.length },
             { label: "Sellers", value: sellers.length },
             { label: "Buyers", value: buyers.length },
-            { label: "Total Listings", value: ads.length },
+            { label: "Advertisers", value: advertisers.length },
+            { label: "Listings", value: ads.length },
+            { label: "Banner Ads", value: bannerAds.length },
           ].map(({ label, value }) => (
             <div
               key={label}
@@ -319,17 +453,47 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-5 border-b border-gray-200">
-          {(["all", "sellers", "buyers", "listings"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-5 py-2.5 text-sm font-medium capitalize border-b-2 -mb-px transition-colors ${tab === t ? "border-[#d35400] text-[#d35400]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
-            >
-              {t === "all" ? "All Users" : t === "listings" ? "Listings" : t}
-            </button>
-          ))}
+        {/* Search bar + Tabs */}
+        <div className="mb-5">
+          <input
+            type="search"
+            placeholder="Search by name, email, store, ID…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full sm:w-80 border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-[#d35400]"
+          />
+          <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
+            {(
+              [
+                "all",
+                "sellers",
+                "buyers",
+                "advertisers",
+                "listings",
+                "bannerads",
+              ] as Tab[]
+            ).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-5 py-2.5 text-sm font-medium capitalize whitespace-nowrap border-b-2 -mb-px transition-colors ${
+                  tab === t
+                    ? "border-[#d35400] text-[#d35400]"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {t === "all"
+                  ? "All Users"
+                  : t === "listings"
+                    ? "Listings"
+                    : t === "bannerads"
+                      ? "Banner Ads"
+                      : t === "advertisers"
+                        ? "Advertisers"
+                        : t}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Listings table */}
@@ -463,6 +627,136 @@ export default function AdminPage() {
               </table>
             )}
           </div>
+        ) : tab === "bannerads" ? (
+          /* Banner Ads table */
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+            {loading ? (
+              <div className="p-8 text-center text-gray-400">
+                Loading banner ads…
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    {[
+                      "ID",
+                      "Image",
+                      "Title",
+                      "Advertiser",
+                      "Status",
+                      "Expires",
+                      "Industry",
+                      "Actions",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left font-semibold text-gray-600"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {bannerAds.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="py-10 text-center text-gray-400"
+                      >
+                        No banner ads found
+                      </td>
+                    </tr>
+                  ) : (
+                    bannerAds
+                      .filter(
+                        (b) =>
+                          !q ||
+                          (b.title || "").toLowerCase().includes(q) ||
+                          (b.advertiserName || "").toLowerCase().includes(q) ||
+                          (b.advertiserCompany || "").toLowerCase().includes(q),
+                      )
+                      .map((b) => (
+                        <tr
+                          key={b.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {b.id}
+                          </td>
+                          <td className="px-4 py-3">
+                            {b.imageUrl ? (
+                              <img
+                                src={b.imageUrl}
+                                alt={b.title}
+                                className="w-14 h-10 object-cover rounded border border-gray-200"
+                              />
+                            ) : (
+                              <span className="text-gray-300 text-xs">
+                                No img
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-gray-900 max-w-[180px]">
+                            <a
+                              href={b.targetUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:text-[#d35400] hover:underline line-clamp-2"
+                            >
+                              {b.title}
+                            </a>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 text-xs">
+                            <div>{b.advertiserName || "—"}</div>
+                            <div className="text-gray-400">
+                              {b.advertiserCompany || ""}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                b.status === "active"
+                                  ? "bg-green-100 text-green-700"
+                                  : b.status === "paused"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-gray-100 text-gray-500"
+                              }`}
+                            >
+                              {b.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {b.expiresAt
+                              ? new Date(b.expiresAt).toLocaleDateString()
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">
+                            {b.industry || "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => openBannerEdit(b)}
+                                className="border border-blue-500 text-blue-600 text-xs px-2.5 py-1 rounded hover:bg-blue-50"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteBannerAd(b.id)}
+                                className="border border-red-400 text-red-500 text-xs px-2.5 py-1 rounded hover:bg-red-50"
+                              >
+                                Del
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
         ) : (
           /* Users table */
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
@@ -494,6 +788,9 @@ export default function AdminPage() {
                         Store
                       </th>
                     )}
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                      Phone
+                    </th>
                     <th className="px-4 py-3 text-left font-semibold text-gray-600">
                       Joined
                     </th>
@@ -539,16 +836,38 @@ export default function AdminPage() {
                         </td>
                         {tab === "sellers" && (
                           <td className="px-4 py-3 text-gray-600">
-                            {u.storeName || "—"}
+                            {u.storeName ? (
+                              <Link
+                                href={`/store/${u.uniqueId || u.id}`}
+                                target="_blank"
+                                className="hover:text-[#d35400] hover:underline"
+                              >
+                                {u.storeName}
+                              </Link>
+                            ) : (
+                              "—"
+                            )}
                           </td>
                         )}
+                        <td className="px-4 py-3 text-gray-400 text-xs">
+                          {u.phone || "—"}
+                        </td>
                         <td className="px-4 py-3 text-gray-400 text-xs">
                           {u.createdAt
                             ? new Date(u.createdAt).toLocaleDateString()
                             : "—"}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
+                            {u.role === "seller" && u.uniqueId && (
+                              <Link
+                                href={`/store/${u.uniqueId}`}
+                                target="_blank"
+                                className="border border-gray-300 text-gray-500 text-xs px-2.5 py-1 rounded hover:bg-gray-50"
+                              >
+                                View
+                              </Link>
+                            )}
                             <button
                               onClick={() => openEdit(u)}
                               className="border border-blue-500 text-blue-600 text-xs px-2.5 py-1 rounded hover:bg-blue-50"
@@ -620,7 +939,15 @@ export default function AdminPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-300">
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="text-gray-300"
+                      >
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <path d="M21 15l-5-5L5 21" />
@@ -629,7 +956,14 @@ export default function AdminPage() {
                   </div>
                   <div className="flex-1">
                     <label className="cursor-pointer inline-flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
@@ -644,20 +978,29 @@ export default function AdminPage() {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           const url = await uploadImage(file);
-                          if (url) setAdEditModal((m) => m ? { ...m, imageUrl: url } : m);
+                          if (url)
+                            setAdEditModal((m) =>
+                              m ? { ...m, imageUrl: url } : m,
+                            );
                         }}
                       />
                     </label>
                     {adEditModal.imageUrl && (
                       <button
                         type="button"
-                        onClick={() => setAdEditModal((m) => m ? { ...m, imageUrl: "" } : m)}
+                        onClick={() =>
+                          setAdEditModal((m) =>
+                            m ? { ...m, imageUrl: "" } : m,
+                          )
+                        }
                         className="mt-2 text-xs text-red-500 hover:underline block"
                       >
                         Remove image
                       </button>
                     )}
-                    <p className="text-[11px] text-gray-400 mt-1">JPG, PNG or WebP. Auto-converted to WebP.</p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      JPG, PNG or WebP. Auto-converted to WebP.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -775,11 +1118,13 @@ export default function AdminPage() {
           onClick={() => setEditModal(null)}
         >
           <div
-            className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl"
+            className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-lg">Edit User</h3>
+              <h3 className="font-bold text-lg">
+                Edit User — {editModal.user.name || editModal.user.email}
+              </h3>
               <button
                 onClick={() => setEditModal(null)}
                 className="text-2xl text-gray-400 hover:text-gray-700"
@@ -788,97 +1133,153 @@ export default function AdminPage() {
               </button>
             </div>
             <form onSubmit={saveEdit} className="space-y-4">
-              {/* Seller logo */}
-              {editModal.user.role === "seller" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Store Logo
-                  </label>
-                  <div className="flex items-start gap-4">
-                    <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
-                      {editModal.logoUrl ? (
-                        <img
-                          src={editModal.logoUrl}
-                          alt="logo"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#d35400] to-amber-400">
-                          <span className="text-white text-2xl font-bold">
-                            {(editModal.user.name || "S").charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <label className="cursor-pointer inline-flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="17 8 12 3 7 8" />
-                          <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        {uploadingImg ? "Uploading…" : "Upload Logo"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploadingImg}
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const url = await uploadImage(file);
-                            if (url) setEditModal((m) => m ? { ...m, logoUrl: url } : m);
-                          }}
-                        />
-                      </label>
-                      {editModal.logoUrl && (
-                        <button
-                          type="button"
-                          onClick={() => setEditModal((m) => m ? { ...m, logoUrl: "" } : m)}
-                          className="mt-2 text-xs text-red-500 hover:underline block"
-                        >
-                          Remove logo
-                        </button>
-                      )}
-                      <p className="text-[11px] text-gray-400 mt-1">JPG, PNG or WebP. Auto-converted to WebP.</p>
-                    </div>
+              {/* Profile pic / logo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {editModal.role === "seller"
+                    ? "Store Logo"
+                    : "Profile Picture"}
+                </label>
+                <div className="flex items-start gap-4">
+                  <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                    {editModal.logoUrl ? (
+                      <img
+                        src={editModal.logoUrl}
+                        alt="logo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#d35400] to-amber-400">
+                        <span className="text-white text-2xl font-bold">
+                          {(editModal.user.name || "U").charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label className="cursor-pointer inline-flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      {uploadingImg ? "Uploading…" : "Upload"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingImg}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const url = await uploadImage(file);
+                          if (url)
+                            setEditModal((m) =>
+                              m ? { ...m, logoUrl: url } : m,
+                            );
+                        }}
+                      />
+                    </label>
+                    {editModal.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditModal((m) => (m ? { ...m, logoUrl: "" } : m))
+                        }
+                        className="mt-2 text-xs text-red-500 hover:underline block"
+                      >
+                        Remove
+                      </button>
+                    )}
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      JPG, PNG or WebP.
+                    </p>
                   </div>
                 </div>
-              )}
-              {[
-                {
-                  label: "Name",
-                  value: editModal.name,
-                  key: "name",
-                  type: "text",
-                },
-                {
-                  label: "Email",
-                  value: editModal.email,
-                  key: "email",
-                  type: "email",
-                },
-                {
-                  label: "Phone",
-                  value: editModal.phone,
-                  key: "phone",
-                  type: "tel",
-                },
-                {
-                  label: "Location",
-                  value: editModal.location,
-                  key: "location",
-                  type: "text",
-                },
-              ].map(({ label, value, key, type }) => (
-                <div key={key}>
+              </div>
+
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <select
+                  value={editModal.role}
+                  onChange={(e) =>
+                    setEditModal((m) =>
+                      m ? { ...m, role: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                >
+                  <option value="buyer">Buyer</option>
+                  <option value="seller">Seller</option>
+                  <option value="advertiser">Advertiser</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {/* Core fields */}
+              {(
+                [
+                  {
+                    label: "Full Name",
+                    key: "name",
+                    type: "text",
+                    required: true,
+                  },
+                  {
+                    label: "Email",
+                    key: "email",
+                    type: "email",
+                    required: true,
+                  },
+                  {
+                    label: "Phone",
+                    key: "phone",
+                    type: "tel",
+                    required: false,
+                  },
+                  {
+                    label: "Location",
+                    key: "location",
+                    type: "text",
+                    required: false,
+                  },
+                  {
+                    label: "Address",
+                    key: "address",
+                    type: "text",
+                    required: false,
+                  },
+                  {
+                    label: "Website",
+                    key: "website",
+                    type: "url",
+                    required: false,
+                  },
+                ] as {
+                  label: string;
+                  key: keyof EditModal;
+                  type: string;
+                  required: boolean;
+                }[]
+              ).map(({ label, key, type, required }) => (
+                <div key={String(key)}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {label}
                   </label>
                   <input
                     type={type}
-                    value={value}
-                    required={["name", "email"].includes(key)}
+                    value={String(editModal[key] ?? "")}
+                    required={required}
                     onChange={(e) =>
                       setEditModal((m) =>
                         m ? { ...m, [key]: e.target.value } : m,
@@ -888,42 +1289,73 @@ export default function AdminPage() {
                   />
                 </div>
               ))}
-              {editModal.user.role === "seller" && (
+
+              {/* Seller / Advertiser specific */}
+              {(editModal.role === "seller" ||
+                editModal.role === "advertiser") && (
                 <>
-                  {[
-                    {
-                      label: "Store Name",
-                      key: "storeName",
-                      value: editModal.storeName,
-                    },
-                    {
-                      label: "Business Type",
-                      key: "businessType",
-                      value: editModal.businessType,
-                    },
-                    {
-                      label: "Address",
-                      key: "address",
-                      value: editModal.address,
-                    },
-                  ].map(({ label, key, value }) => (
-                    <div key={key}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {label}
-                      </label>
-                      <input
-                        value={value}
-                        onChange={(e) =>
-                          setEditModal((m) =>
-                            m ? { ...m, [key]: e.target.value } : m,
-                          )
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
-                      />
-                    </div>
-                  ))}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {editModal.role === "seller"
+                        ? "Store Name"
+                        : "Company Name"}
+                    </label>
+                    <input
+                      value={editModal.storeName}
+                      onChange={(e) =>
+                        setEditModal((m) =>
+                          m ? { ...m, storeName: e.target.value } : m,
+                        )
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Business Type
+                    </label>
+                    <input
+                      value={editModal.businessType}
+                      onChange={(e) =>
+                        setEditModal((m) =>
+                          m ? { ...m, businessType: e.target.value } : m,
+                        )
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Categories
+                    </label>
+                    <input
+                      value={editModal.categories}
+                      onChange={(e) =>
+                        setEditModal((m) =>
+                          m ? { ...m, categories: e.target.value } : m,
+                        )
+                      }
+                      placeholder="e.g. Spices & Herbs, Grains"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax / GST Number
+                    </label>
+                    <input
+                      value={editModal.taxNumber}
+                      onChange={(e) =>
+                        setEditModal((m) =>
+                          m ? { ...m, taxNumber: e.target.value } : m,
+                        )
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                    />
+                  </div>
                 </>
               )}
+
               {editError && <p className="text-sm text-red-600">{editError}</p>}
               <div className="flex gap-3 pt-2">
                 <button
@@ -1016,6 +1448,198 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setPwdModal(null)}
+                  className="border border-gray-300 text-gray-600 px-5 py-2.5 rounded-lg text-sm hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Ad edit modal */}
+      {bannerEditModal && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setBannerEditModal(null)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-lg">Edit Banner Ad</h3>
+              <button
+                onClick={() => setBannerEditModal(null)}
+                className="text-2xl text-gray-400 hover:text-gray-700"
+              >
+                &times;
+              </button>
+            </div>
+            {/* Preview image */}
+            {bannerEditModal.ad.imageUrl && (
+              <img
+                src={bannerEditModal.ad.imageUrl}
+                alt="banner"
+                className="w-full h-36 object-cover rounded-lg border border-gray-200 mb-4"
+              />
+            )}
+            <form onSubmit={saveBannerEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={bannerEditModal.title}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, title: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={bannerEditModal.description}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, description: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400] resize-y"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Target URL
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={bannerEditModal.targetUrl}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, targetUrl: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={bannerEditModal.status}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, status: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                >
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Expiry Date
+                </label>
+                <input
+                  type="date"
+                  value={bannerEditModal.expiresAt}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, expiresAt: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Contact Name
+                </label>
+                <input
+                  type="text"
+                  value={bannerEditModal.contactName}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, contactName: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  value={bannerEditModal.contactNumber}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, contactNumber: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Industry
+                </label>
+                <input
+                  type="text"
+                  value={bannerEditModal.industry}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, industry: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <textarea
+                  rows={2}
+                  value={bannerEditModal.notes}
+                  onChange={(e) =>
+                    setBannerEditModal((m) =>
+                      m ? { ...m, notes: e.target.value } : m,
+                    )
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d35400] resize-y"
+                />
+              </div>
+              {bannerEditError && (
+                <p className="text-sm text-red-600">{bannerEditError}</p>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="bg-[#d35400] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#b84700] disabled:opacity-50"
+                >
+                  {saving ? "Saving…" : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBannerEditModal(null)}
                   className="border border-gray-300 text-gray-600 px-5 py-2.5 rounded-lg text-sm hover:bg-gray-50"
                 >
                   Cancel

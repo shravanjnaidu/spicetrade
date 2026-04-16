@@ -6,6 +6,43 @@ export interface CategoryGroup {
 
 export const CATEGORY_GROUPS: CategoryGroup[] = [
   {
+    label: "Professional Services",
+    items: [
+      "Consulting & Advisory",
+      "Quality Testing & Certification",
+      "Legal & Compliance",
+      "Financial & Accounting",
+      "Marketing & Branding",
+      "Market Research & Analytics",
+      "Training & Education",
+    ],
+  },
+  {
+    label: "Home Services",
+    items: [
+      "Carpentry",
+      "Door & Window Installation",
+      "Flooring Installation",
+      "Painting",
+      "Plumbing",
+      "Electrical",
+      "Appliance Repair",
+    ],
+  },
+  {
+    label: "Pest Control",
+    items: [
+      "Residential Pest Control",
+      "Commercial Pest Control",
+      "Termite Treatment",
+      "Rodent Control",
+      "Mosquito Control",
+      "Bed Bug Treatment",
+      "Cockroach Control",
+      "Bird & Wildlife Control",
+    ],
+  },
+  {
     label: "Food & Agriculture",
     items: [
       "Spices & Herbs",
@@ -36,18 +73,6 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       "Safety & Protective Equipment",
       "Cold Chain & Refrigeration",
       "Industrial Tools & Hardware",
-    ],
-  },
-  {
-    label: "Professional Services",
-    items: [
-      "Consulting & Advisory",
-      "Quality Testing & Certification",
-      "Legal & Compliance",
-      "Financial & Accounting",
-      "Marketing & Branding",
-      "Market Research & Analytics",
-      "Training & Education",
     ],
   },
   {
@@ -501,7 +526,26 @@ export const CATEGORY_TAGS: Record<string, string[]> = {
     "Pesticide Residue Testing",
   ],
   Other: ["Other"],
+  "Pest Control": [
+    "Residential Pest Control",
+    "Commercial Pest Control",
+    "Termite Treatment",
+    "Rodent Control",
+    "Mosquito Control",
+    "Bed Bug Treatment",
+    "Cockroach Control",
+    "Bird & Wildlife Control",
+  ],
+  "Home Services": [
+    "Carpentry",
+    "Door & Window Installation",
+    "Flooring Installation",
+    "Painting",
+    "Plumbing",
+    "Electrical",
+    "Appliance Repair",
+  ],
 };
 
-/** Flat list for the scrollable category tags bar and search dropdowns */
-export const ALL_CATEGORIES: string[] = CATEGORY_GROUPS.flatMap((g) => g.items);
+/** Top-level category group labels for the scrollable category tags bar and search dropdowns */
+export const ALL_CATEGORIES: string[] = CATEGORY_GROUPS.map((g) => g.label);

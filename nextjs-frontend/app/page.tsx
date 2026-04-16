@@ -115,7 +115,9 @@ function HeroBannerCarousel({ banners }: { banners: BannerAd[] }) {
           }`}
         >
           <div className="w-full h-full flex flex-col items-start justify-center px-5 sm:px-16 md:px-24 gap-2 sm:gap-3">
-            <span className="hidden sm:block text-4xl sm:text-5xl leading-none">{b.icon}</span>
+            <span className="hidden sm:block text-4xl sm:text-5xl leading-none">
+              {b.icon}
+            </span>
             <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white leading-snug max-w-lg">
               {b.title}
             </h2>
@@ -150,7 +152,9 @@ function HeroBannerCarousel({ banners }: { banners: BannerAd[] }) {
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white text-center px-5">
-              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 leading-snug">{b.title}</h2>
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 leading-snug">
+                {b.title}
+              </h2>
               {b.description && (
                 <p className="text-white/80 text-[11px] sm:text-base max-w-xl line-clamp-2 sm:line-clamp-none">
                   {b.description}
@@ -981,6 +985,223 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* How It Works */}
+          <section className="py-10 sm:py-14 bg-[#fdf8f5] border-b-8 border-gray-100">
+            <div className="max-w-screen-xl mx-auto px-4">
+              <div className="text-center mb-10">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
+                  How It Works
+                </h2>
+                <p className="text-gray-500 text-sm sm:text-base">
+                  Hire trusted professionals in 3 simple steps
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-0">
+                {/* Step 1 */}
+                <div className="flex-1 bg-white rounded-2xl border border-orange-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 p-6 sm:p-8 text-center w-full">
+                  <div className="relative w-20 h-20 mx-auto mb-5">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 flex items-center justify-center text-[#d35400]">
+                      <svg
+                        className="w-9 h-9"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" />
+                        <line x1="8" y1="13" x2="16" y2="13" />
+                        <line x1="8" y1="17" x2="12" y2="17" />
+                      </svg>
+                    </div>
+                    <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-[#d35400] text-white text-xs font-black flex items-center justify-center border-2 border-[#fdf8f5] shadow">
+                      1
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                    Post Your Requirement
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    Tell us what service/product you need, your location, and
+                    any details. It&apos;s free and takes less than a minute.
+                  </p>
+                </div>
+
+                {/* Connector */}
+                <div className="hidden sm:flex items-center flex-shrink-0 w-14 justify-center pb-10">
+                  <svg
+                    viewBox="0 0 60 20"
+                    fill="none"
+                    className="w-14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M2 10 H52"
+                      stroke="#e0a070"
+                      strokeWidth="2"
+                      strokeDasharray="5 4"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M48 5 L58 10 L48 15"
+                      stroke="#d35400"
+                      strokeWidth="2.2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div className="flex sm:hidden items-center justify-center w-8 h-8 my-1">
+                  <svg
+                    viewBox="0 0 20 40"
+                    fill="none"
+                    className="h-8"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 2 V32"
+                      stroke="#e0a070"
+                      strokeWidth="2"
+                      strokeDasharray="5 4"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M5 28 L10 38 L15 28"
+                      stroke="#d35400"
+                      strokeWidth="2.2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex-1 bg-white rounded-2xl border border-orange-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 p-6 sm:p-8 text-center w-full">
+                  <div className="relative w-20 h-20 mx-auto mb-5">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 flex items-center justify-center text-[#d35400]">
+                      <svg
+                        className="w-9 h-9"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                    </div>
+                    <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-[#d35400] text-white text-xs font-black flex items-center justify-center border-2 border-[#fdf8f5] shadow">
+                      2
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                    Sellers/Technicians Respond
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    Qualified professionals see your request and reach out with
+                    their offers, availability, and pricing.
+                  </p>
+                </div>
+
+                {/* Connector */}
+                <div className="hidden sm:flex items-center flex-shrink-0 w-14 justify-center pb-10">
+                  <svg
+                    viewBox="0 0 60 20"
+                    fill="none"
+                    className="w-14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M2 10 H52"
+                      stroke="#e0a070"
+                      strokeWidth="2"
+                      strokeDasharray="5 4"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M48 5 L58 10 L48 15"
+                      stroke="#d35400"
+                      strokeWidth="2.2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div className="flex sm:hidden items-center justify-center w-8 h-8 my-1">
+                  <svg
+                    viewBox="0 0 20 40"
+                    fill="none"
+                    className="h-8"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 2 V32"
+                      stroke="#e0a070"
+                      strokeWidth="2"
+                      strokeDasharray="5 4"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M5 28 L10 38 L15 28"
+                      stroke="#d35400"
+                      strokeWidth="2.2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex-1 bg-white rounded-2xl border border-orange-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 p-6 sm:p-8 text-center w-full">
+                  <div className="relative w-20 h-20 mx-auto mb-5">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 flex items-center justify-center text-[#d35400]">
+                      <svg
+                        className="w-9 h-9"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                    </div>
+                    <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-[#d35400] text-white text-xs font-black flex items-center justify-center border-2 border-[#fdf8f5] shadow">
+                      3
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                    Review Profile &amp; Choose
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">
+                    Browse their store, read reviews, compare offerings, and
+                    confidently hire the right professional for the job.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-8 text-center">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d35400] to-[#f39c12] text-white font-bold px-8 py-3.5 rounded-lg text-sm sm:text-base shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  Post a Requirement — It&apos;s Free
+                </Link>
+              </div>
+            </div>
+          </section>
+
           {/* Popular Products */}
           <section className="py-5 sm:py-8 bg-white">
             <div className="max-w-screen-xl mx-auto px-4">
@@ -1053,12 +1274,12 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Featured Suppliers */}
+          {/* Featured Sellers */}
           <section className="py-5 sm:py-8 bg-gray-50">
             <div className="max-w-screen-xl mx-auto px-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-                  🏪 Featured Suppliers
+                  🏪 Featured Sellers
                 </h2>
                 <Link
                   href="/stores"
