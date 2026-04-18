@@ -6,6 +6,7 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 
 import os
+import io
 import json
 import queue
 import threading
@@ -18,6 +19,8 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import resend
+import boto3
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -25,6 +28,13 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load PostgreSQL credentials
 with open(BASE_DIR / 'creds.json', 'r') as f:
     DB_CONFIG = json.load(f)
+
+resend.api_key = DB_CONFIG.get('resendapikey', '')
+APP_URL = os.environ.get('APP_URL', 'https://bigspice.in')
+
+# ── S3 config ──────────────────────────────────────────────────────────────────
+S3_BUCKET = DB_CONFIG.get('s3_bucket_name', '')
+S3_REGION = DB_CONFIG.get('aws_region', 'ap-south-2')
 
 DATA_DIR = BASE_DIR / 'data'
 DATA_DIR.mkdir(exist_ok=True)
@@ -278,6 +288,219 @@ def optimise_and_save(stream, dest_path: Path, max_px: int = _PRODUCT_MAX_PX, qu
             f.write(stream.read())
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── S3 image helpers ───────────────────────────────────────────────────────────
+
+def _get_s3():
+    """Return a boto3 S3 client.
+    - Locally: uses aws_access_key_id / aws_secret_access_key from creds.json.
+    - On EC2: keys are absent so boto3 falls through to the IAM instance role.
+    """
+    ak = DB_CONFIG.get('aws_access_key_id', '').strip()
+    sk = DB_CONFIG.get('aws_secret_access_key', '').strip()
+    if ak and sk:
+        return boto3.client('s3', region_name=S3_REGION,
+                            aws_access_key_id=ak, aws_secret_access_key=sk)
+    return boto3.client('s3', region_name=S3_REGION)
+
+
+def _upload_image_to_s3(stream, key: str,
+                         max_px: int = _PRODUCT_MAX_PX, quality: int = 82) -> str:
+    """Optimise an uploaded image and upload it to S3.  Returns the public URL."""
+    buf = io.BytesIO()
+    if _PILLOW_OK:
+        try:
+            img = PILImage.open(stream)
+            if img.mode not in ('RGB', 'RGBA'):
+                img = img.convert('RGB')
+            w, h = img.size
+            if max(w, h) > max_px:
+                ratio = max_px / max(w, h)
+                img = img.resize((int(w * ratio), int(h * ratio)), PILImage.LANCZOS)
+            img.save(buf, 'WEBP', quality=quality, method=4)
+            buf.seek(0)
+        except Exception as exc:
+            print(f'[s3] optimise warning: {exc} — uploading raw')
+            stream.seek(0)
+            buf = stream
+    else:
+        buf = stream
+    _get_s3().upload_fileobj(buf, S3_BUCKET, key, ExtraArgs={'ContentType': 'image/webp'})
+    return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Requirement notification email ───────────────────────────────────────────
+
+def _requirement_email_html(buyer_name: str, title: str, description: str,
+                             category: str, listing_url: str) -> str:
+    """Build a professional HTML email body for a new buyer requirement."""
+    # Truncate description to ~300 chars for the synopsis
+    synopsis = (description[:300] + '…') if len(description) > 300 else description
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Buyer Requirement — BigSpice</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;
+                      box-shadow:0 4px 24px rgba(0,0,0,0.08);overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#b5451b 0%,#e07b39 100%);
+                        padding:32px 40px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;
+                          letter-spacing:-0.5px;">BigSpice</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.88);font-size:14px;
+                         letter-spacing:0.5px;">B2B Spice & Food Trade Platform</p>
+            </td>
+          </tr>
+
+          <!-- Tag line banner -->
+          <tr>
+            <td style="background:#fff8f2;padding:14px 40px;border-bottom:1px solid #f0e6da;">
+              <p style="margin:0;font-size:13px;color:#b5451b;font-weight:600;
+                         text-transform:uppercase;letter-spacing:0.8px;">New Buyer Requirement</p>
+            </td>
+          </tr>
+
+          <!-- Main body -->
+          <tr>
+            <td style="padding:36px 40px 28px;">
+              <p style="margin:0 0 20px;font-size:16px;color:#333333;line-height:1.6;">
+                Hi there,
+              </p>
+              <p style="margin:0 0 24px;font-size:16px;color:#333333;line-height:1.6;">
+                A buyer has just posted a new sourcing requirement that matches your
+                listed category. Here's a quick overview:
+              </p>
+
+              <!-- Requirement card -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background:#fff8f2;border:1px solid #f0e6da;
+                             border-radius:8px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:24px 28px;">
+                    <!-- Category badge -->
+                    <p style="margin:0 0 12px;">
+                      <span style="display:inline-block;background:#b5451b;color:#ffffff;
+                                   font-size:11px;font-weight:700;letter-spacing:0.8px;
+                                   text-transform:uppercase;padding:4px 10px;
+                                   border-radius:4px;">{category}</span>
+                    </p>
+                    <!-- Title -->
+                    <h2 style="margin:0 0 12px;font-size:20px;color:#1a1a1a;font-weight:700;
+                                line-height:1.3;">{title}</h2>
+                    <!-- Synopsis -->
+                    <p style="margin:0 0 16px;font-size:15px;color:#555555;line-height:1.7;
+                               border-left:3px solid #e07b39;padding-left:14px;">
+                      {synopsis}
+                    </p>
+                    <!-- Buyer -->
+                    <p style="margin:0;font-size:13px;color:#888888;">
+                      Posted by <strong style="color:#333333;">{buyer_name}</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA button -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <a href="{listing_url}"
+                       style="display:inline-block;background:linear-gradient(135deg,#b5451b,#e07b39);
+                               color:#ffffff;text-decoration:none;font-size:16px;font-weight:700;
+                               padding:14px 40px;border-radius:50px;
+                               box-shadow:0 4px 14px rgba(181,69,27,0.35);
+                               letter-spacing:0.3px;">
+                      View This Requirement &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:28px 0 0;font-size:14px;color:#888888;line-height:1.6;">
+                If the button above doesn't work, copy and paste this link into your
+                browser:<br />
+                <a href="{listing_url}" style="color:#b5451b;word-break:break-all;">{listing_url}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#faf5ef;padding:24px 40px;border-top:1px solid #f0e6da;
+                        text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;color:#aaaaaa;">
+                You're receiving this because you have listed products/services in
+                the <strong>{category}</strong> category on BigSpice.
+              </p>
+              <p style="margin:0;font-size:12px;color:#aaaaaa;">
+                &copy; 2026 BigSpice &mdash;
+                <a href="{APP_URL}" style="color:#b5451b;text-decoration:none;">bigspice.in</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
+                                   category: str, buyer_name: str) -> None:
+    """Find sellers with matching category listings and email them.
+    Runs in a background thread — must not raise."""
+    try:
+        listing_url = f"{APP_URL}/listing.html?id={ad_id}"
+        html = _requirement_email_html(buyer_name, title, description, category, listing_url)
+
+        db = get_db()
+        cur = db.cursor(cursor_factory=RealDictCursor)
+        # Find sellers who have at least one non-requirement listing in the same category
+        cur.execute("""
+            SELECT DISTINCT u.email, u.name
+            FROM users u
+            JOIN ads a ON a.userid = u.id
+            WHERE u.role = 'seller'
+              AND u.email IS NOT NULL
+              AND a.category = %s
+              AND (a.listingtype IS NULL OR a.listingtype != 'requirement')
+        """, (category,))
+        sellers = cur.fetchall()
+        cur.close()
+        db.close()
+
+        if not sellers:
+            print(f'[email] No sellers found for category "{category}" — skipping.')
+            return
+
+        for seller in sellers:
+            try:
+                resend.Emails.send({
+                    'from': 'BigSpice <onboarding@resend.dev>',
+                    'to': [seller['email']],
+                    'subject': f'New Buyer Requirement: {title}',
+                    'html': html,
+                })
+                print(f'[email] Sent requirement notification to {seller["email"]}')
+            except Exception as exc:
+                print(f'[email] Failed to send to {seller["email"]}: {exc}')
+    except Exception as exc:
+        print(f'[email] notify_sellers_of_requirement error: {exc}')
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Initialize DB immediately so we don't rely on server hooks that may differ across environments
 init_db()
 
@@ -391,48 +614,71 @@ def _sse_publish(user_id, event_type, data):
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
-    """Generic file upload endpoint for images - supports multiple files"""
+    """Upload product/listing images to S3; returns S3 URL(s)."""
     try:
         files = request.files.getlist('file')
         if not files or len(files) == 0:
             return jsonify({'error': 'No files provided'}), 400
-        
-        # Create uploads directory if it doesn't exist
-        uploads_dir = BASE_DIR / 'public' / 'uploads'
-        uploads_dir.mkdir(parents=True, exist_ok=True)
-        
+
         uploaded_urls = []
-        
         for file in files:
             if file.filename == '':
                 continue
-            
-            # Generate secure filename with timestamp, always save as .webp
-            original_name = secure_filename(file.filename)
-            stem = Path(original_name).stem
+            stem = Path(secure_filename(file.filename)).stem
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-            filename = f"{timestamp}_{stem}.webp"
-            
-            # Save and optimise
-            save_path = uploads_dir / filename
-            optimise_and_save(file.stream, save_path)
-            
-            url = f"/uploads/{filename}"
+            key = f"uploads/products/{timestamp}_{stem}.webp"
+            url = _upload_image_to_s3(file.stream, key)
             uploaded_urls.append(url)
-        
+
         if len(uploaded_urls) == 0:
             return jsonify({'error': 'No valid files uploaded'}), 400
-        
-        # Return single URL for backward compatibility, or array for multiple
+
         if len(uploaded_urls) == 1:
             return jsonify({'success': True, 'url': uploaded_urls[0]})
-        else:
-            return jsonify({'success': True, 'urls': uploaded_urls})
+        return jsonify({'success': True, 'urls': uploaded_urls})
     except Exception as e:
         print('upload_file error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'Upload failed'}), 500
+
+
+@app.route('/api/s3/presign', methods=['POST'])
+def s3_presign():
+    """Generate a pre-signed PUT URL for direct browser→S3 uploads.
+
+    Request body (JSON):
+        folder       – one of: products | avatars | logos | banners
+        filename     – original file name (used for extension only)
+        content_type – MIME type, e.g. 'image/jpeg'
+
+    Response:
+        upload_url  – signed PUT URL (valid 15 min); PUT the raw file bytes here
+        public_url  – permanent S3 URL to store in the database
+        key         – S3 object key
+    """
+    data = request.get_json() or {}
+    folder = data.get('folder', 'products')
+    if folder not in ('products', 'avatars', 'logos', 'banners'):
+        folder = 'products'
+    original = secure_filename(data.get('filename') or 'upload.bin')
+    suffix = Path(original).suffix or '.jpg'
+    stem = Path(original).stem
+    content_type = data.get('content_type', 'image/jpeg')
+    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')
+    key = f"uploads/{folder}/{timestamp}_{stem}{suffix}"
+    try:
+        upload_url = _get_s3().generate_presigned_url(
+            'put_object',
+            Params={'Bucket': S3_BUCKET, 'Key': key, 'ContentType': content_type},
+            ExpiresIn=900,
+        )
+        public_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+        return jsonify({'success': True, 'upload_url': upload_url,
+                        'public_url': public_url, 'key': key})
+    except Exception as e:
+        print('s3_presign error:', e)
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/signup', methods=['POST'])
@@ -475,27 +721,19 @@ def signup():
     logo_path = None
     logo_file = files.get('logo') if files else None
     if logo_file and getattr(logo_file, 'filename', None):
-        uploads_dir = BASE_DIR / 'public' / 'uploads'
-        uploads_dir.mkdir(parents=True, exist_ok=True)
         stem = Path(secure_filename(logo_file.filename)).stem
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-        filename = f"{ts}_{stem}.webp"
-        save_path = uploads_dir / filename
-        optimise_and_save(logo_file.stream, save_path, max_px=_AVATAR_MAX_PX, quality=85)
-        logo_path = f"/uploads/{filename}"
-    
+        key = f"uploads/logos/{ts}_{stem}.webp"
+        logo_path = _upload_image_to_s3(logo_file.stream, key, max_px=_AVATAR_MAX_PX, quality=85)
+
     # handle profile picture upload (for buyers)
     profile_picture = None
     profile_file = files.get('profilePicture') if files else None
     if profile_file and getattr(profile_file, 'filename', None):
-        uploads_dir = BASE_DIR / 'public' / 'uploads'
-        uploads_dir.mkdir(parents=True, exist_ok=True)
         stem = Path(secure_filename(profile_file.filename)).stem
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-        filename = f"profile_{ts}_{stem}.webp"
-        save_path = uploads_dir / filename
-        optimise_and_save(profile_file.stream, save_path, max_px=_AVATAR_MAX_PX, quality=85)
-        profile_picture = f"/uploads/{filename}"
+        key = f"uploads/profiles/profile_{ts}_{stem}.webp"
+        profile_picture = _upload_image_to_s3(profile_file.stream, key, max_px=_AVATAR_MAX_PX, quality=85)
 
     # Generate unique ID
     import uuid
@@ -754,6 +992,15 @@ def post_ad():
                 'verified': row['verified'] if 'verified' in row_keys else 0,
                 'listingType': row['listingtype'] if 'listingtype' in row_keys else None
             }
+            # Fire seller notification emails in the background for requirements
+            if listing_type == 'requirement' and category:
+                buyer_name = row['author'] or 'A buyer'
+                t = threading.Thread(
+                    target=notify_sellers_of_requirement,
+                    args=(last, title, description, category, buyer_name),
+                    daemon=True
+                )
+                t.start()
             return jsonify({'success': True, **result})
         return jsonify({'error': 'not found'}), 500
     except Exception as e:
@@ -882,14 +1129,10 @@ def update_profile():
         profile_picture = None
         pic_file = files.get('profilePicture') if files else None
         if pic_file and getattr(pic_file, 'filename', None):
-            uploads_dir = BASE_DIR / 'public' / 'uploads'
-            uploads_dir.mkdir(parents=True, exist_ok=True)
             stem = Path(secure_filename(pic_file.filename)).stem
             ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-            filename = f"profile_{ts}_{stem}.webp"
-            save_path = uploads_dir / filename
-            optimise_and_save(pic_file.stream, save_path, max_px=_AVATAR_MAX_PX, quality=85)
-            profile_picture = f"/uploads/{filename}"
+            key = f"uploads/profiles/profile_{ts}_{stem}.webp"
+            profile_picture = _upload_image_to_s3(pic_file.stream, key, max_px=_AVATAR_MAX_PX, quality=85)
         
         # Build update query dynamically
         updates = []
@@ -1746,10 +1989,8 @@ def create_banner_ad():
         if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
             return jsonify({'error': 'Image must be JPG, PNG, or WebP'}), 400
         fname = f'banner_{uuid.uuid4().hex}.webp'
-        uploads_dir = BASE_DIR / 'public' / 'uploads'
-        uploads_dir.mkdir(parents=True, exist_ok=True)
-        optimise_and_save(file.stream, uploads_dir / fname, max_px=1600, quality=85)
-        image_url = f'/uploads/{fname}'
+        key = f'uploads/banners/{fname}'
+        image_url = _upload_image_to_s3(file.stream, key, max_px=1600, quality=85)
 
         db = get_db()
         cursor = dict_cursor(db)
@@ -1869,10 +2110,8 @@ def update_banner_ad(ad_id):
         if 'image' in request.files and request.files['image'].filename:
             file = request.files['image']
             fname = f'banner_{uuid.uuid4().hex}.webp'
-            uploads_dir = BASE_DIR / 'public' / 'uploads'
-            uploads_dir.mkdir(parents=True, exist_ok=True)
-            optimise_and_save(file.stream, uploads_dir / fname, max_px=1600)
-            updates['imageUrl'] = f'/uploads/{fname}'
+            key = f'uploads/banners/{fname}'
+            updates['imageUrl'] = _upload_image_to_s3(file.stream, key, max_px=1600)
 
         if not updates:
             db.close(); return jsonify({'error': 'No fields to update'}), 400
