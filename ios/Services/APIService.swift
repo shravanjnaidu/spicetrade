@@ -21,6 +21,28 @@ class APIService {
         body: Data? = nil,
         responseType: T.Type
     ) async throws -> T {
+        // Try production first, fall back to local dev server on network errors
+        do {
+            return try await performRequest(baseURL: baseURL, endpoint: endpoint,
+                                           method: method, body: body, responseType: responseType)
+        } catch let error as URLError
+            where error.code == .notConnectedToInternet
+               || error.code == .cannotFindHost
+               || error.code == .cannotConnectToHost
+               || error.code == .networkConnectionLost {
+            // Production unreachable — try local dev server
+            return try await performRequest(baseURL: APIConfig.localURL, endpoint: endpoint,
+                                           method: method, body: body, responseType: responseType)
+        }
+    }
+
+    private func performRequest<T: Decodable>(
+        baseURL: String,
+        endpoint: String,
+        method: String,
+        body: Data?,
+        responseType: T.Type
+    ) async throws -> T {
         guard let url = URL(string: baseURL + endpoint) else {
             throw URLError(.badURL)
         }
@@ -371,6 +393,14 @@ class APIService {
             urls.append(url)
         }
         return urls
+    }
+
+    // MARK: - Push Notifications
+
+    func registerDeviceToken(userId: Int, token: String) async throws {
+        let body: [String: Any] = ["userId": userId, "fcmToken": token]
+        let jsonData = try JSONSerialization.data(withJSONObject: body)
+        let _: GenericResponse = try await makeRequest(endpoint: "/api/device/register", method: "POST", body: jsonData, responseType: GenericResponse.self)
     }
 
     // MARK: - Private Helpers

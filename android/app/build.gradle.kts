@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
+    // alias(libs.plugins.google.services)  // Uncomment after adding google-services.json
 }
 
 android {
@@ -38,6 +41,11 @@ android {
     }
 }
 
+// Force javapoet 1.13.0 to resolve Hilt canonicalName() classpath conflict
+configurations.all {
+    resolutionStrategy.force("com.squareup:javapoet:1.13.0")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -54,8 +62,23 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.coil.compose)
+    implementation(libs.coil.okhttp)
     implementation(libs.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
+    // Firebase (uncomment after adding google-services.json from Firebase console)
+    // implementation(libs.kotlinx.coroutines.play.services)
+    // implementation(platform(libs.firebase.bom))
+    // implementation(libs.firebase.messaging)
     implementation(libs.gson)
+    // Hilt DI
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+    // Timber logging
+    implementation(libs.timber)
+    // Room (offline caching)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
     debugImplementation(libs.androidx.ui.tooling)
 }

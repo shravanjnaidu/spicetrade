@@ -55,13 +55,10 @@ interface ApiService {
     @GET("/api/messages/{conversationId}")
     suspend fun getMessages(@Path("conversationId") conversationId: Int): List<Message>
 
-    @POST("/api/messages/{conversationId}")
-    suspend fun sendMessage(
-        @Path("conversationId") conversationId: Int,
-        @Body request: SendMessageRequest
-    ): GenericResponse
+    @POST("/api/messages")
+    suspend fun sendMessage(@Body request: SendMessageRequest): GenericResponse
 
-    @PUT("/api/messages/{conversationId}/read")
+    @POST("/api/messages/mark-read/{conversationId}")
     suspend fun markMessagesAsRead(
         @Path("conversationId") conversationId: Int,
         @Body body: Map<String, @JvmSuppressWildcards Any?>
@@ -80,11 +77,12 @@ interface ApiService {
     @DELETE("/api/wishlist/{wishlistId}")
     suspend fun removeFromWishlist(@Path("wishlistId") wishlistId: Int): GenericResponse
 
-    @GET("/api/wishlist/check/{userId}/{adId}")
-    suspend fun checkWishlist(
-        @Path("userId") userId: Int,
-        @Path("adId") adId: Int
-    ): WishlistCheckResponse
+    @POST("/api/wishlist/check")
+    suspend fun checkWishlist(@Body body: Map<String, @JvmSuppressWildcards Any?>): WishlistCheckResponse
+
+    // ── Device / Push Notifications ───────────────────────────────────────────
+    @POST("/api/device/register")
+    suspend fun registerDeviceToken(@Body body: Map<String, @JvmSuppressWildcards Any?>): GenericResponse
 
     // ── Reviews ───────────────────────────────────────────────────────────────
     @GET("/api/reviews/{adId}")

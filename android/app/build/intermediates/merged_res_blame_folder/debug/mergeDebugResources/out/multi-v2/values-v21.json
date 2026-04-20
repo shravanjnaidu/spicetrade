@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.spicetrade.app-mergeDebugResources-53:/values-v21/values-v21.xml",
+            "outputFile": "com.spicetrade.app-mergeDebugResources-62:/values-v21/values-v21.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Computer\\.gradle\\caches\\9.0.0\\transforms\\0e75aa46cdaffff2c410d96089c5ed0e\\transformed\\core-1.13.1\\res\\values-v21\\values-v21.xml",
+                    "source": "C:\\Users\\Computer\\.gradle\\caches\\9.0.0\\transforms\\53b7a444d7f6664b85b7df40b50b36c9\\transformed\\core-1.13.1\\res\\values-v21\\values-v21.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,13",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4",

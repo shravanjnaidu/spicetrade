@@ -2,18 +2,22 @@ package com.spicetrade.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spicetrade.app.data.api.RetrofitClient
 import com.spicetrade.app.data.models.AddReviewRequest
 import com.spicetrade.app.data.models.Review
 import com.spicetrade.app.data.models.ReviewStats
+import com.spicetrade.app.data.repository.ReviewRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
 
-class ReviewViewModel : ViewModel() {
-
-    private val api = RetrofitClient.apiService
+@HiltViewModel
+class ReviewViewModel @Inject constructor(
+    private val repository: ReviewRepository
+) : ViewModel() {
 
     private val _reviews = MutableStateFlow<List<Review>>(emptyList())
     val reviews: StateFlow<List<Review>> = _reviews.asStateFlow()
@@ -34,9 +38,11 @@ class ReviewViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _reviews.value = api.getReviews(adId)
-                _stats.value = api.getReviewStats(adId)
+                _reviews.value = repository.getReviews(adId)
+                _stats.value = repository.getReviewStats(adId)
+                Timber.d("Loaded %d reviews for adId=%d", _reviews.value.size, adId)
             } catch (e: Exception) {
+                Timber.e(e, "Failed to load reviews for adId=%d", adId)
                 _errorMessage.value = e.message
             }
             _isLoading.value = false
@@ -46,7 +52,7 @@ class ReviewViewModel : ViewModel() {
     fun checkCanReview(adId: Int, userId: Int) {
         viewModelScope.launch {
             try {
-                _canReview.value = api.canReview(adId, userId).canReview
+                _canReview.value = repository.canReview(adId, userId).canReview
             } catch (e: Exception) {
                 _canReview.value = false
             }
@@ -56,10 +62,12 @@ class ReviewViewModel : ViewModel() {
     fun addReview(adId: Int, userId: Int, rating: Int, reviewText: String?) {
         viewModelScope.launch {
             try {
-                api.addReview(adId, AddReviewRequest(userId, rating, reviewText))
+                repository.addReview(adId, AddReviewRequest(userId, rating, reviewText))
                 loadReviews(adId)
                 _canReview.value = false
+                Timber.d("Review added for adId=%d", adId)
             } catch (e: Exception) {
+                Timber.e(e, "Failed to add review")
                 _errorMessage.value = e.message
             }
         }
@@ -68,9 +76,10 @@ class ReviewViewModel : ViewModel() {
     fun deleteReview(reviewId: Int, adId: Int) {
         viewModelScope.launch {
             try {
-                api.deleteReview(reviewId)
+                repository.deleteReview(reviewId)
                 _reviews.value = _reviews.value.filter { it.id != reviewId }
             } catch (e: Exception) {
+                Timber.e(e, "Failed to delete review")
                 _errorMessage.value = e.message
             }
         }

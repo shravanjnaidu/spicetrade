@@ -103,7 +103,7 @@ struct PremiumStoreCard: View {
                     .frame(width: 80, height: 80)
 
                 if let logoPath = store.logo {
-                    AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(logoPath)")) { phase in
+                    AsyncImage(url: APIConfig.imageURL(logoPath).flatMap { URL(string: $0) }) { phase in
                         switch phase {
                         case .success(let img):
                             img.resizable().scaledToFill()

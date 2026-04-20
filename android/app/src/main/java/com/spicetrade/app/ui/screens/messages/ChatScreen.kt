@@ -18,9 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spicetrade.app.data.models.Conversation
-import com.spicetrade.app.ui.theme.BrandRed
+import com.spicetrade.app.ui.theme.BrandOrange
 import com.spicetrade.app.viewmodel.AuthViewModel
 import com.spicetrade.app.viewmodel.MessageViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +45,11 @@ fun ChatScreen(
     LaunchedEffect(conversation.id) {
         messageViewModel.loadMessages(conversation.id)
         currentUser?.id?.let { messageViewModel.markAsRead(conversation.id, it) }
+        // Poll for new messages while this screen is open
+        while (true) {
+            delay(3_000L)
+            messageViewModel.loadMessages(conversation.id)
+        }
     }
 
     LaunchedEffect(messages.size) {
@@ -65,7 +71,7 @@ fun ChatScreen(
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BrandRed,
+                    containerColor = BrandOrange,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -98,7 +104,7 @@ fun ChatScreen(
                             }
                         }
                     },
-                    modifier = Modifier.size(48.dp).background(BrandRed, shape = RoundedCornerShape(24.dp))
+                    modifier = Modifier.size(48.dp).background(BrandOrange, shape = RoundedCornerShape(24.dp))
                 ) {
                     Icon(Icons.Default.Send, "Send", tint = Color.White)
                 }
@@ -107,7 +113,7 @@ fun ChatScreen(
     ) { innerPadding ->
         if (isLoading && messages.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BrandRed)
+                CircularProgressIndicator(color = BrandOrange)
             }
         } else {
             LazyColumn(
@@ -127,7 +133,7 @@ fun ChatScreen(
                                 modifier = Modifier
                                     .widthIn(max = 280.dp)
                                     .background(
-                                        color = if (isMe) BrandRed else Color.White,
+                                        color = if (isMe) BrandOrange else Color.White,
                                         shape = RoundedCornerShape(
                                             topStart = 16.dp, topEnd = 16.dp,
                                             bottomStart = if (isMe) 16.dp else 4.dp,

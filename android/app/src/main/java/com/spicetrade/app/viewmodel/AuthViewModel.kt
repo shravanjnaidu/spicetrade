@@ -1,23 +1,26 @@
 package com.spicetrade.app.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spicetrade.app.data.api.RetrofitClient
 import com.spicetrade.app.data.models.LoginRequest
 import com.spicetrade.app.data.models.SignupRequest
 import com.spicetrade.app.data.models.User
 import com.spicetrade.app.data.preferences.UserPreferences
+import com.spicetrade.app.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
 
-class AuthViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val prefs = UserPreferences(application)
-    private val api = RetrofitClient.apiService
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val repository: AuthRepository,
+    private val prefs: UserPreferences
+) : ViewModel() {
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
@@ -37,6 +40,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             if (savedUser != null) {
                 _currentUser.value = savedUser
                 _isAuthenticated.value = true
+                Timber.d("Restored session for userId=%d", savedUser.id)
             }
         }
     }
@@ -46,16 +50,19 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                val response = api.login(LoginRequest(email, password))
+                val response = repository.login(LoginRequest(email, password))
                 if (response.success) {
                     val user = userFromResponse(response, email)
                     _currentUser.value = user
                     _isAuthenticated.value = true
                     prefs.saveUser(user)
+                    response.token?.takeIf { it.isNotBlank() }?.let { prefs.saveToken(it) }
+                    Timber.i("Login success userId=%d", user.id)
                 } else {
                     _errorMessage.value = response.error ?: "Login failed"
                 }
             } catch (e: Exception) {
+                Timber.e(e, "Login failed")
                 _errorMessage.value = e.message ?: "An error occurred"
             }
             _isLoading.value = false
@@ -79,7 +86,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                val response = api.signup(
+                val response = repository.signup(
                     SignupRequest(name, email, password, phone, role, location,
                         storeName, businessType, categories, address, website)
                 )
@@ -88,10 +95,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     _currentUser.value = user
                     _isAuthenticated.value = true
                     prefs.saveUser(user)
+                    response.token?.takeIf { it.isNotBlank() }?.let { prefs.saveToken(it) }
+                    Timber.i("Signup success userId=%d role=%s", user.id, user.role)
                 } else {
                     _errorMessage.value = response.error ?: "Signup failed"
                 }
             } catch (e: Exception) {
+                Timber.e(e, "Signup failed")
                 _errorMessage.value = e.message ?: "An error occurred"
             }
             _isLoading.value = false
@@ -100,6 +110,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         viewModelScope.launch {
+            Timber.d("User logout")
             _currentUser.value = null
             _isAuthenticated.value = false
             prefs.clearUser()
@@ -120,30 +131,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private fun userFromResponse(r: com.spicetrade.app.data.models.AuthResponse, fallbackEmail: String): User {
         val id = r.userId ?: r.id ?: 0
         return User(
-            id = id,
-            name = r.name,
-            email = r.email ?: fallbackEmail,
-            phone = r.phone,
-            role = r.role,
-            storeName = r.storeName,
-            businessType = r.businessType,
-            categories = r.categories,
-            address = r.address,
-            website = r.website,
-            logo = r.logo,
-            uniqueId = r.uniqueId,
-            location = r.location,
-            profilePicture = r.profilePicture,
-            tagline = r.tagline,
-            storeDescription = r.storeDescription,
-            ownerMessage = r.ownerMessage,
-            yearEstablished = r.yearEstablished,
-            employeeCount = r.employeeCount,
-            annualTurnover = r.annualTurnover,
-            paymentModes = r.paymentModes,
-            exportMarkets = r.exportMarkets,
-            certifications = r.certifications,
-            whyUs = r.whyUs
+            id = id, name = r.name, email = r.email ?: fallbackEmail, phone = r.phone,
+            role = r.role, storeName = r.storeName, businessType = r.businessType,
+            categories = r.categories, address = r.address, website = r.website,
+            logo = r.logo, uniqueId = r.uniqueId, location = r.location,
+            profilePicture = r.profilePicture, tagline = r.tagline,
+            storeDescription = r.storeDescription, ownerMessage = r.ownerMessage,
+            yearEstablished = r.yearEstablished, employeeCount = r.employeeCount,
+            annualTurnover = r.annualTurnover, paymentModes = r.paymentModes,
+            exportMarkets = r.exportMarkets, certifications = r.certifications, whyUs = r.whyUs
         )
     }
 }

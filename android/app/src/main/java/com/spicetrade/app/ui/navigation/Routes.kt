@@ -14,6 +14,7 @@ object Routes {
     const val CHAT = "chat/{conversationId}"
     const val PROFILE = "profile"
     const val CONTACT_SELLER = "contact_seller/{sellerId}/{adId}"
+    const val POST_REQUIREMENT = "post_requirement"
 
     fun productDetail(productId: Int) = "product/$productId"
     fun storeDetail(storeId: Int) = "store/$storeId"

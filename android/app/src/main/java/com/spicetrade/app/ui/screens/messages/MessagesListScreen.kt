@@ -1,5 +1,6 @@
 package com.spicetrade.app.ui.screens.messages
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,13 +15,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.spicetrade.app.R
 import com.spicetrade.app.data.models.Conversation
-import com.spicetrade.app.ui.theme.BrandRed
+import com.spicetrade.app.ui.components.ConversationShimmer
+import com.spicetrade.app.ui.theme.BrandDark
+import com.spicetrade.app.ui.theme.BrandOrange
 import com.spicetrade.app.viewmodel.AuthViewModel
 import com.spicetrade.app.viewmodel.MessageViewModel
 
@@ -52,23 +58,37 @@ fun MessagesListScreen(
         return
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
-        Box(
-            modifier = Modifier.fillMaxWidth()
-                .background(BrandRed)
-                .padding(16.dp)
-        ) {
-            Text("Messages", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
+    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(R.drawable.bigspicelogo),
+                        contentDescription = "BigSpice",
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Messages", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color(0xFF222222))
+                }
+            }
+            HorizontalDivider(color = Color(0xFFE9E9E9), thickness = 1.dp)
         }
 
         if (isLoading && conversations.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BrandRed)
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(6) {
+                    ConversationShimmer()
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                }
             }
         } else if (conversations.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("💬", fontSize = 48.sp)
+                    Icon(Icons.Default.ChatBubbleOutline, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color(0xFFD0D0D0))
+                    Spacer(Modifier.height(12.dp))
                     Text("No Messages", fontWeight = FontWeight.Bold)
                     Text("Your conversations will appear here", color = Color.Gray, fontSize = 13.sp)
                 }
@@ -108,10 +128,10 @@ private fun ConversationRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier.size(48.dp).clip(CircleShape).background(BrandRed.copy(alpha = 0.1f)),
+            modifier = Modifier.size(48.dp).clip(CircleShape).background(BrandOrange.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(otherName.take(1).uppercase(), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = BrandRed)
+            Text(otherName.take(1).uppercase(), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = BrandOrange)
         }
 
         Spacer(Modifier.width(12.dp))
@@ -140,7 +160,7 @@ private fun ConversationRow(
             if (unread) {
                 Spacer(Modifier.height(4.dp))
                 Box(
-                    modifier = Modifier.size(18.dp).clip(CircleShape).background(BrandRed),
+                    modifier = Modifier.size(18.dp).clip(CircleShape).background(BrandOrange),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

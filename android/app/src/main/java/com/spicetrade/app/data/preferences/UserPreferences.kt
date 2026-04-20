@@ -18,7 +18,8 @@ class UserPreferences(private val context: Context) {
     private val gson = Gson()
 
     companion object {
-        private val USER_KEY = stringPreferencesKey("current_user")
+        private val USER_KEY  = stringPreferencesKey("current_user")
+        private val TOKEN_KEY = stringPreferencesKey("auth_token")
     }
 
     val currentUser: Flow<User?> = context.dataStore.data.map { prefs ->
@@ -27,15 +28,26 @@ class UserPreferences(private val context: Context) {
         }
     }
 
+    val authToken: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[TOKEN_KEY]
+    }
+
     suspend fun saveUser(user: User) {
         context.dataStore.edit { prefs ->
             prefs[USER_KEY] = gson.toJson(user)
         }
     }
 
+    suspend fun saveToken(token: String) {
+        context.dataStore.edit { prefs ->
+            prefs[TOKEN_KEY] = token
+        }
+    }
+
     suspend fun clearUser() {
         context.dataStore.edit { prefs ->
             prefs.remove(USER_KEY)
+            prefs.remove(TOKEN_KEY)
         }
     }
 }

@@ -58,6 +58,7 @@ data class AuthResponse(
     @SerializedName("owner_message") val ownerMessage: String? = null,
     @SerializedName("year_established") val yearEstablished: String? = null,
     @SerializedName("employee_count") val employeeCount: String? = null,
+    val token: String? = null,
     @SerializedName("annual_turnover") val annualTurnover: String? = null,
     @SerializedName("payment_modes") val paymentModes: String? = null,
     @SerializedName("export_markets") val exportMarkets: String? = null,
@@ -295,14 +296,15 @@ data class SignupRequest(
 )
 
 data class SendMessageRequest(
-    @SerializedName("sender_id") val senderId: Int,
+    @SerializedName("conversationId") val conversationId: Int,
+    @SerializedName("senderId") val senderId: Int,
     val message: String
 )
 
 data class CreateConversationRequest(
-    @SerializedName("buyer_id") val buyerId: Int,
-    @SerializedName("seller_id") val sellerId: Int,
-    @SerializedName("listing_id") val listingId: Int? = null
+    @SerializedName("buyerId") val buyerId: Int,
+    @SerializedName("sellerId") val sellerId: Int,
+    @SerializedName("listingId") val listingId: Int? = null
 )
 
 data class AddReviewRequest(
@@ -312,6 +314,13 @@ data class AddReviewRequest(
 )
 
 data class WishlistRequest(
-    @SerializedName("user_id") val userId: Int,
-    @SerializedName("ad_id") val adId: Int
+    @SerializedName("userId") val userId: Int,
+    @SerializedName("adId") val adId: Int
+)
+
+// ── Cart ──────────────────────────────────────────────────────────────────────
+data class CartItem(
+    val product: Product,
+    val quantity: Int = 1,
+    val addedAt: Long = System.currentTimeMillis()
 )

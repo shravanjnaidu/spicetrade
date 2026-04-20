@@ -127,7 +127,7 @@ struct ProductDetailView: View {
                             }) {
                                 HStack {
                                     if let profilePicture = product.profilePicture {
-                                        AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(profilePicture)")) { phase in
+                                        AsyncImage(url: APIConfig.imageURL(profilePicture).flatMap { URL(string: $0) }) { phase in
                                             switch phase {
                                             case .success(let image):
                                                 image.resizable()
@@ -453,7 +453,7 @@ struct ReviewRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 if let profilePicture = review.profilePicture {
-                    AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(profilePicture)")) { phase in
+                    AsyncImage(url: APIConfig.imageURL(review.profilePicture).flatMap { URL(string: $0) }) { phase in
                         switch phase {
                         case .success(let image):
                             image.resizable()

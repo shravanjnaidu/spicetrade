@@ -31,5 +31,19 @@ enum APIConfig {
         // 3. Default — production server
         return "https://bigspice.in"
     }()
+
+    /// Local dev server URL — used as fallback when the production server is
+    /// unreachable (e.g. running on the iOS Simulator without internet access).
+    /// 127.0.0.1 resolves to the Mac's localhost from within the Simulator.
+    static let localURL = "http://127.0.0.1:5000"
+
+    /// Returns a fully-qualified image URL string.
+    /// Handles both absolute S3 URLs and legacy `/uploads/…` relative paths.
+    /// Returns `nil` when `path` is nil or empty.
+    static func imageURL(_ path: String?) -> String? {
+        guard let path = path, !path.isEmpty else { return nil }
+        if path.hasPrefix("http://") || path.hasPrefix("https://") { return path }
+        return baseURL + path
+    }
 }
 

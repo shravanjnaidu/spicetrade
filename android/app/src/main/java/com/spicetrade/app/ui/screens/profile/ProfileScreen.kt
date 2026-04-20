@@ -22,8 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.spicetrade.app.data.api.ApiConfig
+import com.spicetrade.app.ui.theme.BrandAmber
+import com.spicetrade.app.ui.theme.BrandDark
 import com.spicetrade.app.ui.theme.BrandOrange
-import com.spicetrade.app.ui.theme.BrandRed
 import com.spicetrade.app.viewmodel.AuthViewModel
 
 @Composable
@@ -37,14 +38,14 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color.White)
             .verticalScroll(rememberScrollState())
     ) {
         // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(BrandRed, BrandOrange)))
+                .background(BrandOrange)
                 .padding(bottom = 32.dp)
         ) {
             Column(
@@ -172,7 +173,7 @@ fun ProfileScreen(
 @Composable
 private fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
     Row(verticalAlignment = Alignment.Top) {
-        Icon(icon, null, modifier = Modifier.size(18.dp).padding(top = 2.dp), tint = BrandRed)
+        Icon(icon, null, modifier = Modifier.size(18.dp).padding(top = 2.dp), tint = BrandOrange)
         Spacer(Modifier.width(10.dp))
         Column {
             Text(label, fontSize = 11.sp, color = Color.Gray)

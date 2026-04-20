@@ -1,6 +1,6 @@
 package com.spicetrade.app.ui.screens.auth
 
-import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -12,16 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.spicetrade.app.ui.theme.BrandDarkRed
+import com.spicetrade.app.R
+import com.spicetrade.app.ui.theme.BrandAmber
+import com.spicetrade.app.ui.theme.BrandDark
 import com.spicetrade.app.ui.theme.BrandOrange
-import com.spicetrade.app.ui.theme.BrandRed
 import kotlinx.coroutines.delay
 
-private data class Slide(val emoji: String, val title: String, val subtitle: String)
+private data class Slide(val icon: String, val title: String, val subtitle: String)
 
 @Composable
 fun WelcomeScreen(
@@ -30,164 +32,149 @@ fun WelcomeScreen(
 ) {
     val slides = remember {
         listOf(
-            Slide("🌿", "Source Directly", "Connect with verified spice traders & manufacturers across India"),
-            Slide("📦", "Bulk Made Easy", "Post requirements, compare quotes, close deals — all in one place"),
-            Slide("✅", "Quality Assured", "Verified sellers, genuine reviews, trusted trade relationships"),
+            Slide("", "Source Directly", "Connect with verified spice traders & manufacturers across India"),
+            Slide("", "Bulk Made Easy", "Post requirements, compare quotes, close deals — all in one place"),
+            Slide("", "Quality Assured", "Verified sellers, genuine reviews, trusted trade relationships"),
         )
     }
     var currentSlide by remember { mutableIntStateOf(0) }
-
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(3500)
-            currentSlide = (currentSlide + 1) % slides.size
-        }
+        while (true) { delay(3500); currentSlide = (currentSlide + 1) % slides.size }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(BrandDarkRed, BrandRed, BrandOrange))
-            )
+            .background(BrandOrange)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(0.8f))
 
-            // App Icon placeholder
-            Box(
+            // ── Logo + brand name ──────────────────────────────────────────────
+            Image(
+                painter = painterResource(R.drawable.bigspicelogo),
+                contentDescription = "BigSpice",
+                modifier = Modifier.size(96.dp).clip(RoundedCornerShape(22.dp))
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(
+                "BigSpice",
+                fontSize = 38.sp, fontWeight = FontWeight.Black, color = Color.White,
+                letterSpacing = (-0.5).sp
+            )
+            Text(
+                "India's B2B Spice & Food Marketplace",
+                fontSize = 14.sp, color = Color.White.copy(0.85f),
+                letterSpacing = 0.3.sp
+            )
+
+            Spacer(Modifier.weight(0.4f))
+
+            // ── Trust badges row ──────────────────────────────────────────────
+            Row(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.Black.copy(alpha = 0.18f))
+                    .padding(vertical = 14.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🌶️", fontSize = 52.sp)
+                TrustBadge("10K+", "Verified Sellers")
+                VDivider()
+                TrustBadge("50+", "Categories")
+                VDivider()
+                TrustBadge("Pan India", "Delivery")
             }
 
             Spacer(Modifier.height(16.dp))
 
-            Text(
-                "SpiceTrade",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
-            )
-            Text(
-                "India's B2B Spice Marketplace",
-                fontSize = 15.sp,
-                color = Color.White.copy(alpha = 0.85f)
-            )
-
-            Spacer(Modifier.weight(0.5f))
-
-            // Feature slide
+            // ── Feature slides ─────────────────────────────────────────────────
             val slide = slides[currentSlide]
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White.copy(alpha = 0.12f))
-                    .padding(24.dp)
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                color = Color.White.copy(alpha = 0.13f),
+                tonalElevation = 0.dp
             ) {
-                Text(slide.emoji, fontSize = 40.sp)
-                Spacer(Modifier.height(8.dp))
-                Text(slide.title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    slide.subtitle, fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Slide dots
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                slides.indices.forEach { i ->
-                    Box(
-                        modifier = Modifier
-                            .size(if (i == currentSlide) 10.dp else 6.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (i == currentSlide) Color.White else Color.White.copy(alpha = 0.4f)
-                            )
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(slide.icon, fontSize = 36.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        slide.title,
+                        fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        slide.subtitle,
+                        fontSize = 13.sp, color = Color.White.copy(0.78f),
+                        textAlign = TextAlign.Center, lineHeight = 18.sp
                     )
                 }
             }
 
-            Spacer(Modifier.weight(0.5f))
+            Spacer(Modifier.height(10.dp))
 
-            // Stat badges
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.12f))
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatBadge("🌿", "Farm Fresh")
-                VerticalDivider()
-                StatBadge("✅", "Verified Sellers")
-                VerticalDivider()
-                StatBadge("🤝", "Direct Trade")
+            // Dots
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                slides.indices.forEach { i ->
+                    Box(
+                        modifier = Modifier
+                            .size(if (i == currentSlide) 22.dp else 6.dp, 6.dp)
+                            .clip(CircleShape)
+                            .background(if (i == currentSlide) Color.White else Color.White.copy(0.35f))
+                    )
+                }
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.weight(0.6f))
 
-            // Get Started button
+            // ── CTA buttons ────────────────────────────────────────────────────
             Button(
                 onClick = onSignupClick,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
-                    contentColor = BrandRed
+                    contentColor = BrandOrange
                 ),
-                shape = RoundedCornerShape(16.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
-                Text("Get Started — It's Free", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Get Started — It's Free", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // Sign In button
             OutlinedButton(
                 onClick = onLoginClick,
                 modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White.copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(16.dp)
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White.copy(0.55f))
             ) {
-                Text("Already have an account? Sign In", fontSize = 15.sp)
+                Text("Sign In to Your Account", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(28.dp))
         }
     }
 }
 
 @Composable
-private fun StatBadge(emoji: String, label: String) {
+private fun TrustBadge(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(emoji, fontSize = 20.sp)
-        Text(label, fontSize = 11.sp, color = Color.White.copy(alpha = 0.8f))
+        Text(value, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+        Text(label, fontSize = 10.sp, color = Color.White.copy(0.75f))
     }
 }
 
 @Composable
-private fun VerticalDivider() {
-    Box(
-        modifier = Modifier
-            .height(32.dp)
-            .width(1.dp)
-            .background(Color.White.copy(alpha = 0.3f))
-    )
+private fun VDivider() {
+    Box(Modifier.height(30.dp).width(1.dp).background(Color.White.copy(0.25f)))
 }

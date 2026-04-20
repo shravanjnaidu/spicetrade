@@ -1,14 +1,13 @@
 package com.spicetrade.app.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.spicetrade.app.ui.screens.auth.LoginScreen
 import com.spicetrade.app.ui.screens.auth.SignupScreen
 import com.spicetrade.app.ui.screens.auth.WelcomeScreen
@@ -18,15 +17,22 @@ import com.spicetrade.app.viewmodel.AuthViewModel
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
     NavHost(
         navController = navController,
-        startDestination = if (isAuthenticated) Routes.HOME else Routes.WELCOME
+        startDestination = Routes.WELCOME
     ) {
         composable(Routes.WELCOME) {
+            LaunchedEffect(isAuthenticated) {
+                if (isAuthenticated) {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.WELCOME) { inclusive = true }
+                    }
+                }
+            }
             WelcomeScreen(
                 onLoginClick = { navController.navigate(Routes.LOGIN) },
                 onSignupClick = { navController.navigate(Routes.SIGNUP) }

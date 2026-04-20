@@ -68,7 +68,7 @@ struct StoreDetailView: View {
             HStack(spacing: 20) {
                 let logoPath = profile?.logo ?? store.logo
                 if let logoPath {
-                    AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(logoPath)")) { phase in
+                    AsyncImage(url: APIConfig.imageURL(logoPath).flatMap { URL(string: $0) }) { phase in
                         switch phase {
                         case .success(let image): image.resizable().scaledToFill()
                         default: storePlaceholder

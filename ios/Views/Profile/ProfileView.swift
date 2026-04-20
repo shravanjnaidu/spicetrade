@@ -17,7 +17,7 @@ struct ProfileView: View {
                     HStack(spacing: 16) {
                         // Profile picture
                         if let profilePicture = authViewModel.currentUser?.profilePicture {
-                            AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(profilePicture)?v=\(Date().timeIntervalSince1970)")) { phase in
+                            AsyncImage(url: APIConfig.imageURL(profilePicture).flatMap { URL(string: $0 + "?v=\(Int(Date().timeIntervalSince1970))") }) { phase in
                                 switch phase {
                                 case .success(let image):
                                     image
@@ -32,7 +32,7 @@ struct ProfileView: View {
                             .clipShape(Circle())
                             .id(profilePicture)
                         } else if let logo = authViewModel.currentUser?.logo {
-                            AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(logo)")) { phase in
+                            AsyncImage(url: APIConfig.imageURL(logo).flatMap { URL(string: $0) }) { phase in
                                 switch phase {
                                 case .success(let image):
                                     image
@@ -209,7 +209,7 @@ struct EditProfileView: View {
                                 .frame(width: 80, height: 80)
                                 .clipShape(Circle())
                         } else if let pic = authViewModel.currentUser?.profilePicture {
-                            AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(pic)?v=\(Int(Date().timeIntervalSince1970))")) { phase in
+                            AsyncImage(url: APIConfig.imageURL(pic).flatMap { URL(string: $0 + "?v=\(Int(Date().timeIntervalSince1970))") }) { phase in
                                 switch phase {
                                 case .success(let img): img.resizable().scaledToFill()
                                 default: Image(systemName: "person.circle.fill").resizable()

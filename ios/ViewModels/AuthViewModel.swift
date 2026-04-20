@@ -42,6 +42,7 @@ class AuthViewModel: ObservableObject {
             self.currentUser = user
             self.isAuthenticated = true
             saveUserToStorage(user)
+            registerFcmTokenIfAvailable(userId: user.id)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -82,11 +83,18 @@ class AuthViewModel: ObservableObject {
             self.currentUser = user
             self.isAuthenticated = true
             saveUserToStorage(user)
+            registerFcmTokenIfAvailable(userId: user.id)
         } catch {
             errorMessage = error.localizedDescription
         }
         
         isLoading = false
+    }
+    
+    private func registerFcmTokenIfAvailable(userId: Int) {
+        if let token = UserDefaults.standard.string(forKey: "fcm_device_token") {
+            Task { try? await APIService.shared.registerDeviceToken(userId: userId, token: token) }
+        }
     }
     
     func logout() {

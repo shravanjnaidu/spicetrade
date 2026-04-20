@@ -2,17 +2,21 @@ package com.spicetrade.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spicetrade.app.data.api.RetrofitClient
 import com.spicetrade.app.data.models.WishlistItem
 import com.spicetrade.app.data.models.WishlistRequest
+import com.spicetrade.app.data.repository.WishlistRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
 
-class WishlistViewModel : ViewModel() {
-
-    private val api = RetrofitClient.apiService
+@HiltViewModel
+class WishlistViewModel @Inject constructor(
+    private val repository: WishlistRepository
+) : ViewModel() {
 
     private val _items = MutableStateFlow<List<WishlistItem>>(emptyList())
     val items: StateFlow<List<WishlistItem>> = _items.asStateFlow()
@@ -27,8 +31,10 @@ class WishlistViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _items.value = api.getWishlist(userId)
+                _items.value = repository.getWishlist(userId)
+                Timber.d("Loaded %d wishlist items", _items.value.size)
             } catch (e: Exception) {
+                Timber.e(e, "Failed to load wishlist")
                 _errorMessage.value = e.message
             }
             _isLoading.value = false
@@ -38,9 +44,10 @@ class WishlistViewModel : ViewModel() {
     fun addToWishlist(userId: Int, adId: Int) {
         viewModelScope.launch {
             try {
-                api.addToWishlist(WishlistRequest(userId, adId))
+                repository.addToWishlist(WishlistRequest(userId, adId))
                 loadWishlist(userId)
             } catch (e: Exception) {
+                Timber.e(e, "Failed to add to wishlist")
                 _errorMessage.value = e.message
             }
         }
@@ -49,9 +56,10 @@ class WishlistViewModel : ViewModel() {
     fun removeFromWishlist(wishlistId: Int, userId: Int) {
         viewModelScope.launch {
             try {
-                api.removeFromWishlist(wishlistId)
+                repository.removeFromWishlist(wishlistId)
                 _items.value = _items.value.filter { it.wishlistId != wishlistId }
             } catch (e: Exception) {
+                Timber.e(e, "Failed to remove from wishlist")
                 _errorMessage.value = e.message
             }
         }

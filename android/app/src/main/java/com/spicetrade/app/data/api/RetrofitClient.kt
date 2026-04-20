@@ -13,6 +13,8 @@ object RetrofitClient {
     }
 
     private val okHttpClient = OkHttpClient.Builder()
+        // Try production first; on any IOException fall back to local dev server (10.0.2.2:5000)
+        .addInterceptor(LocalFallbackInterceptor())
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)

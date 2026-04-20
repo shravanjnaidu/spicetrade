@@ -1,5 +1,6 @@
 package com.spicetrade.app.ui.screens.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,14 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.spicetrade.app.R
+import com.spicetrade.app.ui.theme.BrandAmber
+import com.spicetrade.app.ui.theme.BrandDark
 import com.spicetrade.app.ui.theme.BrandOrange
-import com.spicetrade.app.ui.theme.BrandRed
 import com.spicetrade.app.viewmodel.AuthViewModel
 
 @Composable
@@ -53,12 +57,12 @@ fun SignupScreen(
 
     LaunchedEffect(isAuthenticated) { if (isAuthenticated) onSuccess() }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp)
-                .background(Brush.linearGradient(listOf(BrandRed, BrandOrange)))
+                .background(BrandOrange)
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
@@ -74,12 +78,18 @@ fun SignupScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
-                    modifier = Modifier.size(72.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.2f)),
+                    modifier = Modifier.size(72.dp).clip(RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
-                ) { Text("🌶️", fontSize = 36.sp) }
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.bigspicelogo),
+                        contentDescription = "BigSpice",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 Spacer(Modifier.height(10.dp))
-                Text("Join SpiceTrade", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text("Join BigSpice", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White)
                 Text("India's B2B Spice Marketplace", fontSize = 13.sp, color = Color.White.copy(alpha = 0.85f))
                 Spacer(Modifier.height(28.dp))
 
@@ -111,16 +121,16 @@ fun SignupScreen(
                         // Personal Info
                         AuthTextField(
                             value = name, onValueChange = { name = it }, label = "Full name",
-                            leadingIcon = { Icon(Icons.Default.Person, null, tint = BrandRed) }
+                            leadingIcon = { Icon(Icons.Default.Person, null, tint = BrandOrange) }
                         )
                         AuthTextField(
                             value = email, onValueChange = { email = it }, label = "Email address",
-                            leadingIcon = { Icon(Icons.Default.Email, null, tint = BrandRed) },
+                            leadingIcon = { Icon(Icons.Default.Email, null, tint = BrandOrange) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                         )
                         AuthTextField(
                             value = password, onValueChange = { password = it }, label = "Password",
-                            leadingIcon = { Icon(Icons.Default.Lock, null, tint = BrandRed) },
+                            leadingIcon = { Icon(Icons.Default.Lock, null, tint = BrandOrange) },
                             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { showPassword = !showPassword }) {
@@ -133,12 +143,12 @@ fun SignupScreen(
                         )
                         AuthTextField(
                             value = phone, onValueChange = { phone = it }, label = "Phone (optional)",
-                            leadingIcon = { Icon(Icons.Default.Phone, null, tint = BrandRed) },
+                            leadingIcon = { Icon(Icons.Default.Phone, null, tint = BrandOrange) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                         )
                         AuthTextField(
                             value = location, onValueChange = { location = it }, label = "Location (optional)",
-                            leadingIcon = { Icon(Icons.Default.LocationOn, null, tint = BrandRed) }
+                            leadingIcon = { Icon(Icons.Default.LocationOn, null, tint = BrandOrange) }
                         )
 
                         // Seller-only fields
@@ -176,7 +186,7 @@ fun SignupScreen(
                             enabled = !isLoading && name.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
                             modifier = Modifier.fillMaxWidth().height(52.dp),
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BrandRed)
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandOrange)
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
@@ -201,8 +211,8 @@ private fun RoleButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) BrandRed else Color.Gray.copy(alpha = 0.3f)
-    val bgColor = if (isSelected) BrandRed.copy(alpha = 0.08f) else Color.Transparent
+    val borderColor = if (isSelected) BrandOrange else Color.Gray.copy(alpha = 0.3f)
+    val bgColor = if (isSelected) BrandOrange.copy(alpha = 0.08f) else Color.Transparent
 
     Column(
         modifier = modifier

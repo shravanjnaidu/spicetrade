@@ -186,7 +186,7 @@ struct PremiumConversationRow: View {
     @ViewBuilder
     private var avatarView: some View {
         if let pic = otherPersonPicture {
-            AsyncImage(url: URL(string: "\(APIConfig.baseURL)\(pic)")) { phase in
+            AsyncImage(url: APIConfig.imageURL(pic).flatMap { URL(string: $0) }) { phase in
                 switch phase {
                 case .success(let img):
                     img.resizable().scaledToFill().clipShape(Circle())

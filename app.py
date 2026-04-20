@@ -11,16 +11,23 @@ import json
 import queue
 import threading
 import uuid
+import secrets
+from functools import wraps
 from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context, render_template, make_response, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import resend
 import boto3
+try:
+    import jwt as pyjwt
+    _JWT_AVAILABLE = True
+except ImportError:
+    _JWT_AVAILABLE = False
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -32,12 +39,71 @@ with open(BASE_DIR / 'creds.json', 'r') as f:
 resend.api_key = DB_CONFIG.get('resendapikey', '')
 APP_URL = os.environ.get('APP_URL', 'https://bigspice.in')
 
+# ── JWT configuration ─────────────────────────────────────────────────────────
+# Secret is loaded from creds.json (key: "jwt_secret") or the JWT_SECRET env var.
+# On first run a random value is generated; to persist tokens across restarts,
+# set a fixed value in creds.json.
+JWT_SECRET = DB_CONFIG.get('jwt_secret') or os.environ.get('JWT_SECRET') or secrets.token_hex(32)
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRES_DAYS = 90  # tokens valid for 90 days
+
+
+def _generate_token(user_id: int, role: str) -> str:
+    """Return a signed JWT for the given user."""
+    if not _JWT_AVAILABLE:
+        return ''
+    payload = {
+        'sub': user_id,
+        'role': role,
+        'iat': datetime.utcnow(),
+        'exp': datetime.utcnow() + timedelta(days=JWT_EXPIRES_DAYS),
+    }
+    return pyjwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def require_auth(f):
+    """Decorator: requires a valid Bearer JWT in the Authorization header.
+    Sets g.user_id and g.user_role if the token is valid."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'authentication required'}), 401
+        token = auth_header[7:]
+        if not _JWT_AVAILABLE:
+            return jsonify({'error': 'JWT not configured on server'}), 500
+        try:
+            payload = pyjwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            g.user_id = payload['sub']
+            g.user_role = payload.get('role', 'buyer')
+        except pyjwt.ExpiredSignatureError:
+            return jsonify({'error': 'token expired'}), 401
+        except pyjwt.InvalidTokenError:
+            return jsonify({'error': 'invalid token'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
 # ── S3 config ──────────────────────────────────────────────────────────────────
 S3_BUCKET = DB_CONFIG.get('s3_bucket_name', '')
 S3_REGION = DB_CONFIG.get('aws_region', 'ap-south-2')
 
 DATA_DIR = BASE_DIR / 'data'
 DATA_DIR.mkdir(exist_ok=True)
+
+# ── Firebase / FCM ─────────────────────────────────────────────────────────────
+try:
+    import firebase_admin
+    from firebase_admin import credentials as fb_creds, messaging as fb_messaging
+    _fb_key = BASE_DIR / DB_CONFIG.get('firebase_service_account', 'firebase-service-account.json')
+    if _fb_key.exists():
+        firebase_admin.initialize_app(fb_creds.Certificate(str(_fb_key)))
+        _FCM_OK = True
+    else:
+        _FCM_OK = False
+        print('[FCM] firebase-service-account.json not found — push notifications disabled')
+except Exception as _fcm_err:
+    _FCM_OK = False
+    print(f'[FCM] Not available: {_fcm_err}')
 
 
 def get_db():
@@ -164,7 +230,15 @@ def init_db():
         expiresAt TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id)
     )''')
-    
+
+    # Create device_tokens table for FCM push notifications
+    cur.execute('''CREATE TABLE IF NOT EXISTS device_tokens (
+        user_id INTEGER PRIMARY KEY,
+        fcm_token TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW(),
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )''')
+
     conn.commit()
     
     # Add extra store-profile columns if they don't already exist
@@ -324,7 +398,13 @@ def _upload_image_to_s3(stream, key: str,
             buf = stream
     else:
         buf = stream
-    _get_s3().upload_fileobj(buf, S3_BUCKET, key, ExtraArgs={'ContentType': 'image/webp'})
+    try:
+        _get_s3().upload_fileobj(buf, S3_BUCKET, key,
+                                  ExtraArgs={'ContentType': 'image/webp', 'ACL': 'public-read'})
+    except Exception:
+        # Bucket may block public ACLs; fall back to upload without explicit ACL
+        buf.seek(0) if hasattr(buf, 'seek') else None
+        _get_s3().upload_fileobj(buf, S3_BUCKET, key, ExtraArgs={'ContentType': 'image/webp'})
     return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -354,11 +434,28 @@ def _requirement_email_html(buyer_name: str, title: str, description: str,
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#b5451b 0%,#e07b39 100%);
-                        padding:32px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;
-                          letter-spacing:-0.5px;">BigSpice</h1>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.88);font-size:14px;
-                         letter-spacing:0.5px;">B2B Spice & Food Trade Platform</p>
+                        padding:28px 40px 24px;text-align:center;">
+              <!-- Bubble icon + wordmark side-by-side -->
+              <table cellpadding="0" cellspacing="0" border="0"
+                     style="margin:0 auto 10px;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:10px;">
+                    <img src="{APP_URL}/logos/bigspicebubble.png"
+                         alt="BigSpice icon"
+                         width="52" height="52"
+                         style="display:block;border-radius:50%;
+                                border:2px solid rgba(255,255,255,0.35);" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <img src="{APP_URL}/logos/bigspicelogo.png"
+                         alt="BigSpice"
+                         height="36"
+                         style="display:block;max-width:160px;" />
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;color:rgba(255,255,255,0.88);font-size:14px;
+                         letter-spacing:0.5px;">B2B Spice &amp; Food Trade Platform</p>
             </td>
           </tr>
 
@@ -457,6 +554,38 @@ def _requirement_email_html(buyer_name: str, title: str, description: str,
 </html>"""
 
 
+# ── FCM helpers ───────────────────────────────────────────────────────────────
+
+def _send_fcm(token: str, title: str, body: str, data: dict = None):
+    """Send a single FCM push notification. Silently ignores errors."""
+    if not _FCM_OK or not token:
+        return
+    try:
+        fb_messaging.send(fb_messaging.Message(
+            notification=fb_messaging.Notification(title=title, body=body),
+            data={str(k): str(v) for k, v in (data or {}).items()},
+            token=token,
+        ))
+    except Exception as e:
+        print(f'[FCM] send error: {e}')
+
+
+def _get_fcm_tokens(user_ids: list) -> list:
+    """Return FCM tokens for the given list of user IDs."""
+    if not user_ids or not _FCM_OK:
+        return []
+    try:
+        db = get_db()
+        c = dict_cursor(db)
+        c.execute('SELECT fcm_token FROM device_tokens WHERE user_id = ANY(%s)', (user_ids,))
+        rows = c.fetchall()
+        db.close()
+        return [r['fcm_token'] for r in rows if r['fcm_token']]
+    except Exception as e:
+        print(f'[FCM] _get_fcm_tokens error: {e}')
+        return []
+
+
 def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
                                    category: str, buyer_name: str) -> None:
     """Find sellers with matching category listings and email them.
@@ -469,7 +598,7 @@ def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
         cur = db.cursor(cursor_factory=RealDictCursor)
         # Find sellers who have at least one non-requirement listing in the same category
         cur.execute("""
-            SELECT DISTINCT u.email, u.name
+            SELECT DISTINCT u.id, u.email, u.name
             FROM users u
             JOIN ads a ON a.userid = u.id
             WHERE u.role = 'seller'
@@ -496,6 +625,13 @@ def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
                 print(f'[email] Sent requirement notification to {seller["email"]}')
             except Exception as exc:
                 print(f'[email] Failed to send to {seller["email"]}: {exc}')
+
+        # Push FCM notifications to all matching sellers
+        seller_ids = [s['id'] for s in sellers]
+        for tok in _get_fcm_tokens(seller_ids):
+            _send_fcm(tok, '🌶 New Requirement',
+                      f'{category}: {title[:80]}',
+                      {'type': 'new_requirement', 'adId': str(ad_id)})
     except Exception as exc:
         print(f'[email] notify_sellers_of_requirement error: {exc}')
 
@@ -765,7 +901,8 @@ def signup():
             'logo': logo_path,
             'uniqueId': unique_id,
             'location': location,
-            'profilePicture': profile_picture
+            'profilePicture': profile_picture,
+            'token': _generate_token(user_id, role),
         }
         db.close()
         return jsonify(user_data)
@@ -810,11 +947,36 @@ def login():
             'logo': row['logo_path'],
             'uniqueId': row['uniqueid'],
             'location': row['location'],
-            'profilePicture': row['profilepicture']
+            'profilePicture': row['profilepicture'],
+            'token': _generate_token(row['id'], row['role'] or 'buyer'),
         }
         return jsonify(user_data)
     except Exception as e:
         print('login error', e)
+        return jsonify({'error': 'database error'}), 500
+
+
+@app.route('/api/device/register', methods=['POST'])
+def register_device_token():
+    """Store or update a user's FCM device token for push notifications."""
+    data = request.get_json() or {}
+    user_id = data.get('userId')
+    token = data.get('fcmToken')
+    if not user_id or not token:
+        return jsonify({'error': 'userId and fcmToken required'}), 400
+    try:
+        db = get_db()
+        c = db.cursor()
+        c.execute('''INSERT INTO device_tokens (user_id, fcm_token, updated_at)
+            VALUES (%s, %s, NOW())
+            ON CONFLICT (user_id) DO UPDATE
+            SET fcm_token = EXCLUDED.fcm_token, updated_at = NOW()''',
+            (user_id, token))
+        db.commit()
+        db.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print('register_device_token error:', e)
         return jsonify({'error': 'database error'}), 500
 
 
@@ -1793,7 +1955,12 @@ def send_message():
         if not conv or (sender_id != conv['buyerid'] and sender_id != conv['sellerid']):
             db.close()
             return jsonify({'error': 'Unauthorized'}), 403
-        
+
+        # Fetch sender name for push notification
+        cursor.execute('SELECT name FROM users WHERE id = %s', (sender_id,))
+        sender_row = cursor.fetchone()
+        sender_name = sender_row['name'] if sender_row else 'Someone'
+
         # Insert message
         cursor.execute('''
             INSERT INTO messages (conversationId, senderId, message, isRead)
@@ -1808,6 +1975,11 @@ def send_message():
         event_payload = {'conversationId': conversation_id, 'messageId': message_id, 'senderId': sender_id}
         _sse_publish(recipient_id, 'new_message', event_payload)
         _sse_publish(sender_id,    'new_message', event_payload)
+
+        # Push FCM notification to the recipient
+        for tok in _get_fcm_tokens([recipient_id]):
+            _send_fcm(tok, sender_name, message[:100],
+                      {'type': 'new_message', 'conversationId': str(conversation_id)})
 
         return jsonify({'success': True, 'messageId': message_id})
     except Exception as e:

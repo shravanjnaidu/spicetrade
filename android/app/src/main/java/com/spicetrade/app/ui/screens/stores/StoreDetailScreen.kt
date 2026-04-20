@@ -19,12 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.spicetrade.app.data.api.ApiConfig
 import com.spicetrade.app.data.models.Store
 import com.spicetrade.app.ui.screens.products.ProductCard
-import com.spicetrade.app.ui.theme.BrandRed
+import com.spicetrade.app.ui.theme.BrandOrange
 import com.spicetrade.app.viewmodel.ProductViewModel
 import com.spicetrade.app.viewmodel.StoreViewModel
 
@@ -33,7 +33,7 @@ import com.spicetrade.app.viewmodel.StoreViewModel
 fun StoreDetailScreen(
     store: Store,
     storeViewModel: StoreViewModel,
-    productViewModel: ProductViewModel = viewModel(),
+    productViewModel: ProductViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     LaunchedEffect(store.id) {
@@ -51,7 +51,7 @@ fun StoreDetailScreen(
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BrandRed,
+                    containerColor = BrandOrange,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -84,7 +84,8 @@ fun StoreDetailScreen(
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
-                                    Text("🏪", fontSize = 36.sp)
+                                    Icon(Icons.Default.Store, contentDescription = null,
+                                        modifier = Modifier.size(36.dp), tint = Color(0xFFBBBBBB))
                                 }
                             }
                             Spacer(Modifier.width(12.dp))
@@ -164,7 +165,7 @@ fun StoreDetailScreen(
 private fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String?) {
     if (text.isNullOrBlank()) return
     Row(modifier = Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, modifier = Modifier.size(16.dp), tint = BrandRed)
+        Icon(icon, null, modifier = Modifier.size(16.dp), tint = BrandOrange)
         Spacer(Modifier.width(8.dp))
         Text(text, fontSize = 13.sp, color = Color.DarkGray)
     }
