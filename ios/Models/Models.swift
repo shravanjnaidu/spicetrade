@@ -62,6 +62,8 @@ struct AuthResponse: Codable {
     let location: String?
     let profilePicture: String?
     let error: String?
+    /// JWT issued by the backend — store and attach as `Authorization: Bearer <token>`
+    let token: String?
     // Extended store-profile fields
     let tagline: String?
     let storeDescription: String?

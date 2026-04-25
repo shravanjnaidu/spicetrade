@@ -15,32 +15,12 @@ class APIService {
 
     // MARK: - Helper Methods
 
+    /// Executes an authenticated JSON request against the production API.
+    /// A JWT Bearer token is automatically attached when the user is signed in.
     private func makeRequest<T: Decodable>(
         endpoint: String,
         method: String = "GET",
         body: Data? = nil,
-        responseType: T.Type
-    ) async throws -> T {
-        // Try production first, fall back to local dev server on network errors
-        do {
-            return try await performRequest(baseURL: baseURL, endpoint: endpoint,
-                                           method: method, body: body, responseType: responseType)
-        } catch let error as URLError
-            where error.code == .notConnectedToInternet
-               || error.code == .cannotFindHost
-               || error.code == .cannotConnectToHost
-               || error.code == .networkConnectionLost {
-            // Production unreachable — try local dev server
-            return try await performRequest(baseURL: APIConfig.localURL, endpoint: endpoint,
-                                           method: method, body: body, responseType: responseType)
-        }
-    }
-
-    private func performRequest<T: Decodable>(
-        baseURL: String,
-        endpoint: String,
-        method: String,
-        body: Data?,
         responseType: T.Type
     ) async throws -> T {
         guard let url = URL(string: baseURL + endpoint) else {
@@ -50,7 +30,14 @@ class APIService {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 30
+
+        // Attach JWT when available — reads UserDefaults (thread-safe, no actor hop needed)
+        if let token = UserDefaults.standard.string(forKey: "spicetrade_jwt"),
+           !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         if let body = body {
             request.httpBody = body
@@ -65,13 +52,12 @@ class APIService {
         guard (200...299).contains(httpResponse.statusCode) else {
             if let errorResponse = try? JSONDecoder().decode(GenericResponse.self, from: data) {
                 throw NSError(domain: "APIError", code: httpResponse.statusCode,
-                            userInfo: [NSLocalizedDescriptionKey: errorResponse.error ?? "Unknown error"])
+                              userInfo: [NSLocalizedDescriptionKey: errorResponse.error ?? "Unknown error"])
             }
             throw URLError(.badServerResponse)
         }
 
-        let decoder = JSONDecoder()
-        return try decoder.decode(T.self, from: data)
+        return try JSONDecoder().decode(T.self, from: data)
     }
 
     // MARK: - Authentication
@@ -88,7 +74,7 @@ class APIService {
         categories: String?,
         address: String?,
         website: String?
-    ) async throws -> User {
+    ) async throws -> (User, String?) {
         let body: [String: Any?] = [
             "name": name,
             "email": email,
@@ -110,10 +96,10 @@ class APIService {
             throw NSError(domain: "APIError", code: -1, userInfo: [NSLocalizedDescriptionKey: response.error ?? "Signup failed"])
         }
 
-        return userFromAuthResponse(response, fallbackId: userId, fallbackEmail: email)
+        return (userFromAuthResponse(response, fallbackId: userId, fallbackEmail: email), response.token)
     }
 
-    func login(email: String, password: String) async throws -> User {
+    func login(email: String, password: String) async throws -> (User, String?) {
         let body: [String: String] = ["email": email, "password": password]
         let jsonData = try JSONEncoder().encode(body)
         let response = try await makeRequest(endpoint: "/api/login", method: "POST", body: jsonData, responseType: AuthResponse.self)
@@ -122,7 +108,7 @@ class APIService {
             throw NSError(domain: "APIError", code: -1, userInfo: [NSLocalizedDescriptionKey: response.error ?? "Login failed"])
         }
 
-        return userFromAuthResponse(response, fallbackId: userId, fallbackEmail: email)
+        return (userFromAuthResponse(response, fallbackId: userId, fallbackEmail: email), response.token)
     }
 
     // MARK: - Stores
@@ -357,6 +343,12 @@ class APIService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.timeoutInterval = 60
+
+        // Attach JWT for authenticated upload — reads UserDefaults directly (thread-safe)
+        if let token = UserDefaults.standard.string(forKey: "spicetrade_jwt"),
+           !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
