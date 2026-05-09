@@ -21,7 +21,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import resend
 import boto3
 try:
     import jwt as pyjwt
@@ -36,8 +35,9 @@ BASE_DIR = Path(__file__).resolve().parent
 with open(BASE_DIR / 'creds.json', 'r') as f:
     DB_CONFIG = json.load(f)
 
-resend.api_key = DB_CONFIG.get('resendapikey', '')
 APP_URL = os.environ.get('APP_URL', 'https://bigspice.in')
+SES_REGION = DB_CONFIG.get('ses_region', DB_CONFIG.get('aws_region', 'ap-south-2'))
+SES_FROM = 'BigSpice <noreply@bigspice.in>'
 
 # ── JWT configuration ─────────────────────────────────────────────────────────
 # Secret is loaded from creds.json (key: "jwt_secret") or the JWT_SECRET env var.
@@ -360,17 +360,25 @@ def optimise_and_save(stream, dest_path: Path, max_px: int = _PRODUCT_MAX_PX, qu
 
 # ── S3 image helpers ───────────────────────────────────────────────────────────
 
-def _get_s3():
-    """Return a boto3 S3 client.
+def _aws_client(service: str, region: str):
+    """Return a boto3 client for any AWS service.
     - Locally: uses aws_access_key_id / aws_secret_access_key from creds.json.
     - On EC2: keys are absent so boto3 falls through to the IAM instance role.
     """
     ak = DB_CONFIG.get('aws_access_key_id', '').strip()
     sk = DB_CONFIG.get('aws_secret_access_key', '').strip()
     if ak and sk:
-        return boto3.client('s3', region_name=S3_REGION,
+        return boto3.client(service, region_name=region,
                             aws_access_key_id=ak, aws_secret_access_key=sk)
-    return boto3.client('s3', region_name=S3_REGION)
+    return boto3.client(service, region_name=region)
+
+
+def _get_s3():
+    return _aws_client('s3', S3_REGION)
+
+
+def _get_ses():
+    return _aws_client('ses', SES_REGION)
 
 
 def _upload_image_to_s3(stream, key: str,
@@ -579,14 +587,17 @@ def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
             print(f'[email] No sellers found for category "{category}" — skipping.')
             return
 
+        ses = _get_ses()
         for seller in sellers:
             try:
-                resend.Emails.send({
-                    'from': 'BigSpice <onboarding@resend.dev>',
-                    'to': [seller['email']],
-                    'subject': f'New Buyer Requirement: {title}',
-                    'html': html,
-                })
+                ses.send_email(
+                    Source=SES_FROM,
+                    Destination={'ToAddresses': [seller['email']]},
+                    Message={
+                        'Subject': {'Data': f'New Buyer Requirement: {title}', 'Charset': 'UTF-8'},
+                        'Body': {'Html': {'Data': html, 'Charset': 'UTF-8'}},
+                    },
+                )
                 print(f'[email] Sent requirement notification to {seller["email"]}')
             except Exception as exc:
                 print(f'[email] Failed to send to {seller["email"]}: {exc}')
