@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import sys
+import uuid
 import boto3
 from pathlib import Path
 
@@ -37,7 +38,9 @@ def _get_ses():
 # ── Email HTML builder (standalone copy — no app.py import to avoid gevent) ──
 def _requirement_email_html(buyer_name, title, description, category, listing_url):
     synopsis = (description[:300] + '…') if len(description) > 300 else description
-    return f"""<!DOCTYPE html>
+    msg_id = uuid.uuid4()
+    return f"""<!-- mid:{msg_id} -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -54,21 +57,13 @@ def _requirement_email_html(buyer_name, title, description, category, listing_ur
           <tr>
             <td style="background:linear-gradient(135deg,#b5451b 0%,#e07b39 100%);
                         padding:28px 40px 24px;text-align:center;">
-              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 10px;">
-                <tr>
-                  <td style="vertical-align:middle;padding-right:10px;">
-                    <img src="{APP_URL}/logos/bigspicebubble.png" alt="BigSpice icon"
-                         width="52" height="52"
-                         style="display:block;border-radius:50%;border:2px solid rgba(255,255,255,0.35);" />
-                  </td>
-                  <td style="vertical-align:middle;">
-                    <img src="{APP_URL}/logos/bigspicelogo.png" alt="BigSpice"
-                         height="36" style="display:block;max-width:160px;" />
-                  </td>
-                </tr>
-              </table>
+              <!-- Logo -->
+              <img src="https://bigspice-images.s3.ap-south-2.amazonaws.com/logos/bigspicelogo.png"
+                   alt="BigSpice"
+                   height="44"
+                   style="display:block;margin:0 auto 10px;max-width:180px;" />
               <p style="margin:0;color:rgba(255,255,255,0.88);font-size:14px;letter-spacing:0.5px;">
-                B2B Spice &amp; Food Trade Platform</p>
+                India's fastest growing B2B marketplace</p>
             </td>
           </tr>
           <tr>
