@@ -90,20 +90,6 @@ S3_REGION = DB_CONFIG.get('aws_region', 'ap-south-2')
 DATA_DIR = BASE_DIR / 'data'
 DATA_DIR.mkdir(exist_ok=True)
 
-# ── Firebase / FCM ─────────────────────────────────────────────────────────────
-try:
-    import firebase_admin
-    from firebase_admin import credentials as fb_creds, messaging as fb_messaging
-    _fb_key = BASE_DIR / DB_CONFIG.get('firebase_service_account', 'firebase-service-account.json')
-    if _fb_key.exists():
-        firebase_admin.initialize_app(fb_creds.Certificate(str(_fb_key)))
-        _FCM_OK = True
-    else:
-        _FCM_OK = False
-        print('[FCM] firebase-service-account.json not found — push notifications disabled')
-except Exception as _fcm_err:
-    _FCM_OK = False
-    print(f'[FCM] Not available: {_fcm_err}')
 
 
 def get_db():
@@ -229,14 +215,6 @@ def init_db():
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         expiresAt TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id)
-    )''')
-
-    # Create device_tokens table for FCM push notifications
-    cur.execute('''CREATE TABLE IF NOT EXISTS device_tokens (
-        user_id INTEGER PRIMARY KEY,
-        fcm_token TEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT NOW(),
-        FOREIGN KEY(user_id) REFERENCES users(id)
     )''')
 
     conn.commit()
@@ -572,37 +550,6 @@ def _requirement_email_html(buyer_name: str, title: str, description: str,
 </html>"""
 
 
-# ── FCM helpers ───────────────────────────────────────────────────────────────
-
-def _send_fcm(token: str, title: str, body: str, data: dict = None):
-    """Send a single FCM push notification. Silently ignores errors."""
-    if not _FCM_OK or not token:
-        return
-    try:
-        fb_messaging.send(fb_messaging.Message(
-            notification=fb_messaging.Notification(title=title, body=body),
-            data={str(k): str(v) for k, v in (data or {}).items()},
-            token=token,
-        ))
-    except Exception as e:
-        print(f'[FCM] send error: {e}')
-
-
-def _get_fcm_tokens(user_ids: list) -> list:
-    """Return FCM tokens for the given list of user IDs."""
-    if not user_ids or not _FCM_OK:
-        return []
-    try:
-        db = get_db()
-        c = dict_cursor(db)
-        c.execute('SELECT fcm_token FROM device_tokens WHERE user_id = ANY(%s)', (user_ids,))
-        rows = c.fetchall()
-        db.close()
-        return [r['fcm_token'] for r in rows if r['fcm_token']]
-    except Exception as e:
-        print(f'[FCM] _get_fcm_tokens error: {e}')
-        return []
-
 
 def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
                                    category: str, buyer_name: str) -> None:
@@ -644,12 +591,6 @@ def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
             except Exception as exc:
                 print(f'[email] Failed to send to {seller["email"]}: {exc}')
 
-        # Push FCM notifications to all matching sellers
-        seller_ids = [s['id'] for s in sellers]
-        for tok in _get_fcm_tokens(seller_ids):
-            _send_fcm(tok, '🌶 New Requirement',
-                      f'{category}: {title[:80]}',
-                      {'type': 'new_requirement', 'adId': str(ad_id)})
     except Exception as exc:
         print(f'[email] notify_sellers_of_requirement error: {exc}')
 
@@ -712,24 +653,13 @@ def seed_default_banners():
 
 seed_default_banners()
 
-# ── Redis (optional — required for multi-worker deployments) ─────────────────
-# Set REDIS_URL env var in production, e.g. redis://localhost:6379/0
-_redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-try:
-    import redis as _redis_lib
-    _redis_client = _redis_lib.from_url(
-        _redis_url, decode_responses=True, socket_connect_timeout=2
-    )
-    _redis_client.ping()
-    USE_REDIS = True
-    print('[SSE] Redis connected — multi-worker pub/sub enabled')
-except Exception as _redis_err:
-    USE_REDIS = False
-    _redis_client = None
-    print(f'[SSE] Redis unavailable ({_redis_err}) — in-memory pub/sub active (single-worker only)')
-# ─────────────────────────────────────────────────────────────────────────────
 
-# ── SSE pub/sub (in-memory fallback when Redis is not available) ──────────────
+@app.route('/api/health')
+def health_check():
+    return {'status': 'ok'}, 200
+
+
+# ── SSE pub/sub (in-memory) ──────────────────────────────────────────────────
 _sse_subscribers = {}   # {user_id: [queue, ...]}
 _sse_lock = threading.Lock()
 
@@ -748,21 +678,14 @@ def _sse_unsubscribe(user_id, q):
             _sse_subscribers.pop(user_id, None)
 
 def _sse_publish(user_id, event_type, data):
-    payload = json.dumps({'type': event_type, 'data': data})
-    if USE_REDIS:
+    event = {'type': event_type, 'data': data}
+    with _sse_lock:
+        queues = list(_sse_subscribers.get(user_id, []))
+    for q in queues:
         try:
-            _redis_client.publish(f'bigspice:user:{user_id}', payload)
-        except Exception as e:
-            print(f'[SSE] Redis publish error: {e}')
-    else:
-        event = json.loads(payload)
-        with _sse_lock:
-            queues = list(_sse_subscribers.get(user_id, []))
-        for q in queues:
-            try:
-                q.put_nowait(event)
-            except queue.Full:
-                pass
+            q.put_nowait(event)
+        except queue.Full:
+            pass
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -973,29 +896,6 @@ def login():
         print('login error', e)
         return jsonify({'error': 'database error'}), 500
 
-
-@app.route('/api/device/register', methods=['POST'])
-def register_device_token():
-    """Store or update a user's FCM device token for push notifications."""
-    data = request.get_json() or {}
-    user_id = data.get('userId')
-    token = data.get('fcmToken')
-    if not user_id or not token:
-        return jsonify({'error': 'userId and fcmToken required'}), 400
-    try:
-        db = get_db()
-        c = db.cursor()
-        c.execute('''INSERT INTO device_tokens (user_id, fcm_token, updated_at)
-            VALUES (%s, %s, NOW())
-            ON CONFLICT (user_id) DO UPDATE
-            SET fcm_token = EXCLUDED.fcm_token, updated_at = NOW()''',
-            (user_id, token))
-        db.commit()
-        db.close()
-        return jsonify({'success': True})
-    except Exception as e:
-        print('register_device_token error:', e)
-        return jsonify({'error': 'database error'}), 500
 
 
 @app.route('/api/stores', methods=['GET'])
@@ -1994,11 +1894,6 @@ def send_message():
         _sse_publish(recipient_id, 'new_message', event_payload)
         _sse_publish(sender_id,    'new_message', event_payload)
 
-        # Push FCM notification to the recipient
-        for tok in _get_fcm_tokens([recipient_id]):
-            _send_fcm(tok, sender_name, message[:100],
-                      {'type': 'new_message', 'conversationId': str(conversation_id)})
-
         return jsonify({'success': True, 'messageId': message_id})
     except Exception as e:
         print('send_message error:', e)
@@ -2009,43 +1904,19 @@ def send_message():
 
 @app.route('/api/sse/<int:user_id>')
 def sse_stream(user_id):
-    """Server-Sent Events stream — uses Redis when available, in-memory otherwise."""
+    """Server-Sent Events stream — in-memory pub/sub."""
     def generate():
-        if USE_REDIS:
-            # Each SSE connection gets its own Redis pubsub subscription.
-            # With gevent workers this is a cooperative (non-blocking) wait.
-            r = _redis_lib.from_url(_redis_url, decode_responses=True, socket_timeout=30)
-            pubsub = r.pubsub(ignore_subscribe_messages=True)
-            channel = f'bigspice:user:{user_id}'
-            pubsub.subscribe(channel)
-            try:
-                yield 'data: {"type":"connected"}\n\n'
-                while True:
-                    msg = pubsub.get_message(timeout=25)
-                    if msg and msg.get('type') == 'message':
-                        yield f'data: {msg["data"]}\n\n'
-                    else:
-                        yield ': keepalive\n\n'
-            finally:
+        q = _sse_subscribe(user_id)
+        try:
+            yield 'data: {"type":"connected"}\n\n'
+            while True:
                 try:
-                    pubsub.unsubscribe(channel)
-                    pubsub.close()
-                    r.close()
-                except Exception:
-                    pass
-        else:
-            # Single-process in-memory fallback
-            q = _sse_subscribe(user_id)
-            try:
-                yield 'data: {"type":"connected"}\n\n'
-                while True:
-                    try:
-                        event = q.get(timeout=25)
-                        yield f'data: {json.dumps(event)}\n\n'
-                    except queue.Empty:
-                        yield ': keepalive\n\n'
-            finally:
-                _sse_unsubscribe(user_id, q)
+                    event = q.get(timeout=25)
+                    yield f'data: {json.dumps(event)}\n\n'
+                except queue.Empty:
+                    yield ': keepalive\n\n'
+        finally:
+            _sse_unsubscribe(user_id, q)
 
     return Response(
         stream_with_context(generate()),

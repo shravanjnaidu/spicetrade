@@ -2,7 +2,9 @@
 const nextConfig = {
   // Proxy all /api/* requests to the Flask backend
   async rewrites() {
-    const backendUrl = process.env.FLASK_API_URL || "http://localhost:5000";
+    // Use 127.0.0.1 explicitly — Node resolves "localhost" to ::1 (IPv6) first
+    // on modern systems, but Flask binds IPv4 only, causing ECONNREFUSED on ::1.
+    const backendUrl = process.env.FLASK_API_URL || "http://127.0.0.1:5000";
     return [
       {
         source: "/api/:path*",
