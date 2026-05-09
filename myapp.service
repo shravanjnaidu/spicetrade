@@ -1,0 +1,25 @@
+[Unit]
+Description=My App Service
+After=network.target
+
+[Service]
+Type=simple
+
+User=root
+WorkingDirectory=/root/spicetrade
+
+ExecStart=/bin/sh /root/spicetrade/start.sh
+
+Restart=always
+RestartSec=5
+
+Environment=NODE_ENV=production
+
+StandardOutput=journal
+StandardError=journal
+
+# (optional but useful if your app crashes due to limits)
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
