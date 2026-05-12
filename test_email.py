@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent
 with open(BASE_DIR / 'creds.json') as f:
     DB_CONFIG = json.load(f)
 
-APP_URL    = os.environ.get('APP_URL', 'https://bigspice.in')
+APP_URL    = os.environ.get('APP_URL', 'https://www.bigspice.in')
 SES_REGION = DB_CONFIG.get('ses_region', DB_CONFIG.get('aws_region', 'ap-south-2'))
 SES_FROM   = 'BigSpice <noreply@bigspice.in>'
 
