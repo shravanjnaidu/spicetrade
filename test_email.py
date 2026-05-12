@@ -184,7 +184,7 @@ if not recipient:
         sys.exit(1)
 
 # ── Build and send ────────────────────────────────────────────────────────────
-listing_url = f'{APP_URL}/listing.html?id={AD_ID}'
+listing_url = f'{APP_URL}/listing/{AD_ID}'
 html = _requirement_email_html(BUYER_NAME, TITLE, DESCRIPTION, CATEGORY, listing_url)
 
 print(f'[test] Sending via SES ({SES_REGION})')

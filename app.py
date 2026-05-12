@@ -646,7 +646,7 @@ def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
     """Find sellers with matching category listings and email them.
     Runs in a background thread — must not raise."""
     try:
-        listing_url = f"{APP_URL}/listing.html?id={ad_id}"
+        listing_url = f"{APP_URL}/listing/{ad_id}"
         html = _requirement_email_html(buyer_name, title, description, category, listing_url)
 
         db = get_db()
