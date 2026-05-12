@@ -15,6 +15,7 @@ import uuid
 import secrets
 from functools import wraps
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context, render_template, make_response, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
@@ -416,6 +417,23 @@ def _normalise_external_url(value: str | None) -> str | None:
     return f'https://{value}'
 
 
+def _public_base_url(base_url: str | None = None) -> str:
+    candidate = (base_url or APP_URL or '').strip()
+    if not candidate:
+        candidate = 'https://www.bigspice.in'
+
+    parts = urlsplit(candidate)
+    scheme = parts.scheme or 'https'
+    netloc = parts.netloc or parts.path
+    path = '' if parts.netloc else parts.path
+
+    host = netloc.lower()
+    if host in {'bigspice.in', 'www.bigspice.in'}:
+        return 'https://www.bigspice.in'
+
+    return urlunsplit((scheme, netloc, path.rstrip('/'), '', '')).rstrip('/')
+
+
 def _read_upload_bytes(upload) -> bytes:
     candidates = []
     if upload is not None:
@@ -642,11 +660,12 @@ def _requirement_email_html(buyer_name: str, title: str, description: str,
 
 
 def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
-                                   category: str, buyer_name: str) -> None:
+                                   category: str, buyer_name: str,
+                                   base_url: str | None = None) -> None:
     """Find sellers with matching category listings and email them.
     Runs in a background thread — must not raise."""
     try:
-        listing_url = f"{APP_URL}/listing/{ad_id}"
+        listing_url = f"{_public_base_url(base_url)}/listing/{ad_id}"
         html = _requirement_email_html(buyer_name, title, description, category, listing_url)
 
         db = get_db()
@@ -1170,9 +1189,10 @@ def post_ad():
             # Fire seller notification emails in the background for requirements
             if listing_type == 'requirement' and category:
                 buyer_name = row['author'] or 'A buyer'
+                request_base_url = _public_base_url(request.host_url)
                 t = threading.Thread(
                     target=notify_sellers_of_requirement,
-                    args=(last, title, description, category, buyer_name),
+                    args=(last, title, description, category, buyer_name, request_base_url),
                     daemon=True
                 )
                 t.start()
