@@ -319,11 +319,11 @@ export default function AdvertiserDashboardPage() {
                     Destination URL *
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={targetUrl}
                     onChange={(e) => setTargetUrl(e.target.value)}
                     required
-                    placeholder="https://yourwebsite.com"
+                    placeholder="yourwebsite.com"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#e47911]"
                   />
                   <p className="text-xs text-gray-400 mt-1">

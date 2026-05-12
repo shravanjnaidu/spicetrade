@@ -1522,7 +1522,7 @@ export default function AdminPage() {
                   Target URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   required
                   value={bannerEditModal.targetUrl}
                   onChange={(e) =>

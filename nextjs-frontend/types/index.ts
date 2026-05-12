@@ -113,6 +113,7 @@ export interface Message {
   conversationId: number;
   senderId: number;
   message: string;
+  content?: string;
   createdAt: string;
   senderName: string;
   senderEmail: string;

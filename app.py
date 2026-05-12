@@ -8,6 +8,7 @@ except ImportError:
 import os
 import io
 import json
+import mimetypes
 import queue
 import threading
 import uuid
@@ -373,16 +374,77 @@ def _upload_public_url(key: str) -> str:
     return '/' + key.lstrip('/').replace('\\', '/')
 
 
-def _read_upload_bytes(stream) -> bytes:
-    if hasattr(stream, 'seek'):
-        stream.seek(0)
-    data = stream.read()
-    if hasattr(stream, 'seek'):
+def _content_type_to_suffix(content_type: str | None) -> str | None:
+    mapping = {
+        'image/webp': '.webp',
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/gif': '.gif',
+    }
+    return mapping.get((content_type or '').lower())
+
+
+def _replace_key_suffix(key: str, content_type: str | None) -> str:
+    suffix = _content_type_to_suffix(content_type)
+    if not suffix:
+        return key
+    path = Path(key)
+    if path.suffix.lower() == suffix:
+        return key
+    return str(path.with_suffix(suffix)).replace('\\', '/')
+
+
+def _detect_upload_content_type(upload) -> str:
+    content_type = getattr(upload, 'mimetype', None) or getattr(upload, 'content_type', None)
+    if content_type:
+        return content_type
+    filename = getattr(upload, 'filename', '') or ''
+    guessed, _ = mimetypes.guess_type(filename)
+    return guessed or 'application/octet-stream'
+
+
+def _normalise_external_url(value: str | None) -> str | None:
+    if value is None:
+        return None
+    value = value.strip()
+    if not value:
+        return ''
+    if value.startswith(('/', '#')):
+        return value
+    if '://' in value:
+        return value
+    return f'https://{value}'
+
+
+def _read_upload_bytes(upload) -> bytes:
+    candidates = []
+    if upload is not None:
+        candidates.append(upload)
+    stream = getattr(upload, 'stream', None)
+    if stream is not None and stream is not upload:
+        candidates.append(stream)
+
+    last_exc = None
+    for candidate in candidates:
+        if not hasattr(candidate, 'read'):
+            continue
         try:
-            stream.seek(0)
-        except Exception:
-            pass
-    return data
+            if hasattr(candidate, 'seek'):
+                candidate.seek(0)
+            data = candidate.read()
+            if hasattr(candidate, 'seek'):
+                try:
+                    candidate.seek(0)
+                except Exception:
+                    pass
+            if data:
+                return data
+        except Exception as exc:
+            last_exc = exc
+
+    if last_exc is not None:
+        raise ValueError(f'upload stream could not be read: {last_exc}')
+    raise ValueError('upload stream is unavailable')
 
 
 def _optimise_image_bytes(data: bytes,
@@ -419,11 +481,15 @@ def _store_uploaded_image_locally(data: bytes, key: str) -> str:
     return _upload_public_url(key)
 
 
-def _upload_image_to_s3(stream, key: str,
+def _upload_image_to_s3(upload, key: str,
                          max_px: int = _PRODUCT_MAX_PX, quality: int = 82) -> str:
     """Optimise an uploaded image and upload it to S3 or local storage."""
-    original = _read_upload_bytes(stream)
+    original = _read_upload_bytes(upload)
+    original_content_type = _detect_upload_content_type(upload)
     payload, content_type = _optimise_image_bytes(original, max_px=max_px, quality=quality)
+    if content_type == 'application/octet-stream':
+        content_type = original_content_type
+    key = _replace_key_suffix(key, content_type)
 
     if not S3_BUCKET:
         print('[upload] S3 bucket not configured — storing upload locally')
@@ -731,7 +797,7 @@ def upload_file():
             stem = Path(secure_filename(file.filename)).stem
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
             key = f"uploads/products/{timestamp}_{stem}.webp"
-            url = _upload_image_to_s3(file.stream, key)
+            url = _upload_image_to_s3(file, key)
             uploaded_urls.append(url)
 
         if len(uploaded_urls) == 0:
@@ -809,7 +875,7 @@ def signup():
     categories = form.get('categories')
     taxNumber = form.get('taxNumber')
     address = form.get('address')
-    website = form.get('website')
+    website = _normalise_external_url(form.get('website'))
     # shippingLocations may be submitted as multiple values
     if isinstance(form, dict):
         shipping_list = form.get('shippingLocations')
@@ -830,7 +896,7 @@ def signup():
         stem = Path(secure_filename(logo_file.filename)).stem
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         key = f"uploads/logos/{ts}_{stem}.webp"
-        logo_path = _upload_image_to_s3(logo_file.stream, key, max_px=_AVATAR_MAX_PX, quality=85)
+        logo_path = _upload_image_to_s3(logo_file, key, max_px=_AVATAR_MAX_PX, quality=85)
 
     # handle profile picture upload (for buyers)
     profile_picture = None
@@ -839,7 +905,7 @@ def signup():
         stem = Path(secure_filename(profile_file.filename)).stem
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         key = f"uploads/profiles/profile_{ts}_{stem}.webp"
-        profile_picture = _upload_image_to_s3(profile_file.stream, key, max_px=_AVATAR_MAX_PX, quality=85)
+        profile_picture = _upload_image_to_s3(profile_file, key, max_px=_AVATAR_MAX_PX, quality=85)
 
     # Generate unique ID
     import uuid
@@ -1241,7 +1307,7 @@ def update_profile():
             stem = Path(secure_filename(pic_file.filename)).stem
             ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
             key = f"uploads/profiles/profile_{ts}_{stem}.webp"
-            profile_picture = _upload_image_to_s3(pic_file.stream, key, max_px=_AVATAR_MAX_PX, quality=85)
+            profile_picture = _upload_image_to_s3(pic_file, key, max_px=_AVATAR_MAX_PX, quality=85)
         
         # Build update query dynamically
         updates = []
@@ -1490,7 +1556,7 @@ def admin_update_user(user_id):
             params.append(data['logo_path'])
         if 'website' in data:
             updates.append('website = %s')
-            params.append(data['website'])
+            params.append(_normalise_external_url(data['website']))
         if 'categories' in data:
             updates.append('categories = %s')
             params.append(data['categories'])
@@ -1863,6 +1929,7 @@ def get_messages(conversation_id):
                 'conversationId': r['conversationid'],
                 'senderId': r['senderid'],
                 'message': r['message'],
+                'content': r['message'],
                 'createdAt': r['createdat'],
                 'senderName': r['sendername'],
                 'senderEmail': r['senderemail'],
@@ -1885,7 +1952,7 @@ def send_message():
         data = request.get_json() or {}
         conversation_id = data.get('conversationId')
         sender_id = data.get('senderId')
-        message = data.get('message')
+        message = (data.get('message') or data.get('content') or '').strip()
         
         if not all([conversation_id, sender_id, message]):
             return jsonify({'error': 'conversationId, senderId, and message required'}), 400
@@ -2055,7 +2122,7 @@ def create_banner_ad():
         user_id    = request.form.get('userId')
         title      = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
-        target_url = request.form.get('targetUrl', '').strip()
+        target_url = _normalise_external_url(request.form.get('targetUrl', '').strip()) or ''
         expires_at = request.form.get('expiresAt') or None
         contact_name   = request.form.get('contactName', '').strip()
         contact_number = request.form.get('contactNumber', '').strip()
@@ -2080,7 +2147,7 @@ def create_banner_ad():
             return jsonify({'error': 'Image must be JPG, PNG, or WebP'}), 400
         fname = f'banner_{uuid.uuid4().hex}.webp'
         key = f'uploads/banners/{fname}'
-        image_url = _upload_image_to_s3(file.stream, key, max_px=1600, quality=85)
+        image_url = _upload_image_to_s3(file, key, max_px=1600, quality=85)
 
         db = get_db()
         cursor = dict_cursor(db)
@@ -2197,11 +2264,14 @@ def update_banner_ad(ad_id):
             if val is not None:
                 updates[field] = val or None
 
+        if 'targetUrl' in updates:
+            updates['targetUrl'] = _normalise_external_url(updates['targetUrl'])
+
         if 'image' in request.files and request.files['image'].filename:
             file = request.files['image']
             fname = f'banner_{uuid.uuid4().hex}.webp'
             key = f'uploads/banners/{fname}'
-            updates['imageUrl'] = _upload_image_to_s3(file.stream, key, max_px=1600)
+            updates['imageUrl'] = _upload_image_to_s3(file, key, max_px=1600)
 
         if not updates:
             db.close(); return jsonify({'error': 'No fields to update'}), 400

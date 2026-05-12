@@ -6,13 +6,18 @@ import Navbar from "@/components/Navbar";
 import CategoryNav from "@/components/CategoryNav";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { CATEGORY_GROUPS } from "@/lib/categories";
 import type { Ad } from "@/types";
+
+const CATEGORY_GROUP_LOOKUP = new Map(
+  CATEGORY_GROUPS.map((group) => [group.label, group.items]),
+);
 
 function AllListingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get("category") || "";
-  const q = searchParams.get("q") || "";
+  const q = searchParams.get("q") || searchParams.get("search") || "";
 
   const [allAds, setAllAds] = useState<Ad[]>([]);
   const [filtered, setFiltered] = useState<Ad[]>([]);
@@ -61,8 +66,15 @@ function AllListingsContent() {
         ),
       );
     }
-    if (selCats.length)
-      r = r.filter((a) => a.category && selCats.includes(a.category));
+    if (selCats.length) {
+      const effectiveCategories = new Set(
+        selCats.flatMap(
+          (categoryName) =>
+            CATEGORY_GROUP_LOOKUP.get(categoryName) ?? [categoryName],
+        ),
+      );
+      r = r.filter((a) => a.category && effectiveCategories.has(a.category));
+    }
     if (minPrice)
       r = r.filter((a) => a.price != null && a.price >= parseFloat(minPrice));
     if (maxPrice)

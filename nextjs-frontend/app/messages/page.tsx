@@ -7,6 +7,31 @@ import Footer from "@/components/Footer";
 import { getUser } from "@/lib/auth";
 import type { Conversation, Message, User } from "@/types";
 
+async function fetchJsonWithRetry<T>(
+  url: string,
+  attempts = 3,
+  delayMs = 500,
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      return (await response.json()) as T;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
+  throw lastError ?? new Error(`Request failed for ${url}`);
+}
+
 function ConvAvatar({
   name,
   picture,
@@ -63,9 +88,9 @@ function MessagesContent() {
       const userId = (u || user)?.id;
       if (!userId) return;
       try {
-        const data: Conversation[] = await fetch(
+        const data = await fetchJsonWithRetry<Conversation[]>(
           `/api/conversations/${userId}`,
-        ).then((r) => r.json());
+        );
         setConversations(Array.isArray(data) ? data : []);
       } catch {
         /* empty */
@@ -79,6 +104,14 @@ function MessagesContent() {
     if (!user) return;
     loadConversations(user);
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const interval = window.setInterval(() => {
+      loadConversations(user);
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [user, loadConversations]);
 
   // Deep-link from URL params
   useEffect(() => {
@@ -96,8 +129,8 @@ function MessagesContent() {
   const loadMessages = useCallback(async (convId: number) => {
     setChatLoading(true);
     try {
-      const data: Message[] = await fetch(`/api/messages/${convId}`).then((r) =>
-        r.json(),
+      const data = await fetchJsonWithRetry<Message[]>(
+        `/api/messages/${convId}`,
       );
       setMessages(Array.isArray(data) ? data : []);
     } catch {
@@ -126,6 +159,14 @@ function MessagesContent() {
     [user, loadMessages, loadConversations],
   );
 
+  useEffect(() => {
+    if (!selectedConvId) return;
+    const interval = window.setInterval(() => {
+      loadMessages(selectedConvId);
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [selectedConvId, loadMessages]);
+
   const sendMessage = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -140,7 +181,7 @@ function MessagesContent() {
           body: JSON.stringify({
             conversationId: selectedConvId,
             senderId: user.id,
-            content,
+            message: content,
           }),
         });
         const j = await res.json();
@@ -351,7 +392,7 @@ function MessagesContent() {
                             <div
                               className={`px-3.5 py-2.5 rounded-xl text-sm leading-relaxed break-words whitespace-pre-wrap ${isSent ? "bg-[#d35400] text-white rounded-br-sm" : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"}`}
                             >
-                              {msg.content}
+                              {msg.content || msg.message}
                             </div>
                             <span className="text-xs text-gray-400 px-1">
                               {msg.createdAt
