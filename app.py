@@ -294,24 +294,12 @@ app = Flask(
 )
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB upload limit
 
-# CORS — only the API blueprint needs cross-origin access.
-# The web app is served from the same origin so it never triggers CORS.
-# Native mobile apps (iOS/Android) do NOT send an Origin header so they are
-# never blocked by CORS — the policy here only governs browser-based callers.
-CORS(
-    app,
-    resources={r"/api/*": {
-        "origins": [
-            "https://bigspice.in",
-            "https://www.bigspice.in",
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept"],
-        "expose_headers": ["Content-Type"],
-        "supports_credentials": False,   # JWT in header, no cookies
-        "max_age": 3600,
-    }},
-)
+# CORS — allow all origins unconditionally.
+# Nginx already enforces the origin restriction at the edge (see nginx/bigspice.in.conf).
+# Having BOTH Nginx and Flask-CORS set Access-Control-Allow-Origin causes duplicate
+# headers, which browsers reject. Flask-CORS is kept here only so that direct
+# (non-Nginx) access and local development work without browser errors.
+CORS(app)
 
 # ── Device-detection middleware ───────────────────────────────────────────────
 from middleware.device_middleware import init_device_middleware

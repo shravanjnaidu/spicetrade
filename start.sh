@@ -44,7 +44,7 @@ done
 # ── Next.js dev server ────────────────────────────────────────────────────────
 echo "[2/2] Starting Next.js dev server on :3000..."
 cd nextjs-frontend
-npm run dev &
+FLASK_API_URL=http://127.0.0.1:5000 npm run dev &
 NEXT_PID=$!
 cd ..
 
