@@ -155,7 +155,7 @@
                         id="advertiserWebsite"
                         name="website"
                         type="text"
-                        placeholder="https://yourcompany.com"
+                        placeholder="yourcompany.com"
                         class="form-control"
                       />
                     </div>
@@ -203,12 +203,7 @@
                         id="categories"
                         name="categories"
                         class="form-control"
-                      >
-                        <option>Food & Beverages</option>
-                        <option>Agriculture</option>
-                        <option>Packaging</option>
-                        <option>Machinery</option>
-                      </select>
+                      ></select>
                     </div>
                   </div>
                   <div>
@@ -380,6 +375,123 @@
         const locationInput = document.getElementById("location");
         const advertiserCompanyInput =
           document.getElementById("advertiserCompany");
+        const categoriesSelect = document.getElementById("categories");
+        const sellerCategoryGroups = [
+          {
+            label: "Professional Services",
+            items: [
+              "Consulting & Advisory",
+              "Quality Testing & Certification",
+              "Legal & Compliance",
+              "Financial & Accounting",
+              "Marketing & Branding",
+              "Market Research & Analytics",
+              "Training & Education",
+            ],
+          },
+          {
+            label: "Home Services",
+            items: [
+              "Carpentry",
+              "Door & Window Installation",
+              "Flooring Installation",
+              "Painting",
+              "Plumbing",
+              "Electrical",
+              "Appliance Repair",
+            ],
+          },
+          {
+            label: "Pest Control",
+            items: [
+              "Residential Pest Control",
+              "Commercial Pest Control",
+              "Termite Treatment",
+              "Rodent Control",
+              "Mosquito Control",
+              "Bed Bug Treatment",
+              "Cockroach Control",
+              "Bird & Wildlife Control",
+            ],
+          },
+          {
+            label: "Food & Agriculture",
+            items: [
+              "Spices & Herbs",
+              "Grains & Cereals",
+              "Pulses & Legumes",
+              "Nuts & Dry Fruits",
+              "Oils & Fats",
+              "Sugar & Sweeteners",
+              "Tea & Coffee",
+              "Dairy Products",
+              "Fruits & Vegetables",
+              "Seafood",
+              "Meat & Poultry",
+              "Processed & Packaged Foods",
+              "Beverages",
+              "Seeds & Planting Material",
+              "Organic & Natural Products",
+              "Agro Chemicals & Fertilizers",
+            ],
+          },
+          {
+            label: "Industrial & Supply Chain",
+            items: [
+              "Packaging Materials",
+              "Machinery & Equipment",
+              "Chemicals & Raw Materials",
+              "Laboratory & Testing Equipment",
+              "Safety & Protective Equipment",
+              "Cold Chain & Refrigeration",
+              "Industrial Tools & Hardware",
+            ],
+          },
+          {
+            label: "Logistics & Supply Chain Services",
+            items: [
+              "Freight Forwarding",
+              "Customs & Import/Export",
+              "Warehousing & Storage",
+              "Cold Chain Logistics",
+              "Last-Mile Delivery",
+              "Packaging & Labelling Services",
+            ],
+          },
+          {
+            label: "Technical Services",
+            items: [
+              "Machinery Installation & Repair",
+              "Calibration & Testing Services",
+              "IT & Software Solutions",
+              "Food Processing Technology",
+              "Quality Control & Inspection",
+            ],
+          },
+          { label: "Other", items: ["Other"] },
+        ];
+
+        function populateCategories() {
+          if (!categoriesSelect) return;
+          categoriesSelect.innerHTML = "";
+
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "Select category";
+          categoriesSelect.appendChild(placeholder);
+
+          sellerCategoryGroups.forEach((group) => {
+            const optgroup = document.createElement("optgroup");
+            optgroup.label = group.label;
+            group.items.forEach((item) => {
+              const option = document.createElement("option");
+              option.value = item;
+              option.textContent = item;
+              optgroup.appendChild(option);
+            });
+            categoriesSelect.appendChild(optgroup);
+          });
+        }
 
         function setRole(r) {
           roleInput.value = r;
@@ -423,6 +535,8 @@
             if (submitBtn) submitBtn.textContent = "Create buyer account";
           }
         }
+
+        populateCategories();
 
         // set initial role (default to seller for this page)
         setRole(initialRole);

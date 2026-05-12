@@ -5,8 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { setUser, dashboardRoute, getUser } from "@/lib/auth";
+import { CATEGORY_GROUPS } from "@/lib/categories";
 
 type Role = "seller" | "buyer" | "advertiser";
+
+const SELLER_CATEGORY_GROUPS = CATEGORY_GROUPS.filter(
+  (group) => group.label !== "Other" || group.items.length,
+);
 
 const ROLE_CONFIGS: Record<
   Role,
@@ -455,8 +460,8 @@ export default function SignupPage() {
                     </label>
                     <input
                       name="website"
-                      type="url"
-                      placeholder="https://yourcompany.com"
+                      type="text"
+                      placeholder="yourcompany.com"
                       className={inputCls}
                     />
                   </div>
@@ -495,10 +500,16 @@ export default function SignupPage() {
                         Primary product category
                       </label>
                       <select name="categories" className={inputCls}>
-                        <option>Food &amp; Beverages</option>
-                        <option>Agriculture</option>
-                        <option>Packaging</option>
-                        <option>Machinery</option>
+                        <option value="">Select category</option>
+                        {SELLER_CATEGORY_GROUPS.map((group) => (
+                          <optgroup key={group.label} label={group.label}>
+                            {group.items.map((item) => (
+                              <option key={item} value={item}>
+                                {item}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
                       </select>
                     </div>
                     <div>
@@ -529,7 +540,7 @@ export default function SignupPage() {
                           (optional)
                         </span>
                       </label>
-                      <input name="website" type="url" className={inputCls} />
+                      <input name="website" type="text" className={inputCls} />
                     </div>
                   </div>
                 </div>

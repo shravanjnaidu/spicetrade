@@ -84,7 +84,7 @@ def require_auth(f):
     return decorated
 
 # ── S3 config ──────────────────────────────────────────────────────────────────
-S3_BUCKET = DB_CONFIG.get('s3_bucket_name', '')
+S3_BUCKET = (DB_CONFIG.get('s3_bucket_name') or '').strip()
 S3_REGION = DB_CONFIG.get('aws_region', 'ap-south-2')
 
 DATA_DIR = BASE_DIR / 'data'
@@ -369,34 +369,74 @@ def _get_ses():
     return _aws_client('ses', SES_REGION)
 
 
+def _upload_public_url(key: str) -> str:
+    return '/' + key.lstrip('/').replace('\\', '/')
+
+
+def _read_upload_bytes(stream) -> bytes:
+    if hasattr(stream, 'seek'):
+        stream.seek(0)
+    data = stream.read()
+    if hasattr(stream, 'seek'):
+        try:
+            stream.seek(0)
+        except Exception:
+            pass
+    return data
+
+
+def _optimise_image_bytes(data: bytes,
+                          max_px: int = _PRODUCT_MAX_PX,
+                          quality: int = 82) -> tuple[bytes, str]:
+    if not data:
+        raise ValueError('empty upload stream')
+
+    if not _PILLOW_OK:
+        return data, 'application/octet-stream'
+
+    try:
+        img = PILImage.open(io.BytesIO(data))
+        if img.mode not in ('RGB', 'RGBA'):
+            img = img.convert('RGB')
+        w, h = img.size
+        if max(w, h) > max_px:
+            ratio = max_px / max(w, h)
+            img = img.resize((int(w * ratio), int(h * ratio)), PILImage.LANCZOS)
+
+        buf = io.BytesIO()
+        img.save(buf, 'WEBP', quality=quality, method=4)
+        return buf.getvalue(), 'image/webp'
+    except Exception as exc:
+        print(f'[upload] optimise warning: {exc} — storing raw bytes')
+        return data, 'application/octet-stream'
+
+
+def _store_uploaded_image_locally(data: bytes, key: str) -> str:
+    dest = BASE_DIR / 'public' / Path(key)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with open(dest, 'wb') as f:
+        f.write(data)
+    return _upload_public_url(key)
+
+
 def _upload_image_to_s3(stream, key: str,
                          max_px: int = _PRODUCT_MAX_PX, quality: int = 82) -> str:
-    """Optimise an uploaded image and upload it to S3.  Returns the public URL."""
-    buf = io.BytesIO()
-    if _PILLOW_OK:
-        try:
-            img = PILImage.open(stream)
-            if img.mode not in ('RGB', 'RGBA'):
-                img = img.convert('RGB')
-            w, h = img.size
-            if max(w, h) > max_px:
-                ratio = max_px / max(w, h)
-                img = img.resize((int(w * ratio), int(h * ratio)), PILImage.LANCZOS)
-            img.save(buf, 'WEBP', quality=quality, method=4)
-            buf.seek(0)
-        except Exception as exc:
-            print(f'[s3] optimise warning: {exc} — uploading raw')
-            stream.seek(0)
-            buf = stream
-    else:
-        buf = stream
+    """Optimise an uploaded image and upload it to S3 or local storage."""
+    original = _read_upload_bytes(stream)
+    payload, content_type = _optimise_image_bytes(original, max_px=max_px, quality=quality)
+
+    if not S3_BUCKET:
+        print('[upload] S3 bucket not configured — storing upload locally')
+        return _store_uploaded_image_locally(payload, key)
+
+    buf = io.BytesIO(payload)
     try:
         _get_s3().upload_fileobj(buf, S3_BUCKET, key,
-                                  ExtraArgs={'ContentType': 'image/webp', 'ACL': 'public-read'})
+                                  ExtraArgs={'ContentType': content_type, 'ACL': 'public-read'})
     except Exception:
         # Bucket may block public ACLs; fall back to upload without explicit ACL
-        buf.seek(0) if hasattr(buf, 'seek') else None
-        _get_s3().upload_fileobj(buf, S3_BUCKET, key, ExtraArgs={'ContentType': 'image/webp'})
+        buf.seek(0)
+        _get_s3().upload_fileobj(buf, S3_BUCKET, key, ExtraArgs={'ContentType': content_type})
     return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -731,6 +771,8 @@ def s3_presign():
     content_type = data.get('content_type', 'image/jpeg')
     timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')
     key = f"uploads/{folder}/{timestamp}_{stem}{suffix}"
+    if not S3_BUCKET:
+        return jsonify({'error': 'S3 uploads are not configured on this server'}), 503
     try:
         upload_url = _get_s3().generate_presigned_url(
             'put_object',

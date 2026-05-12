@@ -6,9 +6,11 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/root/spicetrade
+Environment=HOME=/root
 
-# Activate the project virtualenv before starting Gunicorn.
-ExecStart=/bin/bash -lc 'source ENV/bin/activate && exec gunicorn -c gunicorn.conf.py app:app'
+# Run the existing startup script with the same shell startup files a manual
+# root shell typically uses so npm/node and the virtualenv resolve correctly.
+ExecStart=/bin/bash -lc 'source /root/.bash_profile 2>/dev/null || true; source /root/.bashrc 2>/dev/null || true; cd /root/spicetrade && exec ./start.sh'
 
 Restart=always
 RestartSec=5
