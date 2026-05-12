@@ -65,7 +65,7 @@
             '" loading="lazy" />'
           : '<div class="no-img-placeholder">📦</div>';
         return (
-          '<a class="listing-card" href="/listing.html?id=' +
+          '<a class="listing-card" href="/listing/' +
           esc(ad.id) +
           '">' +
           imgTag +
@@ -116,7 +116,7 @@
             })
           : "";
         return (
-          '<a class="req-card" href="/listing.html?id=' +
+          '<a class="req-card" href="/listing/' +
           esc(ad.id) +
           '">' +
           '<div class="req-card-title">' +

@@ -1,8 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/logos/bigspicebubble.png" type="image/png" sizes="32x32" />
+    <link
+      rel="icon"
+      href="/logos/bigspicebubble.png"
+      type="image/png"
+      sizes="32x32"
+    />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>My Wishlist — BigSpice</title>
     <link rel="stylesheet" href="/styles.css" />
@@ -33,7 +38,9 @@
         border: 1px solid #e9e9e9;
         border-radius: 12px;
         overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
         cursor: pointer;
         position: relative;
       }
@@ -126,7 +133,9 @@
   </head>
   <body>
     <header class="site-header">
-      <a href="/"><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo" /></a>
+      <a href="/"
+        ><img src="/logos/bigspicelogo.png" alt="BigSpice logo" class="logo"
+      /></a>
       <div class="header-right"></div>
     </header>
 
@@ -145,21 +154,25 @@
 
     <footer class="footer">
       &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022 &nbsp;|&nbsp;
-      <a href="/faq.html" style="color:#fff;text-decoration:underline;">FAQ</a>
+      <a href="/faq.html" style="color: #fff; text-decoration: underline"
+        >FAQ</a
+      >
     </footer>
 
     <script src="/app.js"></script>
     <script>
-      const currentUser = JSON.parse(localStorage.getItem('bigspice_user') || 'null');
-      
+      const currentUser = JSON.parse(
+        localStorage.getItem("bigspice_user") || "null",
+      );
+
       if (!currentUser || !currentUser.id) {
-        window.location.href = '/login.html';
+        window.location.href = "/login.html";
       }
 
       // Only buyers should access wishlist
-      if (currentUser.role !== 'buyer') {
-        alert('Wishlist is only available for buyers');
-        window.location.href = '/';
+      if (currentUser.role !== "buyer") {
+        alert("Wishlist is only available for buyers");
+        window.location.href = "/";
       }
 
       let wishlistItems = [];
@@ -168,23 +181,26 @@
         try {
           const res = await fetch(`/api/wishlist/${currentUser.id}`);
           wishlistItems = await res.json();
-          
+
           const count = wishlistItems.length;
-          document.getElementById('wishlistCount').textContent = 
-            count === 0 ? 'No items yet' : `${count} item${count !== 1 ? 's' : ''}`;
-          
+          document.getElementById("wishlistCount").textContent =
+            count === 0
+              ? "No items yet"
+              : `${count} item${count !== 1 ? "s" : ""}`;
+
           renderWishlist();
         } catch (err) {
-          console.error('Error loading wishlist:', err);
-          document.getElementById('wishlistCount').textContent = 'Error loading wishlist';
+          console.error("Error loading wishlist:", err);
+          document.getElementById("wishlistCount").textContent =
+            "Error loading wishlist";
         }
       }
 
       function renderWishlist() {
-        const grid = document.getElementById('wishlistGrid');
-        
+        const grid = document.getElementById("wishlistGrid");
+
         if (wishlistItems.length === 0) {
-          document.getElementById('wishlistContent').innerHTML = `
+          document.getElementById("wishlistContent").innerHTML = `
             <div class="empty-wishlist">
               <div class="empty-wishlist-icon">💝</div>
               <h2>Your wishlist is empty</h2>
@@ -195,28 +211,29 @@
           return;
         }
 
-        grid.innerHTML = '';
-        
-        wishlistItems.forEach(item => {
-          const card = document.createElement('div');
-          card.className = 'wishlist-item';
-          
+        grid.innerHTML = "";
+
+        wishlistItems.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "wishlist-item";
+
           // Image
-          const imgUrl = item.imageUrl || '/placeholder-product.jpg';
-          const img = document.createElement('img');
-          img.className = 'wishlist-item-image';
+          const imgUrl = item.imageUrl || "/placeholder-product.jpg";
+          const img = document.createElement("img");
+          img.className = "wishlist-item-image";
           img.src = imgUrl;
           img.alt = item.title;
-          img.loading = 'lazy';
-          img.onerror = function() {
-            this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" font-size="48" text-anchor="middle" dy=".3em">📦</text></svg>';
+          img.loading = "lazy";
+          img.onerror = function () {
+            this.src =
+              'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" font-size="48" text-anchor="middle" dy=".3em">📦</text></svg>';
           };
           card.appendChild(img);
 
           // Remove button
-          const removeBtn = document.createElement('button');
-          removeBtn.className = 'remove-wishlist-btn';
-          removeBtn.innerHTML = '❌';
+          const removeBtn = document.createElement("button");
+          removeBtn.className = "remove-wishlist-btn";
+          removeBtn.innerHTML = "❌";
           removeBtn.onclick = (e) => {
             e.stopPropagation();
             removeFromWishlist(item.wishlistId);
@@ -224,22 +241,22 @@
           card.appendChild(removeBtn);
 
           // Content
-          const content = document.createElement('div');
-          content.className = 'wishlist-item-content';
+          const content = document.createElement("div");
+          content.className = "wishlist-item-content";
 
-          const title = document.createElement('h3');
-          title.className = 'wishlist-item-title';
+          const title = document.createElement("h3");
+          title.className = "wishlist-item-title";
           title.textContent = item.title;
           content.appendChild(title);
 
-          const description = document.createElement('p');
-          description.className = 'wishlist-item-description';
+          const description = document.createElement("p");
+          description.className = "wishlist-item-description";
           description.textContent = item.description;
           content.appendChild(description);
 
           if (item.price) {
-            const price = document.createElement('div');
-            price.className = 'wishlist-item-price';
+            const price = document.createElement("div");
+            price.className = "wishlist-item-price";
             price.textContent = `$${parseFloat(item.price).toFixed(2)}`;
             if (item.unit) {
               price.textContent += `/${item.unit}`;
@@ -247,16 +264,16 @@
             content.appendChild(price);
           }
 
-          const meta = document.createElement('div');
-          meta.className = 'wishlist-item-meta';
-          
-          const seller = document.createElement('div');
-          seller.className = 'wishlist-item-seller';
-          seller.textContent = item.storeName || item.author || 'Seller';
+          const meta = document.createElement("div");
+          meta.className = "wishlist-item-meta";
+
+          const seller = document.createElement("div");
+          seller.className = "wishlist-item-seller";
+          seller.textContent = item.storeName || item.author || "Seller";
           meta.appendChild(seller);
 
-          const addedDate = document.createElement('div');
-          addedDate.className = 'wishlist-item-seller';
+          const addedDate = document.createElement("div");
+          addedDate.className = "wishlist-item-seller";
           addedDate.textContent = new Date(item.addedAt).toLocaleDateString();
           meta.appendChild(addedDate);
 
@@ -265,7 +282,7 @@
 
           // Click to view listing
           card.onclick = () => {
-            window.location.href = `/listing.html?id=${item.id}`;
+            window.location.href = `/listing/${item.id}`;
           };
 
           grid.appendChild(card);
@@ -273,13 +290,13 @@
       }
 
       async function removeFromWishlist(wishlistId) {
-        if (!confirm('Remove this item from your wishlist?')) {
+        if (!confirm("Remove this item from your wishlist?")) {
           return;
         }
 
         try {
           const res = await fetch(`/api/wishlist/${wishlistId}`, {
-            method: 'DELETE'
+            method: "DELETE",
           });
           const data = await res.json();
 
@@ -287,11 +304,11 @@
             // Reload wishlist
             await loadWishlist();
           } else {
-            alert('Failed to remove item from wishlist');
+            alert("Failed to remove item from wishlist");
           }
         } catch (err) {
-          console.error('Error removing from wishlist:', err);
-          alert('Failed to remove item from wishlist');
+          console.error("Error removing from wishlist:", err);
+          alert("Failed to remove item from wishlist");
         }
       }
 

@@ -298,6 +298,11 @@
           <div id="sellerFields" style="display: none">
             <div class="edit-section-title">Store Information</div>
             <div class="form-group" style="margin-bottom: 16px">
+              <label>Store Logo</label>
+              <input type="file" id="storeLogoInput" accept="image/*" />
+              <div id="currentLogoPreview" style="margin-top: 8px"></div>
+            </div>
+            <div class="form-group" style="margin-bottom: 16px">
               <label>Store Name</label>
               <input
                 type="text"
@@ -873,6 +878,13 @@
             .files[0];
           if (picFile) {
             formData.append("profilePicture", picFile);
+          }
+
+          if (user.role === "seller") {
+            const logoFile = document.getElementById("storeLogoInput")?.files[0];
+            if (logoFile) {
+              formData.append("logo", logoFile);
+            }
           }
 
           try {

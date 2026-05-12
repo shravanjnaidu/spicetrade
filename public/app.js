@@ -233,8 +233,7 @@ function renderAmazonResults(products, query) {
   products.forEach((product) => {
     const card = document.createElement("div");
     card.className = "amazon-product-card";
-    card.onclick = () =>
-      (window.location.href = `/listing.html?id=${product.id}`);
+    card.onclick = () => (window.location.href = `/listing/${product.id}`);
 
     // Product image
     const img = document.createElement("img");
@@ -853,7 +852,7 @@ function renderAds(ads) {
     el.className = "ad";
     el.style.cursor = "pointer";
     el.addEventListener("click", () => {
-      window.location.href = `/listing.html?id=${a.id}`;
+      window.location.href = `/listing/${a.id}`;
     });
 
     if (a.imageUrl) {

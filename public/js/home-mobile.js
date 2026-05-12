@@ -104,7 +104,7 @@
 
       var card = document.createElement("a");
       card.className = "listing-card";
-      card.href = "/listing.html?id=" + encodeURIComponent(ad.id);
+      card.href = "/listing/" + encodeURIComponent(ad.id);
       card.innerHTML =
         imgTag +
         '<div class="listing-card-body">' +
@@ -148,7 +148,7 @@
             })
           : "";
         return (
-          '<a class="req-card" href="/listing.html?id=' +
+          '<a class="req-card" href="/listing/' +
           esc(ad.id) +
           '">' +
           '<div class="req-card-title">' +

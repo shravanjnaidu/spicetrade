@@ -1257,7 +1257,7 @@
             const card = document.createElement("div");
             card.className = "product-card";
             card.onclick = () =>
-              (window.location.href = `/listing.html?id=${product.id}`);
+              (window.location.href = `/listing/${product.id}`);
 
             // Product Image
             const imgUrl = product.imageUrl || "/placeholder-product.jpg";
@@ -1507,7 +1507,7 @@
               const date = dateStr
                 ? `<span class="req-date">${dateStr}</span>`
                 : "";
-              return `<a class="req-card" href="/listing.html?id=${encodeURIComponent(ad.id)}">
+              return `<a class="req-card" href="/listing/${encodeURIComponent(ad.id)}">
                 <div class="req-card-title">${escapeHtml(ad.title)}</div>
                 <div class="req-card-meta">${catTag}${qtyTag}${author}${date}</div>
               </a>`;

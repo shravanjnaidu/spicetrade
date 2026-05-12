@@ -513,15 +513,23 @@ def _upload_image_to_s3(upload, key: str,
         print('[upload] S3 bucket not configured — storing upload locally')
         return _store_uploaded_image_locally(payload, key)
 
-    buf = io.BytesIO(payload)
-    try:
-        _get_s3().upload_fileobj(buf, S3_BUCKET, key,
-                                  ExtraArgs={'ContentType': content_type, 'ACL': 'public-read'})
-    except Exception:
-        # Bucket may block public ACLs; fall back to upload without explicit ACL
-        buf.seek(0)
-        _get_s3().upload_fileobj(buf, S3_BUCKET, key, ExtraArgs={'ContentType': content_type})
-    return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+    s3 = _get_s3()
+    upload_attempts = [
+        {'ContentType': content_type, 'ACL': 'public-read'},
+        {'ContentType': content_type},
+    ]
+
+    last_exc = None
+    for extra_args in upload_attempts:
+        try:
+            s3.upload_fileobj(io.BytesIO(payload), S3_BUCKET, key, ExtraArgs=extra_args)
+            return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+        except Exception as exc:
+            last_exc = exc
+            print(f'[upload] S3 upload failed with args {extra_args}: {exc}')
+
+    print('[upload] Falling back to local storage after S3 upload failure')
+    return _store_uploaded_image_locally(payload, key)
 
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1328,6 +1336,14 @@ def update_profile():
             ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
             key = f"uploads/profiles/profile_{ts}_{stem}.webp"
             profile_picture = _upload_image_to_s3(pic_file, key, max_px=_AVATAR_MAX_PX, quality=85)
+
+        logo_path = None
+        logo_file = files.get('logo') if files else None
+        if logo_file and getattr(logo_file, 'filename', None):
+            stem = Path(secure_filename(logo_file.filename)).stem
+            ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+            key = f"uploads/logos/{ts}_{stem}.webp"
+            logo_path = _upload_image_to_s3(logo_file, key, max_px=_AVATAR_MAX_PX, quality=85)
         
         # Build update query dynamically
         updates = []
@@ -1351,6 +1367,9 @@ def update_profile():
         if 'address' in data:
             updates.append('address = %s')
             params.append(data['address'])
+        if 'website' in data:
+            updates.append('website = %s')
+            params.append(_normalise_external_url(data['website']))
         for field in ['tagline', 'storeDescription', 'ownerMessage', 'yearEstablished',
                       'employeeCount', 'annualTurnover', 'paymentModes', 'exportMarkets',
                       'certifications', 'whyUs']:
@@ -1358,6 +1377,9 @@ def update_profile():
                 db_col = field.lower()  # map camelCase form field to lowercase DB column
                 updates.append(f'{db_col} = %s')
                 params.append(data[field])
+        if logo_path:
+            updates.append('logo_path = %s')
+            params.append(logo_path)
         if profile_picture:
             updates.append('profilePicture = %s')
             params.append(profile_picture)
