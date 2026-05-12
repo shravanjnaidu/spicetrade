@@ -136,6 +136,20 @@ def init_db():
     )''')
     # Add store_views column if it doesn't exist (safe migration)
     cur.execute('''ALTER TABLE users ADD COLUMN IF NOT EXISTS store_views INTEGER DEFAULT 0''')
+    # Add extended seller profile columns (safe migrations)
+    for _col in (
+        'tagline TEXT',
+        'storeDescription TEXT',
+        'ownerMessage TEXT',
+        'yearEstablished TEXT',
+        'employeeCount TEXT',
+        'annualTurnover TEXT',
+        'paymentModes TEXT',
+        'exportMarkets TEXT',
+        'certifications TEXT',
+        'whyUs TEXT',
+    ):
+        cur.execute(f'ALTER TABLE users ADD COLUMN IF NOT EXISTS {_col}')
     
     # Create ads table
     cur.execute('''CREATE TABLE IF NOT EXISTS ads (
