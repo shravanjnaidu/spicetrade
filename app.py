@@ -1339,18 +1339,26 @@ def update_profile():
         profile_picture = None
         pic_file = files.get('profilePicture') if files else None
         if pic_file and getattr(pic_file, 'filename', None):
-            stem = Path(secure_filename(pic_file.filename)).stem
-            ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-            key = f"uploads/profiles/profile_{ts}_{stem}.webp"
-            profile_picture = _upload_image_to_s3(pic_file, key, max_px=_AVATAR_MAX_PX, quality=85)
+            try:
+                stem = Path(secure_filename(pic_file.filename)).stem
+                ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                key = f"uploads/profiles/profile_{ts}_{stem}.webp"
+                profile_picture = _upload_image_to_s3(pic_file, key, max_px=_AVATAR_MAX_PX, quality=85)
+            except Exception as upload_exc:
+                print(f'[update_profile] profile picture upload error: {upload_exc}')
+                return jsonify({'error': f'Image upload failed: {upload_exc}'}), 500
 
         logo_path = None
         logo_file = files.get('logo') if files else None
         if logo_file and getattr(logo_file, 'filename', None):
-            stem = Path(secure_filename(logo_file.filename)).stem
-            ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-            key = f"uploads/logos/{ts}_{stem}.webp"
-            logo_path = _upload_image_to_s3(logo_file, key, max_px=_AVATAR_MAX_PX, quality=85)
+            try:
+                stem = Path(secure_filename(logo_file.filename)).stem
+                ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+                key = f"uploads/logos/{ts}_{stem}.webp"
+                logo_path = _upload_image_to_s3(logo_file, key, max_px=_AVATAR_MAX_PX, quality=85)
+            except Exception as upload_exc:
+                print(f'[update_profile] logo upload error: {upload_exc}')
+                return jsonify({'error': f'Logo upload failed: {upload_exc}'}), 500
         
         # Build update query dynamically
         updates = []
