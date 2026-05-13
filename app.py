@@ -15,6 +15,7 @@ import uuid
 import secrets
 from functools import wraps
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlsplit, urlunsplit
 from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context, render_template, make_response, g
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -389,7 +390,7 @@ def _upload_public_url(key: str) -> str:
     return '/' + key.lstrip('/').replace('\\', '/')
 
 
-def _content_type_to_suffix(content_type: str | None) -> str | None:
+def _content_type_to_suffix(content_type: Optional[str]) -> Optional[str]:
     mapping = {
         'image/webp': '.webp',
         'image/jpeg': '.jpg',
@@ -399,7 +400,7 @@ def _content_type_to_suffix(content_type: str | None) -> str | None:
     return mapping.get((content_type or '').lower())
 
 
-def _replace_key_suffix(key: str, content_type: str | None) -> str:
+def _replace_key_suffix(key: str, content_type: Optional[str]) -> str:
     suffix = _content_type_to_suffix(content_type)
     if not suffix:
         return key
@@ -418,7 +419,7 @@ def _detect_upload_content_type(upload) -> str:
     return guessed or 'application/octet-stream'
 
 
-def _normalise_external_url(value: str | None) -> str | None:
+def _normalise_external_url(value: Optional[str]) -> Optional[str]:
     if value is None:
         return None
     value = value.strip()
@@ -431,7 +432,7 @@ def _normalise_external_url(value: str | None) -> str | None:
     return f'https://{value}'
 
 
-def _public_base_url(base_url: str | None = None) -> str:
+def _public_base_url(base_url: Optional[str] = None) -> str:
     candidate = (base_url or APP_URL or '').strip()
     if not candidate:
         candidate = 'https://www.bigspice.in'
@@ -676,7 +677,7 @@ def _requirement_email_html(buyer_name: str, title: str, description: str,
 
 def notify_sellers_of_requirement(ad_id: int, title: str, description: str,
                                    category: str, buyer_name: str,
-                                   base_url: str | None = None) -> None:
+                                   base_url: Optional[str] = None) -> None:
     """Find sellers with matching category listings and email them.
     Runs in a background thread — must not raise."""
     try:
