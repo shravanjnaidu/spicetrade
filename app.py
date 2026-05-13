@@ -442,7 +442,11 @@ def _public_base_url(base_url: Optional[str] = None) -> str:
     netloc = parts.netloc or parts.path
     path = '' if parts.netloc else parts.path
 
-    host = netloc.lower()
+    host = netloc.lower().split(':')[0]  # strip port for checks
+    # Treat loopback / private addresses as unusable; fall back to APP_URL
+    if host in ('127.0.0.1', 'localhost', '0.0.0.0') or host.startswith('192.168.') or host.startswith('10.'):
+        return _public_base_url(APP_URL or 'https://www.bigspice.in')
+
     if host in {'bigspice.in', 'www.bigspice.in'}:
         return 'https://www.bigspice.in'
 
