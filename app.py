@@ -528,19 +528,12 @@ def _upload_image_to_s3(upload, key: str,
         return _store_uploaded_image_locally(payload, key)
 
     s3 = _get_s3()
-    upload_attempts = [
-        {'ContentType': content_type, 'ACL': 'public-read'},
-        {'ContentType': content_type},
-    ]
-
-    last_exc = None
-    for extra_args in upload_attempts:
-        try:
-            s3.upload_fileobj(io.BytesIO(payload), S3_BUCKET, key, ExtraArgs=extra_args)
-            return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
-        except Exception as exc:
-            last_exc = exc
-            print(f'[upload] S3 upload failed with args {extra_args}: {exc}')
+    try:
+        s3.upload_fileobj(io.BytesIO(payload), S3_BUCKET, key,
+                          ExtraArgs={'ContentType': content_type})
+        return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+    except Exception as exc:
+        print(f'[upload] S3 upload failed: {exc}')
 
     print('[upload] Falling back to local storage after S3 upload failure')
     return _store_uploaded_image_locally(payload, key)
@@ -1332,7 +1325,7 @@ def update_profile():
     try:
         # Support JSON or multipart/form-data for profile picture upload
         if request.content_type and 'multipart/form-data' in request.content_type:
-            data = dict(request.form)
+            data = request.form.to_dict()
             files = request.files
         else:
             data = request.get_json() or {}
