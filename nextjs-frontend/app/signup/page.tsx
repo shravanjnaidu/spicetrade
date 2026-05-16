@@ -591,7 +591,25 @@ export default function SignupPage() {
                 htmlFor="termsCheck"
                 className="text-sm text-gray-600 cursor-pointer"
               >
-                I agree to the Terms of Service and Privacy Policy.
+                I agree to the{" "}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener"
+                  className="text-[#d35400] hover:underline font-medium"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener"
+                  className="text-[#d35400] hover:underline font-medium"
+                >
+                  Privacy Policy
+                </Link>
+                .
               </label>
             </div>
 

@@ -11,44 +11,46 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "What is BigSpice?",
-        a: "BigSpice is a B2B online marketplace dedicated to buying and selling spices, herbs, teas, coffees, oils, and other food commodities. Founded in 2022 by Spice Cloud Technologies (Canada), it connects verified spice sellers with wholesale buyers across the globe, making sourcing high-quality spices simple and transparent.",
+        a: "BigSpice is a B2B online marketplace where businesses can buy and sell products and services across all categories — from spices, food commodities, and agricultural produce to industrial goods and professional services. Founded in 2022 by Spice Cloud Technologies (Canada), it connects verified sellers with buyers across the globe, making business sourcing simple, transparent, and efficient.",
+      },
+      {
+        q: "Is BigSpice only for spices?",
+        a: "No. While BigSpice started with spices and food commodities, the platform is open to all B2B products and services. Any business — whether you sell raw materials, manufactured goods, agricultural produce, or professional services — can list on BigSpice and connect with buyers.",
       },
       {
         q: "Is BigSpice free to use?",
-        a: "Creating an account, browsing listings, and messaging sellers are all free. Sellers can list their products on the platform at no cost. Optional paid advertising placements (banner ads) are available for businesses that want premium visibility on the homepage.",
+        a: "Creating an account, browsing listings, posting requirements, and messaging are all completely free. Sellers can list their products and services at no cost. Optional paid advertising (homepage banner ads) is available for businesses that want extra visibility.",
       },
       {
-        q: "What product categories are available on BigSpice?",
+        q: "Who can join BigSpice?",
         a: (
           <>
-            BigSpice covers a wide range of food trade categories, including:
+            Any registered business or entrepreneur can join. There are three
+            account types:
             <ul className="list-disc ml-5 mt-2 space-y-1">
               <li>
-                Spices &amp; Herbs (cumin, turmeric, cardamom, pepper, and more)
+                <strong>Buyer</strong> — source products and services, post
+                requirements, chat with sellers.
               </li>
               <li>
-                Tea &amp; Coffee (Assam, Darjeeling, Arabica, Robusta, and more)
+                <strong>Seller</strong> — list products or services, receive
+                buyer leads, chat with buyers.
               </li>
-              <li>Oils &amp; Fats</li>
-              <li>Sugar &amp; Sweeteners</li>
-              <li>Dairy Products</li>
-              <li>Fruits &amp; Vegetables</li>
-              <li>Seafood</li>
+              <li>
+                <strong>Advertiser</strong> — promote your brand on the homepage
+                carousel.
+              </li>
             </ul>
-            <p className="mt-2">
-              Use the search bar or the category filters on the homepage to
-              explore specific products.
-            </p>
           </>
         ),
       },
       {
         q: "Which countries does BigSpice serve?",
-        a: "BigSpice is a global platform headquartered in Canada. Sellers can specify their shipping locations when setting up their store, so you can find suppliers that ship to your country. Both domestic and international trade is supported.",
+        a: "BigSpice is a global platform headquartered in Canada. Businesses from any country can join as buyers or sellers. Sellers specify their shipping or service coverage, and buyers can filter for local or international suppliers.",
       },
       {
-        q: "Is my personal data secure on BigSpice?",
-        a: "Yes. Passwords are stored using industry-standard hashing (never in plain text). All data is stored securely in our database. We do not sell or share your personal information with third parties. Sensitive fields such as tax numbers and addresses are only used for account verification and communication purposes.",
+        q: "Is my data secure on BigSpice?",
+        a: "Yes. Passwords are stored using industry-standard one-way hashing and are never readable by anyone. All data is stored in a secured database. We do not sell or share your personal information with third parties.",
       },
     ],
   },
@@ -57,74 +59,85 @@ const FAQ_SECTIONS = [
     title: "For Buyers",
     items: [
       {
-        q: "Do I need an account to browse listings?",
-        a: "No. Anyone can browse product listings and store pages without creating an account. However, you need a free account to message sellers, save items to your wishlist, leave reviews, or post buying requirements.",
-      },
-      {
-        q: "How do I become a buyer?",
+        q: "How do I register as a buyer?",
         a: (
           <>
             Click{" "}
             <Link
-              href="/signup"
+              href="/signup?role=buyer"
               className="text-[#d35400] font-medium hover:underline"
             >
               Sign up
             </Link>{" "}
-            and choose <strong>Become a buyer</strong>. Fill in your name,
-            email, and a password — it takes less than a minute. Once signed in,
-            you can contact sellers, wishlist products, and post requirements.
+            and choose <strong>Become a Buyer</strong>. Fill in your business
+            name, email, and a password — it takes less than a minute. Once
+            signed in you can browse listings, message sellers, save items to
+            your wishlist, and post buying requirements.
           </>
         ),
       },
       {
-        q: "How do I search for products?",
-        a: "Use the search bar at the top of any page. You can search by product name, tag, category, or store name. The homepage also features category filter buttons at the top — click any category to instantly filter listings. Live autocomplete suggestions appear as you type to help you find what you need faster.",
-      },
-      {
-        q: "How do I contact a seller?",
-        a: "Open any product listing and click the Message Seller button. You'll be taken to the messaging section where you can start a conversation directly. All messages are kept private between you and the seller. You must be signed in to send messages.",
-      },
-      {
-        q: "Can I save products I'm interested in?",
-        a: (
-          <>
-            Yes. Click the wishlist (heart) icon on any product card or listing
-            page to save it for later. Access all your saved items from the{" "}
-            <Link
-              href="/wishlist"
-              className="text-[#d35400] font-medium hover:underline"
-            >
-              Wishlist
-            </Link>{" "}
-            page in your account.
-          </>
-        ),
+        q: "Do I need an account to browse listings?",
+        a: "No. Anyone can browse product and service listings and store profiles without an account. You only need a free account to message sellers, save wishlisted items, leave reviews, or post requirements.",
       },
       {
         q: "How do I post a buying requirement?",
         a: (
           <>
-            Log in to your account and go to{" "}
+            Log in and go to your{" "}
             <Link
               href="/dashboard"
               className="text-[#d35400] font-medium hover:underline"
             >
-              My Requirements
+              Dashboard
             </Link>
-            . Fill in the title, description, category, quantity, and deadline.
-            Your requirement will then be visible to sellers on the platform,
-            allowing them to reach out to you directly with matching offers.
+            . Click <strong>Post a Requirement</strong> and fill in the title,
+            description, and the <strong>product or service tag</strong> that
+            matches what you need. BigSpice then automatically notifies all
+            sellers who have listings with that matching tag by email, so
+            relevant suppliers reach out directly to you.
           </>
         ),
       },
       {
-        q: "How do I leave a review for a seller?",
-        a: "Navigate to the seller's store page or the listing you purchased. Click Leave a Review, give a star rating, and write your feedback. Reviews help the community make informed decisions and reward trustworthy sellers.",
+        q: "How do sellers find out about my requirement?",
+        a: "When you post a requirement with a product or service tag, BigSpice automatically emails every seller whose listings share that tag with your requirement details. You get targeted responses from genuinely relevant suppliers without having to search for them yourself.",
+      },
+      {
+        q: "Can I chat directly with sellers?",
+        a: (
+          <>
+            Yes. Open any listing and click <strong>Message Seller</strong> to
+            start a private conversation. All messages are visible in your{" "}
+            <Link
+              href="/messages"
+              className="text-[#d35400] font-medium hover:underline"
+            >
+              Messages
+            </Link>{" "}
+            inbox. You can discuss pricing, quantities, delivery terms, and
+            anything else — directly and privately.
+          </>
+        ),
+      },
+      {
+        q: "Can I save products or services I'm interested in?",
+        a: (
+          <>
+            Yes. Click the heart icon on any listing card to add it to your{" "}
+            <Link
+              href="/wishlist"
+              className="text-[#d35400] font-medium hover:underline"
+            >
+              Wishlist
+            </Link>
+            . Access all saved items any time from your account.
+          </>
+        ),
       },
       {
         q: "Does BigSpice handle payments or shipping?",
-        a: "BigSpice is a marketplace and discovery platform. Payments and shipping arrangements are negotiated directly between the buyer and seller via the messaging system. We recommend confirming payment terms, shipping timelines, minimum order quantities, and product quality before finalising any transaction.",
+        a: "BigSpice is a matchmaking and discovery platform. Payments, shipping, and all transaction terms are agreed directly between you and the seller via the built-in messaging system. We recommend confirming all details before finalising any deal.",
       },
     ],
   },
@@ -133,37 +146,37 @@ const FAQ_SECTIONS = [
     title: "For Sellers",
     items: [
       {
-        q: "How do I start selling on BigSpice?",
+        q: "How do I register as a seller?",
         a: (
           <>
             Click{" "}
             <Link
-              href="/signup"
+              href="/signup?role=seller"
               className="text-[#d35400] font-medium hover:underline"
             >
-              Sign up
-            </Link>{" "}
-            and choose <strong>Become a seller</strong>. You'll provide:
-            <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li>Your name, email, and password</li>
-              <li>Store name and business type</li>
-              <li>Product categories you sell</li>
-              <li>Business address and shipping locations</li>
-              <li>Optional: tax number, website, store logo</li>
-            </ul>
-            <p className="mt-2">
-              Once your account is created, you can immediately start adding
-              product listings from your seller dashboard.
-            </p>
+              Sign up as a Seller
+            </Link>
+            . Provide your business name, email, password, store name, the
+            products or services you offer, and your location. Once your account
+            is created you can start adding listings immediately from your
+            seller dashboard.
           </>
         ),
       },
       {
-        q: "Is there a fee to list products?",
-        a: "No. Listing products on BigSpice is completely free. There are no subscription fees or listing charges. Optional paid advertising (homepage banner ads) is available for businesses that want to boost their visibility.",
+        q: "What can I sell on BigSpice?",
+        a: "BigSpice is open to all B2B products and services — physical goods (agricultural produce, food commodities, industrial materials, packaged goods) as well as B2B services (logistics, manufacturing, consulting, and more). Tag your listings accurately so buyers posting matching requirements get connected to you automatically.",
       },
       {
-        q: "How do I add and manage product listings?",
+        q: "Is there a fee to list?",
+        a: "No. Listing products or services on BigSpice is completely free — no subscription fees, no listing charges. Optional paid advertising (homepage banner ads) is available for extra visibility.",
+      },
+      {
+        q: "How do buyer requirements reach me?",
+        a: "When a buyer posts a requirement with a product or service tag that matches one of your listings, BigSpice automatically emails you the requirement details. This is a warm inbound lead — you can then reply directly via the platform's messaging system to discuss the deal.",
+      },
+      {
+        q: "How do I add and manage listings?",
         a: (
           <>
             After signing in, go to your{" "}
@@ -173,60 +186,37 @@ const FAQ_SECTIONS = [
             >
               Seller Dashboard
             </Link>
-            . Click <strong>Add Listing</strong> and fill in the product
-            details: title, description, category, tags, price, unit, minimum
-            order quantity, stock, and up to multiple product images. You can
-            edit or delete any listing at any time from your dashboard.
+            . Click <strong>Add Listing</strong> and fill in the title,
+            description, category, tags, price, unit, minimum order quantity,
+            stock, and product images. You can edit or delete listings at any
+            time.
           </>
         ),
       },
       {
-        q: "What details should I include in a product listing?",
+        q: "How do I chat with buyers?",
         a: (
           <>
-            A well-crafted listing gets more attention. We recommend including:
-            <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li>Clear, descriptive product title</li>
-              <li>
-                Detailed description (origin, grade, certifications, processing
-                method)
-              </li>
-              <li>Accurate category and relevant tags</li>
-              <li>Price per unit (e.g., per kg, per tonne)</li>
-              <li>Minimum order quantity and available stock</li>
-              <li>High-quality product photos</li>
-            </ul>
-          </>
-        ),
-      },
-      {
-        q: "Can I upload multiple images for a product?",
-        a: "Yes. When creating or editing a listing, you can upload multiple product images to give buyers a comprehensive view of your product. Buyers can scroll through them on the listing detail page.",
-      },
-      {
-        q: "How do I receive and respond to buyer messages?",
-        a: (
-          <>
-            Buyer enquiries appear in the{" "}
+            Buyer messages appear in your{" "}
             <Link
               href="/messages"
               className="text-[#d35400] font-medium hover:underline"
             >
               Messages
             </Link>{" "}
-            section of your account. You'll see a list of all conversations.
-            Click any conversation to read and reply. Keeping response times
-            short improves your standing on the platform.
+            inbox. All conversations are private between you and the buyer.
+            Quick responses improve your reputation on the platform and increase
+            the chance of closing deals.
           </>
         ),
       },
       {
-        q: "What is the store profile page?",
-        a: "Every seller gets a public store profile page that showcases their store name, logo, business type, categories, location, and all active listings. Buyers can browse your store page and get in touch. You can customise and manage your store details from the Profile section.",
+        q: "What is my store profile page?",
+        a: "Every seller gets a public store profile showcasing your store name, logo, business type, categories, location, and all active listings. Buyers can browse your store and message you directly. Keep your store details updated from the Profile section.",
       },
       {
         q: "How does listing verification work?",
-        a: "Listings can be marked as Verified by the BigSpice admin team after review. Verified listings indicate that the product details have been confirmed and the seller is a legitimate business. This badge increases buyer confidence and can improve your listing's visibility.",
+        a: "The BigSpice admin team can mark listings as Verified after review, confirming that the product or service details are accurate and the seller is a legitimate business. Verified badges increase buyer confidence and boost your listing's visibility.",
       },
     ],
   },
@@ -238,26 +228,26 @@ const FAQ_SECTIONS = [
         q: "How can I advertise my business on BigSpice?",
         a: (
           <>
-            BigSpice offers banner ad slots on the homepage carousel, giving
-            your business prominent visibility to all visitors. Sign up or log
-            in as an <strong>Advertiser</strong> and go to your{" "}
+            BigSpice offers banner ad slots on the homepage carousel for
+            prominent visibility to all visitors. Sign up or log in as an{" "}
+            <strong>Advertiser</strong> and go to your{" "}
             <Link
               href="/advertiser-dashboard"
               className="text-[#d35400] font-medium hover:underline"
             >
               Advertiser Dashboard
             </Link>{" "}
-            to submit a banner ad with your image and target URL.
+            to submit your banner with an image and target URL.
           </>
         ),
       },
       {
-        q: "What are the specifications for banner ads?",
-        a: "Banner ads appear in the full-width homepage carousel. We recommend using high-resolution landscape images (ideally 1600×500 px or similar wide-format ratio) with clear branding and a compelling call-to-action. An admin will review your submission before it goes live.",
+        q: "What are the banner ad specifications?",
+        a: "Banner ads appear in the full-width homepage carousel. Use high-resolution landscape images (ideally 1600×500 px or a similar wide ratio) with clear branding and a compelling call-to-action. An admin will review your submission before it goes live.",
       },
       {
-        q: "How long does it take for my ad to go live?",
-        a: "Ad submissions are reviewed by the BigSpice admin team. Approval typically happens within 1–2 business days. You will be notified once your ad is approved and live on the platform.",
+        q: "How long does ad approval take?",
+        a: "Ad submissions are reviewed by the BigSpice admin team, typically within 1–2 business days. You will be notified once your ad is approved and live.",
       },
     ],
   },
@@ -267,7 +257,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "Can I be both a buyer and a seller?",
-        a: "Yes. While you sign up with a primary role (buyer, seller, or advertiser), you can use the platform for multiple purposes. If you need to switch or expand your role, update your profile settings or contact support.",
+        a: "Yes. BigSpice supports businesses that both source and supply. You sign up with a primary role, but you can engage on both sides of the marketplace. Contact support if you need to change or expand your role.",
       },
       {
         q: "How do I update my profile or store details?",
@@ -280,9 +270,9 @@ const FAQ_SECTIONS = [
             >
               Profile
             </Link>{" "}
-            page. From there you can update your name, contact number, profile
-            picture, business address, and other account details. Sellers can
-            also update store information from the same area.
+            page to update your name, contact number, profile picture, business
+            address, and other account details. Sellers can also update store
+            information from the same area.
           </>
         ),
       },
@@ -297,20 +287,20 @@ const FAQ_SECTIONS = [
             >
               Sign in
             </Link>{" "}
-            page, look for the <strong>Forgot password</strong> option and
-            follow the instructions to reset your password via your registered
-            email address. If you continue to experience issues, contact our
-            support team.
+            page, click <strong>Forgot password?</strong> and enter your
+            registered email. You&apos;ll receive a reset link in your inbox —
+            click it, set a new password, and you&apos;re done. The link expires
+            in 1 hour.
           </>
         ),
       },
       {
         q: "How do I report a suspicious listing or user?",
-        a: "If you encounter a fraudulent listing, spammy content, or suspicious behaviour, please send a message to our support team with the listing/user details. Our admin team reviews all reports and takes appropriate action to keep the platform trustworthy.",
+        a: "If you encounter a fraudulent listing, spam, or suspicious behaviour, contact our support team with the listing or user details. Our admin team reviews all reports and takes appropriate action to keep the platform trustworthy.",
       },
       {
         q: "How do I delete my account?",
-        a: "To request account deletion, please contact our support team with your registered email address. We will process the deletion and remove your data in accordance with applicable privacy regulations.",
+        a: "To request account deletion, contact our support team with your registered email address. We will remove your data in accordance with applicable privacy regulations.",
       },
     ],
   },
@@ -341,7 +331,8 @@ export default function FAQPage() {
           Frequently Asked Questions
         </h1>
         <p className="text-lg opacity-90">
-          Everything you need to know about buying and selling on BigSpice.
+          Everything you need to know about BigSpice — the B2B marketplace for
+          all products and services.
         </p>
       </div>
 

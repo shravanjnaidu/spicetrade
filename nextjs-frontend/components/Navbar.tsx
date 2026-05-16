@@ -113,7 +113,9 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
             ...recent.filter((r) => r !== query.trim()),
           ].slice(0, 8);
           localStorage.setItem("recentSearches", JSON.stringify(updated));
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
       const params = new URLSearchParams();
       if (query.trim()) params.set("q", query.trim());
@@ -137,7 +139,9 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
         );
         const updated = [s, ...recent.filter((r) => r !== s)].slice(0, 8);
         localStorage.setItem("recentSearches", JSON.stringify(updated));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       const params = new URLSearchParams();
       params.set("q", s);
       if (searchCat !== "All Categories") params.set("category", searchCat);
@@ -166,7 +170,7 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
           </span>
           <div className="flex items-center gap-4">
             <Link
-              href="/seller-requirements"
+              href="/signup?role=seller"
               className="hover:text-white transition-colors"
             >
               Become a Seller
@@ -204,89 +208,89 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
 
           {/* Search bar with category prefix (Alibaba-style) */}
           <div className="flex-1 max-w-2xl relative">
-          <form
-            onSubmit={handleSearch}
-            className="flex items-center bg-white rounded-lg overflow-hidden ring-2 ring-white/30 focus-within:ring-white transition-all"
-          >
-            <select
-              value={searchCat}
-              onChange={(e) => setSearchCat(e.target.value)}
-              className="shrink-0 h-11 px-2 text-sm text-gray-700 bg-gray-100 border-r border-gray-200 cursor-pointer focus:outline-none max-w-[140px]"
-              aria-label="Category filter"
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center bg-white rounded-lg overflow-hidden ring-2 ring-white/30 focus-within:ring-white transition-all"
             >
-              <option>All Categories</option>
-              {ALL_CATEGORIES.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setShowSugs(true)}
-              onBlur={() => setTimeout(() => setShowSugs(false), 150)}
-              type="search"
-              placeholder="Search products, suppliers, categories..."
-              className="flex-1 h-11 px-3 text-sm text-gray-900 focus:outline-none bg-white"
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              className="shrink-0 h-11 px-5 bg-[#d35400] hover:bg-[#b84700] text-white font-semibold text-sm transition-colors flex items-center gap-1.5"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
+              <select
+                value={searchCat}
+                onChange={(e) => setSearchCat(e.target.value)}
+                className="shrink-0 h-11 px-2 text-sm text-gray-700 bg-gray-100 border-r border-gray-200 cursor-pointer focus:outline-none max-w-[140px]"
+                aria-label="Category filter"
               >
-                <circle cx="11" cy="11" r="7" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              Search
-            </button>
-          </form>
-          {/* Suggestions dropdown */}
-          {showSugs && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[200] overflow-hidden">
-              <p className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                {query.trim() ? "Suggested categories" : "Recent searches"}
-              </p>
-              {suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onMouseDown={() => selectSuggestion(s)}
-                  className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#d35400] transition-colors text-left"
+                <option>All Categories</option>
+                {ALL_CATEGORIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowSugs(true)}
+                onBlur={() => setTimeout(() => setShowSugs(false), 150)}
+                type="search"
+                placeholder="Search products, suppliers, categories..."
+                className="flex-1 h-11 px-3 text-sm text-gray-900 focus:outline-none bg-white"
+                autoComplete="off"
+              />
+              <button
+                type="submit"
+                className="shrink-0 h-11 px-5 bg-[#d35400] hover:bg-[#b84700] text-white font-semibold text-sm transition-colors flex items-center gap-1.5"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
                 >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="shrink-0 text-gray-400"
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                Search
+              </button>
+            </form>
+            {/* Suggestions dropdown */}
+            {showSugs && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[200] overflow-hidden">
+                <p className="px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-100">
+                  {query.trim() ? "Suggested categories" : "Recent searches"}
+                </p>
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onMouseDown={() => selectSuggestion(s)}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#d35400] transition-colors text-left"
                   >
-                    {query.trim() ? (
-                      <>
-                        <circle cx="11" cy="11" r="7" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </>
-                    ) : (
-                      <>
-                        <circle cx="12" cy="12" r="9" />
-                        <polyline points="12 7 12 12 15 15" />
-                      </>
-                    )}
-                  </svg>
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="shrink-0 text-gray-400"
+                    >
+                      {query.trim() ? (
+                        <>
+                          <circle cx="11" cy="11" r="7" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </>
+                      ) : (
+                        <>
+                          <circle cx="12" cy="12" r="9" />
+                          <polyline points="12 7 12 12 15 15" />
+                        </>
+                      )}
+                    </svg>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right action icons */}
@@ -570,7 +574,7 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
                       </div>
                       <div className="border-t border-gray-100 px-4 py-3">
                         <Link
-                          href="/seller-requirements"
+                          href="/signup?role=seller"
                           onClick={() => setAccountOpen(false)}
                           className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#d35400] transition-colors"
                         >
@@ -636,77 +640,77 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
 
           {/* Search bar — grows to fill space */}
           <div className="flex-1 relative">
-          <form
-            onSubmit={handleSearch}
-            className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm"
-          >
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setShowSugs(true)}
-              onBlur={() => setTimeout(() => setShowSugs(false), 150)}
-              type="search"
-              placeholder="Search..."
-              className="flex-1 h-9 px-3 text-sm text-gray-900 focus:outline-none bg-transparent min-w-0"
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              className="h-9 px-3 bg-[#b84700] text-white flex items-center justify-center shrink-0"
-              aria-label="Search"
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm"
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowSugs(true)}
+                onBlur={() => setTimeout(() => setShowSugs(false), 150)}
+                type="search"
+                placeholder="Search..."
+                className="flex-1 h-9 px-3 text-sm text-gray-900 focus:outline-none bg-transparent min-w-0"
+                autoComplete="off"
+              />
+              <button
+                type="submit"
+                className="h-9 px-3 bg-[#b84700] text-white flex items-center justify-center shrink-0"
+                aria-label="Search"
               >
-                <circle cx="11" cy="11" r="7" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
-          </form>
-          {/* Mobile suggestions dropdown */}
-          {showSugs && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[200] overflow-hidden max-h-52 overflow-y-auto">
-              <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                {query.trim() ? "Suggestions" : "Recent"}
-              </p>
-              {suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onMouseDown={() => selectSuggestion(s)}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#d35400] transition-colors text-left border-b border-gray-50 last:border-0"
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
                 >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="shrink-0 text-gray-400"
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </button>
+            </form>
+            {/* Mobile suggestions dropdown */}
+            {showSugs && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[200] overflow-hidden max-h-52 overflow-y-auto">
+                <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-100">
+                  {query.trim() ? "Suggestions" : "Recent"}
+                </p>
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onMouseDown={() => selectSuggestion(s)}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#d35400] transition-colors text-left border-b border-gray-50 last:border-0"
                   >
-                    {query.trim() ? (
-                      <>
-                        <circle cx="11" cy="11" r="7" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </>
-                    ) : (
-                      <>
-                        <circle cx="12" cy="12" r="9" />
-                        <polyline points="12 7 12 12 15 15" />
-                      </>
-                    )}
-                  </svg>
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="shrink-0 text-gray-400"
+                    >
+                      {query.trim() ? (
+                        <>
+                          <circle cx="11" cy="11" r="7" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </>
+                      ) : (
+                        <>
+                          <circle cx="12" cy="12" r="9" />
+                          <polyline points="12 7 12 12 15 15" />
+                        </>
+                      )}
+                    </svg>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right icons */}
@@ -999,7 +1003,7 @@ export default function Navbar({ searchValue, onSearch }: NavbarProps) {
                   All Suppliers
                 </Link>
                 <Link
-                  href="/seller-requirements"
+                  href="/signup?role=seller"
                   onClick={() => setDrawerOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 active:bg-orange-100"
                 >

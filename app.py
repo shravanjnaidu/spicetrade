@@ -290,6 +290,18 @@ def init_db():
             pass
     conn.commit()
 
+    # Create password_reset_tokens table
+    cur.execute('''CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        token TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    )''')
+    conn.commit()
+
     # Generate unique IDs for existing users without one
     import uuid
     cur.execute("SELECT id FROM users WHERE uniqueId IS NULL OR uniqueId = ''")
@@ -1030,6 +1042,108 @@ def login():
         print('login error', e)
         return jsonify({'error': 'database error'}), 500
 
+
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    if not email:
+        return jsonify({'error': 'email required'}), 400
+    try:
+        db = get_db()
+        cur = dict_cursor(db)
+        cur.execute('SELECT id, name FROM users WHERE LOWER(email) = %s', (email,))
+        user = cur.fetchone()
+        if not user:
+            # Don't reveal whether the email exists
+            db.close()
+            return jsonify({'success': True, 'message': 'If that email is registered, a reset link has been sent.'})
+
+        # Invalidate any existing unused tokens for this user
+        cur.execute('UPDATE password_reset_tokens SET used = TRUE WHERE user_id = %s AND used = FALSE', (user['id'],))
+
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.utcnow() + timedelta(hours=1)
+        cur.execute(
+            'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (%s, %s, %s)',
+            (user['id'], token, expires_at)
+        )
+        db.commit()
+        db.close()
+
+        reset_url = f"{_public_base_url()}/reset-password?token={token}"
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#d35400">Reset your BigSpice password</h2>
+          <p>Hi {user['name'] or 'there'},</p>
+          <p>We received a request to reset the password for your BigSpice account.</p>
+          <p style="margin:24px 0">
+            <a href="{reset_url}"
+               style="background:#d35400;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block">
+              Reset Password
+            </a>
+          </p>
+          <p>This link expires in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>
+          <p style="color:#888;font-size:13px">If the button doesn't work, copy and paste this URL into your browser:<br>{reset_url}</p>
+          <hr style="border:none;border-top:1px solid #eee;margin-top:32px"/>
+          <p style="color:#aaa;font-size:12px">&copy; BigSpice &mdash; Spice Cloud Technologies, Canada</p>
+        </div>"""
+
+        try:
+            ses = _get_ses()
+            ses.send_email(
+                Source=SES_FROM,
+                Destination={'ToAddresses': [email]},
+                Message={
+                    'Subject': {'Data': 'Reset your BigSpice password', 'Charset': 'UTF-8'},
+                    'Body': {'Html': {'Data': html_body, 'Charset': 'UTF-8'}},
+                },
+            )
+        except Exception as mail_err:
+            print(f'[forgot-password] SES send failed: {mail_err}')
+
+        return jsonify({'success': True, 'message': 'If that email is registered, a reset link has been sent.'})
+    except Exception as e:
+        print('forgot_password error', e)
+        return jsonify({'error': 'server error'}), 500
+
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    data = request.get_json() or {}
+    token = (data.get('token') or '').strip()
+    new_password = data.get('password') or ''
+    if not token or not new_password:
+        return jsonify({'error': 'token and password required'}), 400
+    if len(new_password) < 8:
+        return jsonify({'error': 'password must be at least 8 characters'}), 400
+    try:
+        db = get_db()
+        cur = dict_cursor(db)
+        cur.execute(
+            'SELECT id, user_id, expires_at, used FROM password_reset_tokens WHERE token = %s',
+            (token,)
+        )
+        row = cur.fetchone()
+        if not row:
+            db.close()
+            return jsonify({'error': 'Invalid or expired reset link.'}), 400
+        if row['used']:
+            db.close()
+            return jsonify({'error': 'This reset link has already been used.'}), 400
+        if datetime.utcnow() > row['expires_at']:
+            db.close()
+            return jsonify({'error': 'This reset link has expired. Please request a new one.'}), 400
+
+        hashed = generate_password_hash(new_password)
+        cur.execute('UPDATE users SET password = %s WHERE id = %s', (hashed, row['user_id']))
+        cur.execute('UPDATE password_reset_tokens SET used = TRUE WHERE id = %s', (row['id'],))
+        db.commit()
+        db.close()
+        return jsonify({'success': True, 'message': 'Password updated successfully.'})
+    except Exception as e:
+        print('reset_password error', e)
+        return jsonify({'error': 'server error'}), 500
 
 
 @app.route('/api/stores', methods=['GET'])

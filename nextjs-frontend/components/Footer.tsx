@@ -11,6 +11,20 @@ export default function Footer() {
       >
         FAQ
       </Link>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <Link
+        href="/terms"
+        className="text-white underline hover:text-orange-300 transition-colors"
+      >
+        Terms of Service
+      </Link>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <Link
+        href="/privacy"
+        className="text-white underline hover:text-orange-300 transition-colors"
+      >
+        Privacy Policy
+      </Link>
     </footer>
   );
 }
