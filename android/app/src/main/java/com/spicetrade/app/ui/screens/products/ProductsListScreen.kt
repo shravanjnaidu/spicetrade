@@ -106,97 +106,106 @@ fun ProductsListScreen(
         productViewModel.filteredProducts.filter { !it.isRequirement }
     } else null   // null = show home sections
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
 
-        // ── Top header ─────────────────────────────────────────────────────────
-        Column(
-            modifier = Modifier.fillMaxWidth().background(Color.White)
+        // ── Orange gradient header ──────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(colors = listOf(BrandDark, BrandOrange)))
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-            ) {
-            // Logo + notification row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 10.dp)
-            ) {
-                if (onMenuOpen != null) {
-                    IconButton(onClick = onMenuOpen, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Menu, null, tint = Color(0xFF222222), modifier = Modifier.size(24.dp))
-                    }
-                    Spacer(Modifier.width(2.dp))
-                }
-                Image(
-                    painter = painterResource(R.drawable.bigspicelogo),
-                    contentDescription = "BigSpice",
-                    modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp))
-                )
-                Spacer(Modifier.width(8.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "BigSpice",
-                        fontSize = 19.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF222222),
-                        letterSpacing = (-0.3).sp
-                    )
-                    Text(
-                        "India's #1 B2B Marketplace",
-                        fontSize = 10.sp, color = Color(0xFF888888)
-                    )
-                }
-                // Cart icon with badge
-                val cartCount by cartViewModel.cartCount.collectAsState()
-                BadgedBox(
-                    badge = { if (cartCount > 0) Badge { Text("$cartCount") } },
-                    modifier = Modifier.padding(end = 2.dp)
-                ) {
-                    IconButton(onClick = { onCartClick?.invoke() }, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.ShoppingCart, "Cart", tint = BrandOrange, modifier = Modifier.size(22.dp))
-                    }
-                }
-                IconButton(onClick = { /* notifications */ }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Notifications, null, tint = BrandOrange, modifier = Modifier.size(22.dp))
-                }
-            }
-            // Search bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFFF5F5F5))
-            ) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, top = 14.dp, bottom = 18.dp)) {
+                // Logo + icons row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Search, null, tint = BrandOrange, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    BasicTextField(
-                        value = searchText,
-                        onValueChange = { productViewModel.searchText.value = it; showAllProducts = it.isNotEmpty() },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        decorationBox = { inner ->
-                            if (searchText.isEmpty()) {
-                                Text("Search products, suppliers, services…", color = Color.Gray, fontSize = 14.sp)
-                            }
-                            inner()
+                    if (onMenuOpen != null) {
+                        IconButton(onClick = onMenuOpen, modifier = Modifier.size(36.dp)) {
+                            Icon(Icons.Default.Menu, null, tint = Color.White, modifier = Modifier.size(24.dp))
                         }
+                    }
+                    Image(
+                        painter = painterResource(R.drawable.bigspicelogo),
+                        contentDescription = "BigSpice",
+                        modifier = Modifier.size(34.dp).clip(RoundedCornerShape(8.dp))
                     )
-                    if (searchText.isNotEmpty()) {
-                        IconButton(
-                            onClick = { productViewModel.searchText.value = ""; showAllProducts = false },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(Icons.Default.Close, null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("BigSpice", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold,
+                            color = Color.White, letterSpacing = (-0.5).sp)
+                        Text("India's #1 B2B Marketplace", fontSize = 10.sp,
+                            color = Color.White.copy(alpha = 0.85f))
+                    }
+                    val cartCount by cartViewModel.cartCount.collectAsState()
+                    BadgedBox(
+                        badge = { if (cartCount > 0) Badge { Text("$cartCount") } },
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        IconButton(onClick = { onCartClick?.invoke() }, modifier = Modifier.size(36.dp)) {
+                            Icon(Icons.Default.ShoppingCart, "Cart", tint = Color.White, modifier = Modifier.size(22.dp))
+                        }
+                    }
+                    IconButton(onClick = {}, modifier = Modifier.size(36.dp)) {
+                        Icon(Icons.Default.Notifications, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    }
+                }
+                Spacer(Modifier.height(14.dp))
+                // White search bar embedded in header
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Search, null, tint = BrandOrange, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(10.dp))
+                        BasicTextField(
+                            value = searchText,
+                            onValueChange = { productViewModel.searchText.value = it; showAllProducts = it.isNotEmpty() },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            decorationBox = { inner ->
+                                if (searchText.isEmpty()) {
+                                    Text("Search products, suppliers, services…",
+                                        color = Color(0xFFAAAAAA), fontSize = 14.sp)
+                                }
+                                inner()
+                            }
+                        )
+                        if (searchText.isNotEmpty()) {
+                            IconButton(
+                                onClick = { productViewModel.searchText.value = ""; showAllProducts = false },
+                                modifier = Modifier.size(22.dp)
+                            ) {
+                                Icon(Icons.Default.Close, null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
             }
         }
+
+        // ── Stats strip ────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            HomeStatItem("500+", "Suppliers")
+            Box(modifier = Modifier.width(1.dp).height(28.dp).background(Color(0xFFE0E0E0)))
+            HomeStatItem("10K+", "Products")
+            Box(modifier = Modifier.width(1.dp).height(28.dp).background(Color(0xFFE0E0E0)))
+            HomeStatItem("100+", "Cities")
+            Box(modifier = Modifier.width(1.dp).height(28.dp).background(Color(0xFFE0E0E0)))
+            HomeStatItem("24/7", "Support")
+        }
         HorizontalDivider(color = Color(0xFFE9E9E9), thickness = 1.dp)
-    }
 
         // ── Body ───────────────────────────────────────────────────────────────
         if (filteredProducts != null) {
@@ -210,8 +219,8 @@ fun ProductsListScreen(
                 onBack = { productViewModel.searchText.value = ""; productViewModel.clearFilters(); showAllProducts = false }
             )
         } else {
-            // ── Indiamart-style home ────────────────────────────────────────
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // ── Home ──────────────────────────────────────────────────────
+            LazyColumn(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
 
                 // Banner / promotions strip
                 item { PromotionBanner() }
@@ -324,50 +333,55 @@ private fun SectionHeader(title: String, actionLabel: String? = null, onAction: 
     }
 }
 
-// ── Promotion banner (Indiamart-style) ─────────────────────────────────────────
+// ── Promotion banner ──────────────────────────────────────────────────────────
 @Composable
 private fun PromotionBanner() {
-    val banners = listOf(
-        Triple("Grow Your Business", "Post buy requirements & connect with top suppliers", BrandOrange),
-        Triple("Verified Suppliers", "500+ verified businesses on BigSpice", Color(0xFF1565C0)),
-        Triple("Secure Payments", "Safe & easy trade payments", Color(0xFF2E7D32)),
-    )
+    data class BannerItem(val title: String, val subtitle: String, val icon: ImageVector, val color: Color)
+
+    val banners = remember {
+        listOf(
+            BannerItem("Grow Your Business", "Connect with 500+ verified B2B suppliers across India", Icons.Default.TrendingUp, BrandOrange),
+            BannerItem("Verified Suppliers", "Trade with confidence — all sellers are KYC verified", Icons.Default.Verified, Color(0xFF1565C0)),
+            BannerItem("Fast Quotations", "Post a requirement and receive quotes within hours", Icons.Default.Speed, Color(0xFF2E7D32)),
+        )
+    }
     var current by remember { mutableIntStateOf(0) }
     val banner = banners[current]
 
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(14.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { current = (current + 1) % banners.size },
-        shape = RoundedCornerShape(12.dp),
-        color = banner.third.copy(0.12f)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Brush.horizontalGradient(listOf(banner.color, banner.color.copy(alpha = 0.72f))))
+            .clickable { current = (current + 1) % banners.size }
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Campaign,
-                contentDescription = null,
-                tint = banner.third,
-                modifier = Modifier.size(40.dp).padding(end = 2.dp)
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(banner.first, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = banner.third)
-                Text(banner.second, fontSize = 12.sp, color = Color.DarkGray)
+        Row(modifier = Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.22f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(banner.icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
             }
-            // Page dots
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                banners.forEachIndexed { i, _ ->
-                    Box(
-                        modifier = Modifier
-                            .padding(vertical = 2.dp)
-                            .size(if (i == current) 8.dp else 6.dp)
-                            .background(if (i == current) banner.third else Color.LightGray, CircleShape)
-                    )
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(banner.title, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, color = Color.White)
+                Spacer(Modifier.height(4.dp))
+                Text(banner.subtitle, fontSize = 12.sp, color = Color.White.copy(alpha = 0.88f), lineHeight = 17.sp)
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    banners.forEachIndexed { i, _ ->
+                        Box(
+                            modifier = Modifier
+                                .width(if (i == current) 20.dp else 6.dp)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(Color.White.copy(if (i == current) 1f else 0.38f))
+                        )
+                    }
                 }
             }
         }
@@ -444,14 +458,14 @@ private fun QuickActionsRow(onPostRequirement: (() -> Unit)?) {
         QuickActionCard(
             icon = Icons.Default.Store,
             label = "Find\nSuppliers",
-            color = Color(0xFF1565C0),
+            color = BrandOrange,
             modifier = Modifier.weight(1f),
             onClick = {}
         )
         QuickActionCard(
             icon = Icons.Default.Verified,
             label = "Verified\nSellers",
-            color = Color(0xFF2E7D32),
+            color = BrandOrange,
             modifier = Modifier.weight(1f),
             onClick = {}
         )
@@ -797,6 +811,15 @@ fun ProductCard(
                 }
             }
         }
+    }
+}
+
+// ── Home stat item ────────────────────────────────────────────────────────────
+@Composable
+private fun HomeStatItem(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 4.dp)) {
+        Text(value, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = BrandOrange)
+        Text(label, fontSize = 10.sp, color = Color.Gray)
     }
 }
 

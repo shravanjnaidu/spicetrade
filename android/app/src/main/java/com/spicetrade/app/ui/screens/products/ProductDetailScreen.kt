@@ -584,75 +584,77 @@ private fun ProductDetailBottomBar(
                     Text("Share Listing")
                 }
             } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (inCart) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .border(1.dp, BrandOrange.copy(0.4f), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 6.dp, vertical = 4.dp)
-                        ) {
-                            IconButton(onClick = onDecreaseQty, modifier = Modifier.size(28.dp)) {
-                                Icon(
-                                    if (cartQty <= 1) Icons.Default.Delete else Icons.Default.Remove,
-                                    null,
-                                    tint = if (cartQty <= 1) Color.Red else BrandOrange,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (inCart) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .border(1.dp, BrandOrange.copy(0.4f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                            ) {
+                                IconButton(onClick = onDecreaseQty, modifier = Modifier.size(28.dp)) {
+                                    Icon(
+                                        if (cartQty <= 1) Icons.Default.Delete else Icons.Default.Remove,
+                                        null,
+                                        tint = if (cartQty <= 1) Color.Red else BrandOrange,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Text("$cartQty", fontWeight = FontWeight.Bold, fontSize = 15.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp))
+                                IconButton(onClick = onIncreaseQty, modifier = Modifier.size(28.dp)) {
+                                    Icon(Icons.Default.Add, null, tint = BrandOrange, modifier = Modifier.size(16.dp))
+                                }
                             }
-                            Text("$cartQty", fontWeight = FontWeight.Bold, fontSize = 15.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp))
-                            IconButton(onClick = onIncreaseQty, modifier = Modifier.size(28.dp)) {
-                                Icon(Icons.Default.Add, null, tint = BrandOrange, modifier = Modifier.size(16.dp))
+                            Button(
+                                onClick = onViewCart,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = BrandOrange)
+                            ) {
+                                Icon(Icons.Default.ShoppingCart, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("View Cart", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             }
-                        }
-                        Button(
-                            onClick = onViewCart,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BrandOrange)
-                        ) {
-                            Icon(Icons.Default.ShoppingCart, null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("View Cart", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = onRequestQuote,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = BrandOrange),
-                            border = androidx.compose.foundation.BorderStroke(1.5.dp, BrandOrange)
-                        ) {
-                            Icon(Icons.Default.RequestQuote, null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Request Quote", fontSize = 12.sp)
-                        }
-                        Button(
-                            onClick = onAddToCart,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BrandOrange)
-                        ) {
-                            Icon(Icons.Default.AddShoppingCart, null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Add to Cart", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        } else {
+                            OutlinedButton(
+                                onClick = onRequestQuote,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = BrandOrange),
+                                border = androidx.compose.foundation.BorderStroke(1.5.dp, BrandOrange)
+                            ) {
+                                Icon(Icons.Default.RequestQuote, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Request Quote", fontSize = 12.sp)
+                            }
+                            Button(
+                                onClick = onAddToCart,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = BrandOrange)
+                            ) {
+                                Icon(Icons.Default.AddShoppingCart, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Add to Cart", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                     if (hasSeller) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1565C0).copy(0.1f))
-                                .clickable(onClick = onContactSeller),
-                            contentAlignment = Alignment.Center
+                        Button(
+                            onClick = onContactSeller,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandOrange)
                         ) {
-                            Icon(Icons.Default.Chat, "Chat", tint = Color(0xFF1565C0))
+                            Icon(Icons.Default.Chat, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Contact Seller", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
                 }
