@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="background">#F5F5F5</color>
-    <color name="brand_orange">#F27F14</color>
-    <color name="brand_red">#A62003</color>
-    <color name="white">#FFFFFF</color>
-    <string name="app_name">SpiceTrade</string>
-    <style name="Theme.SpiceTrade" parent="android:Theme.Material.Light.NoActionBar"/>
-</resources>

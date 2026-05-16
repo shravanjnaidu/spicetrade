@@ -386,7 +386,7 @@ fun ProductDetailScreen(
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(review.userName ?: "User", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text(review.createdAt.take(10), fontSize = 11.sp, color = Color.Gray)
+                                Text(review.createdAt?.take(10) ?: "", fontSize = 11.sp, color = Color.Gray)
                             }
                             Row { repeat(5) { i -> Text(if (i < review.rating) "★" else "☆", fontSize = 13.sp, color = StarYellow) } }
                         }

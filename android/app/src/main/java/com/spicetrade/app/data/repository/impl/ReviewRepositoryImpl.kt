@@ -24,9 +24,9 @@ class ReviewRepositoryImpl @Inject constructor(
         return apiService.getReviewStats(adId)
     }
 
-    override suspend fun addReview(adId: Int, request: AddReviewRequest): ReviewAddResponse {
-        Timber.d("Adding review for adId=%d rating=%d", adId, request.rating)
-        return apiService.addReview(adId, request)
+    override suspend fun addReview(request: AddReviewRequest): ReviewAddResponse {
+        Timber.d("Adding review for adId=%d rating=%d", request.adId, request.rating)
+        return apiService.addReview(request)
     }
 
     override suspend fun deleteReview(reviewId: Int): GenericResponse {
@@ -35,6 +35,6 @@ class ReviewRepositoryImpl @Inject constructor(
     }
 
     override suspend fun canReview(adId: Int, userId: Int): CanReviewResponse {
-        return apiService.canReview(adId, userId)
+        return apiService.canReview(adId, mapOf("userId" to userId))
     }
 }

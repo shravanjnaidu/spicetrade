@@ -1,6 +1,8 @@
 package com.spicetrade.app.data.api
 
 import com.spicetrade.app.data.models.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -11,6 +13,12 @@ interface ApiService {
 
     @POST("/api/signup")
     suspend fun signup(@Body request: SignupRequest): AuthResponse
+
+    @POST("/api/forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): ForgotPasswordResponse
+
+    @POST("/api/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): GenericResponse
 
     // ── Products / Ads ────────────────────────────────────────────────────────
     @GET("/api/ads")
@@ -88,21 +96,39 @@ interface ApiService {
     @GET("/api/reviews/{adId}")
     suspend fun getReviews(@Path("adId") adId: Int): List<Review>
 
-    @GET("/api/reviews/{adId}/stats")
+    @GET("/api/reviews/stats/{adId}")
     suspend fun getReviewStats(@Path("adId") adId: Int): ReviewStats
 
-    @POST("/api/reviews/{adId}")
-    suspend fun addReview(
-        @Path("adId") adId: Int,
-        @Body request: AddReviewRequest
-    ): ReviewAddResponse
+    @POST("/api/reviews")
+    suspend fun addReview(@Body request: AddReviewRequest): ReviewAddResponse
 
     @DELETE("/api/reviews/{reviewId}")
     suspend fun deleteReview(@Path("reviewId") reviewId: Int): GenericResponse
 
-    @GET("/api/reviews/{adId}/can-review/{userId}")
+    @POST("/api/reviews/can-review/{adId}")
     suspend fun canReview(
         @Path("adId") adId: Int,
-        @Path("userId") userId: Int
+        @Body body: Map<String, @JvmSuppressWildcards Any?>
     ): CanReviewResponse
+
+    // ── Banner Ads ────────────────────────────────────────────────────────────
+    @GET("/api/banner-ads")
+    suspend fun getBannerAds(): List<BannerAd>
+
+    @GET("/api/banner-ads/my/{userId}")
+    suspend fun getMyBannerAds(@Path("userId") userId: Int): List<BannerAd>
+
+    @Multipart
+    @POST("/api/banner-ads")
+    suspend fun createBannerAd(
+        @Part("userId") userId: RequestBody,
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("targetUrl") targetUrl: RequestBody,
+        @Part("expiresAt") expiresAt: RequestBody,
+        @Part("contactName") contactName: RequestBody,
+        @Part("contactNumber") contactNumber: RequestBody,
+        @Part("industry") industry: RequestBody,
+        @Part image: MultipartBody.Part
+    ): GenericResponse
 }

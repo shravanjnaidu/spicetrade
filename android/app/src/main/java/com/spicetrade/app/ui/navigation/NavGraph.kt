@@ -8,6 +8,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.spicetrade.app.ui.screens.auth.ForgotPasswordScreen
 import com.spicetrade.app.ui.screens.auth.LoginScreen
 import com.spicetrade.app.ui.screens.auth.SignupScreen
 import com.spicetrade.app.ui.screens.auth.WelcomeScreen
@@ -46,6 +47,13 @@ fun NavGraph(
                         popUpTo(Routes.WELCOME) { inclusive = true }
                     }
                 },
+                onForgotPassword = { navController.navigate(Routes.FORGOT_PASSWORD) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Routes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(
+                authViewModel = authViewModel,
                 onBack = { navController.popBackStack() }
             )
         }

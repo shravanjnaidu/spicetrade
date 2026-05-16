@@ -149,7 +149,7 @@ fun ChatScreen(
                                 )
                             }
                             Text(
-                                message.createdAt.take(16),
+                                message.createdAt?.take(16) ?: "",
                                 fontSize = 10.sp,
                                 color = Color.Gray,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)

@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.spicetrade.app.R
 import com.spicetrade.app.data.api.ApiConfig
+import com.spicetrade.app.ui.screens.advertiser.AdvertiserDashboardScreen
 import com.spicetrade.app.ui.screens.messages.MessagesListScreen
 import com.spicetrade.app.ui.screens.products.ProductsListScreen
 import com.spicetrade.app.ui.screens.profile.ProfileScreen
@@ -54,6 +55,7 @@ fun MainScreen(
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val isSeller = currentUser?.isSeller == true
+    val isAdvertiser = currentUser?.isAdvertiser == true
     var selectedTab by remember { mutableIntStateOf(0) }
     var showPostRequirement by remember { mutableStateOf(false) }
     var showCart by remember { mutableStateOf(false) }
@@ -82,16 +84,21 @@ fun MainScreen(
         return
     }
 
-    val tabs = if (isSeller) {
-        listOf(
+    val tabs = when {
+        isAdvertiser -> listOf(
+            Tab("Home",      Icons.Default.Home),
+            Tab("My Ads",    Icons.Default.Campaign),
+            Tab("Messages",  Icons.Default.Message),
+            Tab("Profile",   Icons.Default.Person)
+        )
+        isSeller -> listOf(
             Tab("Home",      Icons.Default.Home),
             Tab("Stores",    Icons.Default.Store),
             Tab("Dashboard", Icons.Default.BarChart),
             Tab("Messages",  Icons.Default.Message),
             Tab("Profile",   Icons.Default.Person)
         )
-    } else {
-        listOf(
+        else -> listOf(
             Tab("Home",     Icons.Default.Home),
             Tab("Stores",   Icons.Default.Store),
             Tab("Wishlist", Icons.Default.Favorite),
@@ -111,6 +118,7 @@ fun MainScreen(
                         if (it.startsWith("http")) it else "${ApiConfig.BASE_URL}/uploads/$it"
                     },
                     isSeller = isSeller,
+                    isAdvertiser = isAdvertiser,
                     unreadCount = unreadCount,
                     onClose = { scope.launch { drawerState.close() } },
                     onNavigate = { tabIndex ->
@@ -152,7 +160,7 @@ fun MainScreen(
                 }
             },
             floatingActionButton = {
-                if (selectedTab == 0) {
+                if (selectedTab == 0 && !isAdvertiser) {
                     FloatingActionButton(
                         onClick = { showPostRequirement = true },
                         containerColor = BrandOrange,
@@ -164,26 +172,42 @@ fun MainScreen(
             }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
-                when (selectedTab) {
-                    0 -> ProductsListScreen(
-                        authViewModel = authViewModel,
-                        cartViewModel = cartViewModel,
-                        onPostRequirement = { showPostRequirement = true },
-                        onMenuOpen = { scope.launch { drawerState.open() } },
-                        onViewAllStores = { selectedTab = 1 },
-                        onCartClick = { showCart = true },
-                        onContactSeller = { sellerId, adId ->
-                            currentUser?.id?.let { buyerId ->
-                                messageViewModel.createConversation(buyerId, sellerId, adId)
+                when {
+                    isAdvertiser -> when (selectedTab) {
+                        0 -> ProductsListScreen(
+                            authViewModel = authViewModel,
+                            cartViewModel = cartViewModel,
+                            onPostRequirement = { },
+                            onMenuOpen = { scope.launch { drawerState.open() } },
+                            onViewAllStores = { },
+                            onCartClick = { showCart = true },
+                            onContactSeller = { _, _ -> selectedTab = 2 }
+                        )
+                        1 -> AdvertiserDashboardScreen(authViewModel = authViewModel)
+                        2 -> MessagesListScreen(authViewModel = authViewModel, messageViewModel = messageViewModel)
+                        3 -> ProfileScreen(authViewModel = authViewModel, onLogout = onLogout)
+                    }
+                    else -> when (selectedTab) {
+                        0 -> ProductsListScreen(
+                            authViewModel = authViewModel,
+                            cartViewModel = cartViewModel,
+                            onPostRequirement = { showPostRequirement = true },
+                            onMenuOpen = { scope.launch { drawerState.open() } },
+                            onViewAllStores = { selectedTab = 1 },
+                            onCartClick = { showCart = true },
+                            onContactSeller = { sellerId, adId ->
+                                currentUser?.id?.let { buyerId ->
+                                    messageViewModel.createConversation(buyerId, sellerId, adId)
+                                }
+                                selectedTab = if (isSeller) 3 else 3
                             }
-                            selectedTab = if (isSeller) 3 else 3
-                        }
-                    )
-                    1 -> StoresListScreen(authViewModel = authViewModel)
-                    2 -> if (isSeller) SellerDashboardScreen(authViewModel = authViewModel)
-                         else WishlistScreen(authViewModel = authViewModel)
-                    3 -> MessagesListScreen(authViewModel = authViewModel, messageViewModel = messageViewModel)
-                    4 -> ProfileScreen(authViewModel = authViewModel, onLogout = onLogout)
+                        )
+                        1 -> StoresListScreen(authViewModel = authViewModel)
+                        2 -> if (isSeller) SellerDashboardScreen(authViewModel = authViewModel)
+                             else WishlistScreen(authViewModel = authViewModel)
+                        3 -> MessagesListScreen(authViewModel = authViewModel, messageViewModel = messageViewModel)
+                        4 -> ProfileScreen(authViewModel = authViewModel, onLogout = onLogout)
+                    }
                 }
             }
         }
@@ -197,6 +221,7 @@ private fun BigSpiceDrawerContent(
     currentUserEmail: String,
     currentUserAvatarUrl: String?,
     isSeller: Boolean,
+    isAdvertiser: Boolean = false,
     unreadCount: Int,
     onClose: () -> Unit,
     onNavigate: (Int) -> Unit,
@@ -270,17 +295,22 @@ private fun BigSpiceDrawerContent(
 
         // ── My Account ─────────────────────────────────────────────────────────
         DrawerSection("MY ACCOUNT") {
-            DrawerMenuItem(Icons.Default.Person, "My Profile") { onNavigate(4) }
+            val profileTabIdx = if (isAdvertiser) 3 else 4
+            val messagesTabIdx = if (isAdvertiser) 2 else 3
+            DrawerMenuItem(Icons.Default.Person, "My Profile") { onNavigate(profileTabIdx) }
             DrawerMenuItem(
                 icon = Icons.Default.Message,
                 label = "Messages",
                 badge = if (unreadCount > 0) unreadCount.toString() else null
-            ) { onNavigate(3) }
-            if (!isSeller) {
+            ) { onNavigate(messagesTabIdx) }
+            if (!isSeller && !isAdvertiser) {
                 DrawerMenuItem(Icons.Default.Favorite, "My Wishlist") { onNavigate(2) }
             }
             if (isSeller) {
                 DrawerMenuItem(Icons.Default.BarChart, "Seller Dashboard") { onNavigate(2) }
+            }
+            if (isAdvertiser) {
+                DrawerMenuItem(Icons.Default.Campaign, "My Banner Ads") { onNavigate(1) }
             }
         }
 

@@ -9,3 +9,19 @@ middleware/__pycache__/*
 utils/__pycache__/*
 __pycache__/
 *.pyc
+*.pyo
+
+# Android build artifacts – never commit these
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/local.properties
+android/**/*.iml
+android/captures/
+android/.cxx/
+
+# Android keystore / release config
+android/*.keystore
+android/app/release/
+android/keystore.properties

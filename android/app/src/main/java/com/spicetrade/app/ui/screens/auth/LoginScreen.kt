@@ -39,7 +39,8 @@ import com.spicetrade.app.viewmodel.AuthViewModel
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onSuccess: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onForgotPassword: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
@@ -170,6 +171,18 @@ fun LoginScreen(
                             } else {
                                 Text("Sign In", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                             }
+                        }
+
+                        TextButton(
+                            onClick = onForgotPassword,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text(
+                                "Forgot password?",
+                                color = BrandOrange,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
                         }
                     }
                 }

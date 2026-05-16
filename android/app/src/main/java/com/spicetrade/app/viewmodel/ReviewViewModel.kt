@@ -62,7 +62,7 @@ class ReviewViewModel @Inject constructor(
     fun addReview(adId: Int, userId: Int, rating: Int, reviewText: String?) {
         viewModelScope.launch {
             try {
-                repository.addReview(adId, AddReviewRequest(userId, rating, reviewText))
+                repository.addReview(AddReviewRequest(adId, userId, rating, reviewText))
                 loadReviews(adId)
                 _canReview.value = false
                 Timber.d("Review added for adId=%d", adId)

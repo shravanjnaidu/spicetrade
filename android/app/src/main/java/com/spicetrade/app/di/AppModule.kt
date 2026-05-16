@@ -4,14 +4,17 @@ import android.content.Context
 import com.spicetrade.app.data.api.ApiService
 import com.spicetrade.app.data.api.ApiConfig
 import com.spicetrade.app.data.api.AuthInterceptor
+import com.spicetrade.app.data.api.LocalFallbackInterceptor
 import com.spicetrade.app.data.preferences.UserPreferences
 import com.spicetrade.app.data.repository.AuthRepository
+import com.spicetrade.app.data.repository.BannerAdRepository
 import com.spicetrade.app.data.repository.MessageRepository
 import com.spicetrade.app.data.repository.ProductRepository
 import com.spicetrade.app.data.repository.ReviewRepository
 import com.spicetrade.app.data.repository.StoreRepository
 import com.spicetrade.app.data.repository.WishlistRepository
 import com.spicetrade.app.data.repository.impl.AuthRepositoryImpl
+import com.spicetrade.app.data.repository.impl.BannerAdRepositoryImpl
 import com.spicetrade.app.data.repository.impl.MessageRepositoryImpl
 import com.spicetrade.app.data.repository.impl.ProductRepositoryImpl
 import com.spicetrade.app.data.repository.impl.ReviewRepositoryImpl
@@ -42,6 +45,7 @@ object NetworkModule {
         }
         return OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(userPreferences))
+            .addInterceptor(LocalFallbackInterceptor())
             .addInterceptor(logging)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -96,4 +100,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindReviewRepository(impl: ReviewRepositoryImpl): ReviewRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBannerAdRepository(impl: BannerAdRepositoryImpl): BannerAdRepository
 }

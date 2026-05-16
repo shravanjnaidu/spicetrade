@@ -128,6 +128,35 @@ class AuthViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
+    // ── Forgot / Reset password ───────────────────────────────────────────────
+    private val _forgotPasswordSuccess = MutableStateFlow<String?>(null)
+    val forgotPasswordSuccess: StateFlow<String?> = _forgotPasswordSuccess.asStateFlow()
+
+    fun forgotPassword(email: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            _forgotPasswordSuccess.value = null
+            try {
+                val response = repository.forgotPassword(email)
+                if (response.success) {
+                    _forgotPasswordSuccess.value = response.message
+                        ?: "If that email is registered, a reset link has been sent."
+                } else {
+                    _errorMessage.value = response.error ?: "Failed to send reset email"
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Forgot password failed")
+                _errorMessage.value = e.message ?: "An error occurred"
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun clearForgotPasswordSuccess() {
+        _forgotPasswordSuccess.value = null
+    }
+
     private fun userFromResponse(r: com.spicetrade.app.data.models.AuthResponse, fallbackEmail: String): User {
         val id = r.userId ?: r.id ?: 0
         return User(
