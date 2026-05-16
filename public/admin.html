@@ -261,10 +261,14 @@
         <button class="tab active" onclick="switchTab('all')">All Users</button>
         <button class="tab" onclick="switchTab('sellers')">Sellers</button>
         <button class="tab" onclick="switchTab('buyers')">Buyers</button>
+        <button class="tab" onclick="switchTab('listings')">Listings</button>
+        <button class="tab" onclick="switchTab('advertisers')">
+          Advertisers
+        </button>
       </div>
 
       <div class="users-section">
-        <div id="allUsersTab" class="tab-content active">
+        <div id="allTab" class="tab-content active">
           <h2 class="section-title">All Users</h2>
           <table class="users-table" id="allUsersTable">
             <thead>
@@ -287,7 +291,7 @@
           </table>
         </div>
 
-        <div id="sellersTab" class="tab-content">
+        <div id="sellersTab" class="tab-content" style="display: none">
           <h2 class="section-title">Sellers</h2>
           <table class="users-table">
             <thead>
@@ -309,7 +313,7 @@
           </table>
         </div>
 
-        <div id="buyersTab" class="tab-content">
+        <div id="buyersTab" class="tab-content" style="display: none">
           <h2 class="section-title">Buyers</h2>
           <table class="users-table">
             <thead>
@@ -326,6 +330,56 @@
             <tbody id="buyersBody">
               <tr>
                 <td colspan="7" style="text-align: center">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="listingsTab" class="tab-content" style="display: none">
+          <h2 class="section-title">All Listings</h2>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Seller</th>
+                <th>Type</th>
+                <th>Verified</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listingsBody">
+              <tr>
+                <td colspan="8" style="text-align: center">
+                  Click the Listings tab to load
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="advertisersTab" class="tab-content" style="display: none">
+          <h2 class="section-title">Banner Ads / Advertisers</h2>
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Advertiser</th>
+                <th>Status</th>
+                <th>Industry</th>
+                <th>Created</th>
+                <th>Expires</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="advertisersBody">
+              <tr>
+                <td colspan="8" style="text-align: center">
+                  Click the Advertisers tab to load
+                </td>
               </tr>
             </tbody>
           </table>
@@ -438,7 +492,9 @@
 
     <footer class="footer">
       &copy; Group of Spice Cloud Technologies, Canada, ESTB 2022 &nbsp;|&nbsp;
-      <a href="/faq.html" style="color:#fff;text-decoration:underline;">FAQ</a>
+      <a href="/faq.html" style="color: #fff; text-decoration: underline"
+        >FAQ</a
+      >
     </footer>
 
     <script src="/app.js"></script>
@@ -632,10 +688,19 @@
         event.target.classList.add("active");
 
         // Update tab content
-        document
-          .querySelectorAll(".tab-content")
-          .forEach((c) => c.classList.remove("active"));
-        document.getElementById(tab + "UsersTab").classList.add("active");
+        document.querySelectorAll(".tab-content").forEach((c) => {
+          c.classList.remove("active");
+          c.style.display = "none";
+        });
+        const el = document.getElementById(tab + "Tab");
+        if (el) {
+          el.classList.add("active");
+          el.style.display = "block";
+        }
+
+        // Lazy-load data for new tabs
+        if (tab === "listings") loadListings();
+        if (tab === "advertisers") loadAdvertisers();
       }
 
       function editUser(userId) {
@@ -793,12 +858,174 @@
       // Load ads count
       async function loadAdsCount() {
         try {
-          const res = await fetch("/api/ads");
+          const res = await fetch("/api/admin/ads");
           const data = await res.json();
-          const ads = data.success ? data.ads : data;
+          const ads = data.success ? data.ads : [];
           document.getElementById("totalAds").textContent = ads.length || 0;
         } catch (err) {
           console.error(err);
+        }
+      }
+
+      let allListings = [];
+      async function loadListings() {
+        try {
+          const res = await fetch("/api/admin/ads");
+          const data = await res.json();
+          allListings = data.success ? data.ads : [];
+          renderListings();
+        } catch (err) {
+          console.error(err);
+          document.getElementById("listingsBody").innerHTML =
+            '<tr><td colspan="8" style="text-align:center">Error loading listings</td></tr>';
+        }
+      }
+
+      function renderListings() {
+        const tbody = document.getElementById("listingsBody");
+        if (!allListings.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="8" style="text-align:center">No listings found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = allListings
+          .map(
+            (l) => `
+          <tr>
+            <td>${l.id}</td>
+            <td>${escapeHtml(l.title || "—")}</td>
+            <td>${escapeHtml(l.category || "—")}</td>
+            <td>${l.price != null ? "₹" + l.price : "Contact for price"}</td>
+            <td>${escapeHtml(l.authorName || l.storeName || "—")}</td>
+            <td>${escapeHtml(l.listingType || "product")}</td>
+            <td>${l.verified ? "✓" : "—"}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-small secondary"
+                  onclick="adminDeleteListing(${l.id}, '${escapeHtml(l.title || "").replace(/'/g, "\\'")}')"
+                  style="background:#dc3545;border-color:#dc3545;color:white;">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `,
+          )
+          .join("");
+      }
+
+      async function adminDeleteListing(listingId, title) {
+        if (!confirm(`Delete listing "${title}"? This cannot be undone.`))
+          return;
+        try {
+          const res = await fetch(`/api/admin/ads/${listingId}`, {
+            method: "DELETE",
+          });
+          const result = await res.json();
+          if (result.success) {
+            alert("Listing deleted successfully");
+            loadListings();
+            loadAdsCount();
+          } else {
+            alert(result.error || "Failed to delete listing");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error deleting listing");
+        }
+      }
+
+      let allAdvertisers = [];
+      async function loadAdvertisers() {
+        try {
+          const res = await fetch("/api/admin/banner-ads");
+          const data = await res.json();
+          allAdvertisers = data.success ? data.ads : [];
+          renderAdvertisers();
+        } catch (err) {
+          console.error(err);
+          document.getElementById("advertisersBody").innerHTML =
+            '<tr><td colspan="8" style="text-align:center">Error loading advertisers</td></tr>';
+        }
+      }
+
+      function renderAdvertisers() {
+        const tbody = document.getElementById("advertisersBody");
+        if (!allAdvertisers.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="8" style="text-align:center">No banner ads found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = allAdvertisers
+          .map(
+            (a) => `
+          <tr>
+            <td>${a.id}</td>
+            <td>${escapeHtml(a.title || "—")}</td>
+            <td>${escapeHtml(a.advertiserName || a.advertiserCompany || "—")}</td>
+            <td><span class="badge ${a.status === "active" ? "badge-seller" : "badge-buyer"}">${a.status || "pending"}</span></td>
+            <td>${escapeHtml(a.industry || "—")}</td>
+            <td>${a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "—"}</td>
+            <td>${a.expiresAt ? new Date(a.expiresAt).toLocaleDateString() : "No expiry"}</td>
+            <td>
+              <div class="action-buttons">
+                ${a.status !== "active" ? `<button class="btn btn-small secondary" onclick="adminApproveAd(${a.id})">Approve</button>` : ""}
+                ${a.status === "active" ? `<button class="btn btn-small secondary" onclick="adminRejectAd(${a.id})">Suspend</button>` : ""}
+                <button class="btn btn-small secondary"
+                  onclick="adminDeleteBannerAd(${a.id}, '${escapeHtml(a.title || "").replace(/'/g, "\\'")}')"
+                  style="background:#dc3545;border-color:#dc3545;color:white;">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `,
+          )
+          .join("");
+      }
+
+      async function adminApproveAd(adId) {
+        try {
+          const res = await fetch(`/api/admin/banner-ads/${adId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "active" }),
+          });
+          const result = await res.json();
+          if (result.success) loadAdvertisers();
+          else alert(result.error || "Failed");
+        } catch (err) {
+          alert("Error updating ad");
+        }
+      }
+
+      async function adminRejectAd(adId) {
+        try {
+          const res = await fetch(`/api/admin/banner-ads/${adId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "suspended" }),
+          });
+          const result = await res.json();
+          if (result.success) loadAdvertisers();
+          else alert(result.error || "Failed");
+        } catch (err) {
+          alert("Error updating ad");
+        }
+      }
+
+      async function adminDeleteBannerAd(adId, title) {
+        if (!confirm(`Delete banner ad "${title}"? This cannot be undone.`))
+          return;
+        try {
+          const res = await fetch(`/api/admin/banner-ads/${adId}`, {
+            method: "DELETE",
+          });
+          const result = await res.json();
+          if (result.success) {
+            alert("Banner ad deleted successfully");
+            loadAdvertisers();
+          } else {
+            alert(result.error || "Failed to delete ad");
+          }
+        } catch (err) {
+          alert("Error deleting ad");
         }
       }
 

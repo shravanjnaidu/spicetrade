@@ -1,6 +1,7 @@
 package com.spicetrade.app.di
 
 import android.content.Context
+import com.spicetrade.app.BuildConfig
 import com.spicetrade.app.data.api.ApiService
 import com.spicetrade.app.data.api.ApiConfig
 import com.spicetrade.app.data.api.AuthInterceptor
@@ -26,12 +27,21 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+/** Qualifier for the application-level [CoroutineScope]. */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ApplicationScope
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -39,12 +49,22 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(userPreferences: UserPreferences): OkHttpClient {
+    @ApplicationScope
+    fun provideApplicationScope(): CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        userPreferences: UserPreferences,
+        @ApplicationScope appScope: CoroutineScope
+    ): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC
+                    else HttpLoggingInterceptor.Level.NONE
         }
         return OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(userPreferences))
+            .addInterceptor(AuthInterceptor(userPreferences, appScope))
             .addInterceptor(LocalFallbackInterceptor())
             .addInterceptor(logging)
             .connectTimeout(30, TimeUnit.SECONDS)

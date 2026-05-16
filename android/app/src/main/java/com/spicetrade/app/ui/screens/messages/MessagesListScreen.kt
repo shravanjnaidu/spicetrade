@@ -38,11 +38,22 @@ fun MessagesListScreen(
     val currentUser by authViewModel.currentUser.collectAsState()
     val conversations by messageViewModel.conversations.collectAsState()
     val isLoading by messageViewModel.isLoading.collectAsState()
+    val newConversationId by messageViewModel.newConversationId.collectAsState()
 
     var selectedConversation by remember { mutableStateOf<Conversation?>(null) }
 
     LaunchedEffect(currentUser) {
         currentUser?.id?.let { messageViewModel.loadConversations(it) }
+    }
+
+    // Auto-open a conversation that was just created (e.g. from "Contact Seller")
+    LaunchedEffect(newConversationId, conversations) {
+        val convId = newConversationId ?: return@LaunchedEffect
+        val conv = conversations.find { it.id == convId }
+        if (conv != null) {
+            selectedConversation = conv
+            messageViewModel.clearNewConversationId()
+        }
     }
 
     if (selectedConversation != null) {

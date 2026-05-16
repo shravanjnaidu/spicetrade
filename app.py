@@ -1659,6 +1659,46 @@ def get_public_profile(user_id):
         return jsonify({'error': 'database error'}), 500
 
 
+@app.route('/api/users/search', methods=['GET'])
+def search_users():
+    """Search users by name, email or store name (for starting conversations)"""
+    try:
+        q = request.args.get('q', '').strip()
+        exclude_id = request.args.get('excludeId', None)
+        if not q or len(q) < 2:
+            return jsonify([])
+        db = get_db()
+        cursor = dict_cursor(db)
+        pattern = f'%{q}%'
+        params = [pattern, pattern, pattern]
+        excl = ''
+        if exclude_id:
+            excl = 'AND id != %s'
+            params.append(exclude_id)
+        cursor.execute(f'''
+            SELECT id, name, email, storeName, role, profilePicture, uniqueId
+            FROM users
+            WHERE (name ILIKE %s OR email ILIKE %s OR storeName ILIKE %s)
+            {excl}
+            ORDER BY name ASC
+            LIMIT 20
+        ''', params)
+        rows = cursor.fetchall()
+        db.close()
+        return jsonify([{
+            'id': r['id'],
+            'name': r['name'],
+            'email': r['email'],
+            'storeName': r['storename'],
+            'role': r['role'],
+            'profilePicture': r['profilepicture'],
+            'uniqueId': r['uniqueid'],
+        } for r in rows])
+    except Exception as e:
+        print('search_users error:', e)
+        return jsonify([])
+
+
 # Admin endpoints
 @app.route('/api/admin/users', methods=['GET'])
 def admin_get_users():
@@ -1793,18 +1833,54 @@ def admin_delete_user(user_id):
     try:
         db = get_db()
         cursor = dict_cursor(db)
-        
-        # Delete user's ads first
+
+        # Verify user exists first
+        cursor.execute('SELECT id FROM users WHERE id = %s', (user_id,))
+        if not cursor.fetchone():
+            db.close()
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        # Delete messages in conversations involving this user (buyer/seller)
+        # and conversations tied to this user's listings
+        cursor.execute('''
+            DELETE FROM messages WHERE conversationId IN (
+                SELECT id FROM conversations
+                WHERE buyerId = %s OR sellerId = %s
+                   OR listingId IN (SELECT id FROM ads WHERE userId = %s)
+            )
+        ''', (user_id, user_id, user_id))
+
+        # Delete conversations involving user or user's listings
+        cursor.execute('''
+            DELETE FROM conversations
+            WHERE buyerId = %s OR sellerId = %s
+               OR listingId IN (SELECT id FROM ads WHERE userId = %s)
+        ''', (user_id, user_id, user_id))
+
+        # Delete wishlist items by user or referencing user's listings
+        cursor.execute('''
+            DELETE FROM wishlist
+            WHERE userId = %s OR adId IN (SELECT id FROM ads WHERE userId = %s)
+        ''', (user_id, user_id))
+
+        # Delete reviews by user or for user's listings
+        cursor.execute('''
+            DELETE FROM reviews
+            WHERE userId = %s OR adId IN (SELECT id FROM ads WHERE userId = %s)
+        ''', (user_id, user_id))
+
+        # Delete banner ads
+        cursor.execute('DELETE FROM banner_ads WHERE userId = %s', (user_id,))
+
+        # Delete product listings
         cursor.execute('DELETE FROM ads WHERE userId = %s', (user_id,))
-        
+
+        # Delete password reset tokens
+        cursor.execute('DELETE FROM password_reset_tokens WHERE user_id = %s', (user_id,))
+
         # Delete user
         cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
         db.commit()
-        
-        if cursor.rowcount == 0:
-            db.close()
-            return jsonify({'success': False, 'error': 'User not found'}), 404
-        
         db.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -1998,11 +2074,12 @@ def start_conversation():
         db = get_db()
         cursor = dict_cursor(db)
         
-        # Check if conversation already exists
+        # Check if conversation already exists in either direction
         cursor.execute('''
-            SELECT id FROM conversations 
-            WHERE buyerId = %s AND sellerId = %s
-        ''', (buyer_id, seller_id))
+            SELECT id FROM conversations
+            WHERE (buyerId = %s AND sellerId = %s)
+               OR (buyerId = %s AND sellerId = %s)
+        ''', (buyer_id, seller_id, seller_id, buyer_id))
         existing = cursor.fetchone()
         
         if existing:
@@ -2029,27 +2106,52 @@ def start_conversation():
 @app.route('/api/conversations/<int:user_id>', methods=['GET'])
 def get_user_conversations(user_id):
     """Get all conversations for a user"""
+    db = None
     try:
         db = get_db()
         cursor = dict_cursor(db)
-        
-        # Get conversations where user is buyer or seller
+
+        # Single-pass query: use LEFT JOIN on a pre-aggregated messages subquery
+        # instead of three correlated subqueries — avoids N×3 round-trips and
+        # prevents ORDER BY on a nullable subquery alias from causing issues.
         cursor.execute('''
-            SELECT 
-                c.id, c.buyerId, c.sellerId, c.listingId, c.createdAt,
-                buyer.name as buyerName, buyer.email as buyerEmail, buyer.profilePicture as buyerPicture,
-                seller.name as sellerName, seller.email as sellerEmail, seller.profilePicture as sellerPicture,
+            SELECT
+                c.id,
+                c.buyerId,
+                c.sellerId,
+                c.listingId,
+                c.createdAt,
+                buyer.name            AS buyerName,
+                buyer.email           AS buyerEmail,
+                buyer.profilePicture  AS buyerPicture,
+                seller.name           AS sellerName,
+                seller.email          AS sellerEmail,
+                seller.profilePicture AS sellerPicture,
                 seller.storeName,
-                (SELECT message FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessage,
-                (SELECT createdAt FROM messages WHERE conversationId = c.id ORDER BY createdAt DESC LIMIT 1) as lastMessageTime,
-                (SELECT COUNT(*) FROM messages WHERE conversationId = c.id AND senderId != %s AND isRead = 0) as unreadCount
+                lm.lastMessage,
+                lm.lastMessageTime,
+                COALESCE(unread.unreadCount, 0) AS unreadCount
             FROM conversations c
-            JOIN users buyer ON c.buyerId = buyer.id
+            JOIN users buyer  ON c.buyerId  = buyer.id
             JOIN users seller ON c.sellerId = seller.id
+            LEFT JOIN LATERAL (
+                SELECT message AS lastMessage, createdAt AS lastMessageTime
+                FROM messages
+                WHERE conversationId = c.id
+                ORDER BY createdAt DESC
+                LIMIT 1
+            ) lm ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*) AS unreadCount
+                FROM messages
+                WHERE conversationId = c.id
+                  AND senderId != %s
+                  AND isRead = 0
+            ) unread ON TRUE
             WHERE c.buyerId = %s OR c.sellerId = %s
-            ORDER BY lastMessageTime DESC, c.createdAt DESC
+            ORDER BY lm.lastMessageTime DESC NULLS LAST, c.createdAt DESC
         ''', (user_id, user_id, user_id))
-        
+
         rows = cursor.fetchall()
         conversations = []
         for r in rows:
@@ -2058,7 +2160,7 @@ def get_user_conversations(user_id):
                 'buyerId': r['buyerid'],
                 'sellerId': r['sellerid'],
                 'listingId': r['listingid'],
-                'createdAt': r['createdat'],
+                'createdAt': r['createdat'].isoformat() if r['createdat'] else None,
                 'buyerName': r['buyername'],
                 'buyerEmail': r['buyeremail'],
                 'buyerPicture': r['buyerpicture'],
@@ -2067,17 +2169,19 @@ def get_user_conversations(user_id):
                 'sellerPicture': r['sellerpicture'],
                 'storeName': r['storename'],
                 'lastMessage': r['lastmessage'],
-                'lastMessageTime': r['lastmessagetime'],
-                'unreadCount': r['unreadcount']
+                'lastMessageTime': r['lastmessagetime'].isoformat() if r['lastmessagetime'] else None,
+                'unreadCount': int(r['unreadcount'] or 0),
             })
-        
-        db.close()
+
         return jsonify(conversations)
     except Exception as e:
         print('get_user_conversations error:', e)
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'database error'}), 500
+    finally:
+        if db:
+            db.close()
 
 
 @app.route('/api/messages/<int:conversation_id>', methods=['GET'])
@@ -2106,12 +2210,12 @@ def get_messages(conversation_id):
                 'senderId': r['senderid'],
                 'message': r['message'],
                 'content': r['message'],
-                'createdAt': r['createdat'],
+                'createdAt': r['createdat'].isoformat() if r['createdat'] else None,
                 'senderName': r['sendername'],
                 'senderEmail': r['senderemail'],
                 'senderPicture': r['profilepicture']
             })
-        
+
         db.close()
         return jsonify(messages)
     except Exception as e:

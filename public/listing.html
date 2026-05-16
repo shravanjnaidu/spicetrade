@@ -1203,8 +1203,6 @@
             // Only show contact button if user is logged in and not the owner
             contactBtn.style.display = "inline-block";
 
-            // For buyers viewing seller listings, allow contact
-            // For sellers viewing buyer requirements, allow contact only if conversation exists
             if (user.role === "buyer" && listing.role === "seller") {
               contactBtn.onclick = () => contactSeller(listing);
 
@@ -1212,12 +1210,12 @@
               const wishlistBtn = document.getElementById("wishlistBtn");
               wishlistBtn.style.display = "block";
               wishlistBtn.onclick = toggleWishlist;
-
-              // Check if already in wishlist
               checkWishlistStatus(user.id, listing.id);
             } else if (user.role === "seller" && listing.role === "buyer") {
               contactBtn.onclick = () => contactBuyer(listing);
-            } else if (user.role === "seller" && listing.role === "seller") {
+            } else {
+              // Any other combination (seller→seller, buyer→buyer, etc.)
+              // Use the generic contact function — buyer field defaults to current user
               contactBtn.onclick = () => contactSeller(listing);
             }
           } else {

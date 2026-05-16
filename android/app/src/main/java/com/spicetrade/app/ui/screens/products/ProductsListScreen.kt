@@ -114,7 +114,7 @@ fun ProductsListScreen(
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(colors = listOf(BrandDark, BrandOrange)))
         ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, top = 14.dp, bottom = 18.dp)) {
+            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.dp)) {
                 // Logo + icons row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
